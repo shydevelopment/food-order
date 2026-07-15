@@ -81,45 +81,40 @@ export default function Navbar() {
     <header className="bg-black text-white shadow-md w-full relative z-50 border-b border-neutral-900">
       <div className="w-full px-6 py-3 flex justify-between items-center">
 
-        {/* ฝั่งซ้าย: โลโก้เว็บไซต์ */}
         <div className="text-xl font-black cursor-pointer text-orange-500 tracking-wide flex-shrink-0" onClick={() => window.location.href = '/'}>
           FOOD <span className="text-white">ORDER</span> KMUTNB 🍔
         </div>
 
-        {/* 🛠️ ส่วนที่เพิ่มใหม่ตรงกลาง: เมนูหลักสำหรับสั่งอาหาร (ซ่อนในมือถือ แสดงบนคอม) */}
         <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
           <a href="/" className={`transition-colors ${pathname === '/' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
-            หน้าแรก
+            Home
           </a>
-          <a href="/menus" className={`transition-colors ${pathname === '/menus' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
-            เมนูทั้งหมด
+          <a href="/menuPage" className={`transition-colors ${pathname === '/menus' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+            Restaurant
           </a>
-          <a href="/promotions" className={`transition-colors ${pathname === '/promotions' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
-            โปรโมชัน
+          <a href="/promotionPage" className={`transition-colors ${pathname === '/promotions' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+            Promotions
           </a>
           {user && (
-            <a href="/orders" className={`transition-colors ${pathname === '/orders' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
-              ติดตามออเดอร์
+            <a href="/trackorderPage" className={`transition-colors ${pathname === '/orders' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+              Track Order
             </a>
           )}
-          {/* 👑 แสดงปุ่มระบบหลังบ้านเฉพาะไอดีที่เป็นแอดมิน */}
+
           {user && isAdmin && (
             <a href="/admin" className="text-red-400 hover:text-red-500 font-bold border border-red-900/50 px-2.5 py-0.5 rounded bg-red-950/20 transition-all text-xs tracking-wide">
-              📊 ระบบหลังบ้าน
+              📊 Admin
             </a>
           )}
         </nav>
 
-        {/* ฝั่งขวา: ส่วนแสดงโปรไฟล์และตะกร้าสินค้า */}
         <div className="flex items-center space-x-6">
           
-          {/* 🛠️ ส่วนที่เพิ่มใหม่: ปุ่มตะกร้าสินค้า (Cart Icon พร้อมตัวเลขแจ้งเตือน) */}
           {user && (
-            <a href="/cart" className="relative text-gray-300 hover:text-orange-500 transition-colors p-1 group">
+            <a href="/cartPage" className="relative text-gray-300 hover:text-orange-500 transition-colors p-1 group">
               <svg className="w-6 h-6 group-hover:scale-105 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
-              {/* วงกลมแจ้งเตือนสีส้ม (เปลี่ยนเลข 0 เป็นจำนวนจริงในตะกร้าได้เลย) */}
               <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-black text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-black animate-pulse">
                 2
               </span>
@@ -162,7 +157,7 @@ export default function Navbar() {
 
                   <div className="absolute right-0 mt-2 w-56 bg-neutral-900 text-gray-200 rounded-lg shadow-2xl border border-neutral-800 py-1 z-20">
                     <div className="px-4 py-2.5 border-b border-neutral-800 bg-neutral-950 rounded-t-lg">
-                      <p className="text-[10px] text-gray-500 font-bold tracking-wider uppercase">บัญชีผู้ใช้</p>
+                      <p className="text-[10px] text-gray-500 font-bold tracking-wider uppercase">Your Account</p>
                       <p className="text-sm font-bold text-orange-500 truncate mt-0.5">
                         @{profile?.username || profile?.full_name || 'username'}
                       </p>
