@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/service/supabase/service'
-import Link from 'next/link'
+import { createClient } from '@/supabase/service'
+import RegisterForm from '@/components/register-form' // 💡 นำเข้าฟอร์มฝั่งหน้าบ้านที่เราจะสร้างในข้อ 2
 
 export default async function RegisterPage({
   searchParams,
@@ -10,13 +10,28 @@ export default async function RegisterPage({
 }) {
   const resolvedSearchParams = await searchParams
 
-  // Server Action สำหรับสมัครสมาชิก
+  // Server Action สำหรับสมัครสมาชิก (ปลอดภัย รันฝั่ง Server)
   const signUp = async (formData: FormData) => {
     'use server'
     const origin = (await headers()).get('origin')
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
+    const username = formData.get('username') as string
+    const displayName = formData.get('displayName') as string
+    const phone = formData.get('phone') as string
+
+    // [หลังบ้าน] ตรวจสอบโครงสร้าง Email ด้วย Regex
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(email)) {
+      return redirect('/register?message=รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง')
+    }
+
+    // [หลังบ้าน] ตรวจสอบเบอร์โทรต้องเป็นตัวเลข ขึ้นต้นด้วย 0 และยาว 9-10 หลัก
+    const phoneRegex = /^0[0-9]{8,9}$/
+    if (!phoneRegex.test(phone)) {
+      return redirect('/register?message=เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)')
+    }
 
     // ตรวจสอบว่ารหัสผ่านตรงกันหรือไม่
     if (password !== confirmPassword) {
@@ -30,6 +45,11 @@ export default async function RegisterPage({
       password,
       options: {
         emailRedirectTo: `${origin}/auth/callback`,
+        data: {
+          username: username,
+          full_name: displayName, 
+          phone: phone,
+        }
       },
     })
 
@@ -37,70 +57,8 @@ export default async function RegisterPage({
       return redirect(`/register?message=${error.message}`)
     }
 
-    // สมัครสำเร็จ ให้กลับไปหน้า Login พร้อมข้อความแจ้งเตือน
     return redirect('/login?message=Registration successful! Please check your email to confirm.')
   }
 
-  return (
-    <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2 mt-20 mx-auto text-white">
-      <form action={signUp} className="animate-in flex-1 flex flex-col w-full justify-center gap-2">
-        
-        <label className="text-sm text-gray-300" htmlFor="email">
-          Email
-        </label>
-        <input
-          className="rounded-md px-4 py-2 bg-transparent border border-gray-600 mb-4 focus:outline-none focus:border-gray-400 text-white placeholder:text-gray-500"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
-          required
-        />
-
-        <label className="text-sm text-gray-300" htmlFor="password">
-          Password
-        </label>
-        <input
-          className="rounded-md px-4 py-2 bg-transparent border border-gray-600 mb-4 focus:outline-none focus:border-gray-400 text-white placeholder:text-gray-500"
-          type="password"
-          name="password"
-          placeholder="••••••••"
-          required
-        />
-
-        <label className="text-sm text-gray-300" htmlFor="confirmPassword">
-          Confirm Password
-        </label>
-        <input
-          className="rounded-md px-4 py-2 bg-transparent border border-gray-600 mb-6 focus:outline-none focus:border-gray-400 text-white placeholder:text-gray-500"
-          type="password"
-          name="confirmPassword"
-          placeholder="••••••••"
-          required
-        />
-
-        {/* ปุ่มหลัก (สีเขียว เหมือนในรูป) */}
-        <button
-          type="submit"
-          className="bg-[#0e9f3b] rounded-md px-4 py-2 text-white mb-2 hover:bg-[#0c8732] transition-colors font-medium"
-        >
-          Sign Up
-        </button>
-
-        {/* ปุ่มรอง (เส้นขอบใส เหมือนปุ่ม Sign Up ในรูปของคุณ) */}
-        <Link
-          href="/login"
-          className="border border-gray-600 rounded-md px-4 py-2 text-white mb-2 text-center hover:bg-gray-800 transition-colors"
-        >
-          Sign In
-        </Link>
-
-        {/* แสดงข้อความแจ้งเตือน Error (ถ้ามี) */}
-        {resolvedSearchParams?.message && (
-          <p className="mt-4 p-4 bg-gray-900 border border-gray-700 text-center text-red-400 rounded-md text-sm">
-            {resolvedSearchParams.message}
-          </p>
-        )}
-      </form>
-    </div>
-  )
+  return <RegisterForm signUpAction={signUp} message={resolvedSearchParams?.message} />
 }
