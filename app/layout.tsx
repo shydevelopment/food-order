@@ -31,7 +31,7 @@ export default function RootLayout({
         <Navbar /> 
         
         {/* เนื้อหาด้านล่างขยายตัวเพื่อดัน Footer ลงไป */}
-        <main className="flex-grow w-full max-w-7xl mx-auto px-6 py-4">
+        <main className=" w-full max-w-7xl mx-auto px-6 py-4">
           {children}
         </main>
 
