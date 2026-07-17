@@ -24,7 +24,7 @@ export default async function Index() {
     // 2. ปรับโครงสร้างหลักให้เป็น flex-col แบบเต็มหน้าจอ
     <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
 
-      <main className="flex-grow flex flex-col items-center justify-center p-4"></main>
+      <main className=" flex flex-col items-center justify-center p-4"></main>
 
     </div>
   )

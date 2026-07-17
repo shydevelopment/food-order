@@ -81,7 +81,7 @@ export default function Navbar() {
     <header className="bg-black text-white shadow-md w-full relative z-50 border-b border-neutral-900">
       <div className="w-full px-6 py-3 flex justify-between items-center">
 
-        <div className="text-xl font-black cursor-pointer text-orange-500 tracking-wide flex-shrink-0" onClick={() => window.location.href = '/'}>
+        <div className="text-xl font-black cursor-pointer text-orange-500 tracking-wide" onClick={() => window.location.href = '/'}>
           FOOD <span className="text-white">ORDER</span> KMUTNB 🍔
         </div>
 
@@ -89,7 +89,7 @@ export default function Navbar() {
           <a href="/" className={`transition-colors ${pathname === '/' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
             Home
           </a>
-          <a href="/menuPage" className={`transition-colors ${pathname === '/menus' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+          <a href="/storePage" className={`transition-colors ${pathname === '/menus' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
             Restaurant
           </a>
           <a href="/promotionPage" className={`transition-colors ${pathname === '/promotions' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
