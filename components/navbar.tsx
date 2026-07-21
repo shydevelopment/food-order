@@ -54,7 +54,8 @@ export default function Navbar() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, full_name, avatar_url')
+        // จุดแก้ไขที่ 1: เพิ่มคอลัมน์ role เข้าไปใน select
+        .select('username, full_name, avatar_url, role') 
         .eq('id', userId)
         .single();
 
@@ -74,8 +75,8 @@ export default function Navbar() {
     return <header className="bg-black text-gray-300 p-4 border-b border-neutral-900">กำลังโหลด...</header>;
   }
 
-  // เช็คว่าเป็นแอดมินหรือไม่จากชื่อผู้ใช้งาน
-  const isAdmin = profile?.username?.toLowerCase().includes('admin') || profile?.full_name?.toLowerCase().includes('admin');
+  // จุดแก้ไขที่ 2: เช็คแอดมินจาก role ที่ดึงมาจาก Database โดยตรง
+  const isAdmin = profile?.role === 'admin';
 
   return (
     <header className="bg-black text-white shadow-md w-full relative z-50 border-b border-neutral-900">
@@ -156,19 +157,34 @@ export default function Navbar() {
                   <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)}></div>
 
                   <div className="absolute right-0 mt-2 w-56 bg-neutral-900 text-gray-200 rounded-lg shadow-2xl border border-neutral-800 py-1 z-20">
-                    <div className="px-4 py-2.5 border-b border-neutral-800 bg-neutral-950 rounded-t-lg">
-                      <p className="text-[10px] text-gray-500 font-bold tracking-wider uppercase">Your Account</p>
-                      <p className="text-sm font-bold text-orange-500 truncate mt-0.5">
-                        @{profile?.username || profile?.full_name || 'username'}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                    <div className="px-4 py-3 border-b border-neutral-800 bg-neutral-950 rounded-t-lg">
+                      <p className="text-[10px] text-gray-500 font-bold tracking-wider uppercase mb-1">Your Account</p>
+                      
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-sm font-bold text-orange-500 truncate">
+                          @{profile?.username || profile?.full_name || 'username'}
+                        </p>
+                        {/* จุดแก้ไขที่ 3: ป้าย Badge แสดง Role */}
+                        {profile?.role && (
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide
+                            ${profile.role === 'admin' ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 
+                              profile.role === 'restaurant' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/50' : 
+                              profile.role === 'rider' ? 'bg-green-500/20 text-green-500 border border-green-500/50' : 
+                              'bg-gray-500/20 text-gray-400 border border-gray-500/50'}`}
+                          >
+                            {profile.role}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-gray-400 truncate mt-1">
                         {user?.email}
                       </p>
                     </div>
 
                     <a
                       href="/viewProfile"
-                      className="block px-4 py-2 text-sm hover:bg-neutral-800 hover:text-orange-400 transition-colors"
+                      className="block px-4 py-2 text-sm hover:bg-neutral-800 hover:text-orange-400 transition-colors mt-1"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       👤 View Profile
