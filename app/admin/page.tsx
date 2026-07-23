@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { ActivityLogItem } from './components/ActivityLogItem';
 
 export default function AdminDashboardHome() {
   const supabase = createBrowserClient(
@@ -24,7 +25,7 @@ export default function AdminDashboardHome() {
     fetchDashboardStats();
     fetchActivityLogs();
 
-    // ⚡ ดักจับ Realtime เมื่อมีการสร้างข้อมูลใหม่ในตาราง orders, restaurants, menus, profiles
+    // ⚡ ดักจับ Realtime เมื่อมีการสร้างข้อมูลใหม่
     const channel = supabase
       .channel('realtime-dashboard-activities')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => handleRealtimeUpdate())
@@ -45,6 +46,13 @@ export default function AdminDashboardHome() {
   const handleRealtimeUpdate = () => {
     fetchDashboardStats();
     fetchActivityLogs();
+  };
+
+  // Helper แปลงเป็น Date Object อย่างปลอดภัย
+  const parseSafeDate = (dateString: string | null | undefined): Date | null => {
+    if (!dateString) return null;
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime()) ? null : parsed;
   };
 
   // 1. ดึงข้อมูลสถิติรวม
@@ -77,7 +85,7 @@ export default function AdminDashboardHome() {
     }
   };
 
-  // 2. ดึงข้อมูลกิจกรรมล่าสุดดึงตรงจากตารางหลักที่มีจริงในระบบ
+  // 2. ดึงข้อมูลกิจกรรมล่าสุด (ดึง created_at จริงจาก Supabase)
   const fetchActivityLogs = async () => {
     setLoadingActivities(true);
     try {
@@ -88,10 +96,11 @@ export default function AdminDashboardHome() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // ดึง 5 สมาชิกในระบบ
+      // ⚡ ดึง 5 สมาชิกสิริรวมเรียงตาม created_at จริง
       const { data: latestUsers } = await supabase
         .from('profiles')
-        .select('id, full_name, username, role, email')
+        .select('id, full_name, username, role, email, created_at')
+        .order('created_at', { ascending: false })
         .limit(5);
 
       // ดึง 3 ร้านค้าล่าสุด
@@ -113,7 +122,7 @@ export default function AdminDashboardHome() {
         id: `order-${o.id}`,
         title: `มีรายการสั่งซื้อใหม่ #${String(o.id).substring(0, 8)}`,
         detail: `ยอดชำระ: ฿${o.total_price ? o.total_price.toLocaleString() : '0'} • สถานะ: ${o.status || 'รอดำเนินการ'}`,
-        timestamp: new Date(o.created_at),
+        timestamp: parseSafeDate(o.created_at),
         icon: '🛒',
         colorClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
       }));
@@ -122,7 +131,7 @@ export default function AdminDashboardHome() {
         id: `user-${u.id}`,
         title: `ผู้ใช้งานในระบบ`,
         detail: `${u.full_name || u.username || 'สมาชิก'} (@${u.username || 'user'}) • บทบาท: ${u.role || 'customer'}`,
-        timestamp: new Date(),
+        timestamp: parseSafeDate(u.created_at), // ⚡ ดึงวันที่สมัครจริง
         icon: '👤',
         colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
       }));
@@ -131,7 +140,7 @@ export default function AdminDashboardHome() {
         id: `rest-${r.id}`,
         title: `เพิ่มร้านอาหารใหม่`,
         detail: `ร้าน "${r.name}" เข้าสู่ระบบ`,
-        timestamp: new Date(r.created_at),
+        timestamp: parseSafeDate(r.created_at),
         icon: '🏪',
         colorClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
       }));
@@ -140,14 +149,14 @@ export default function AdminDashboardHome() {
         id: `menu-${m.id}`,
         title: `เพิ่มเมนูอาหารใหม่`,
         detail: `เมนู "${m.name}" (฿${m.price || 0}) ${m.restaurants?.name ? `ร้าน ${m.restaurants.name}` : ''}`,
-        timestamp: new Date(m.created_at),
+        timestamp: parseSafeDate(m.created_at),
         icon: '🍽️',
         colorClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
       }));
 
       // รวมและเรียงลำดับจากใหม่ไปเก่า
       const combinedLogs = [...formattedOrders, ...formattedUsers, ...formattedRestaurants, ...formattedMenus]
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0))
         .slice(0, 10);
 
       setActivities(combinedLogs);
@@ -156,18 +165,6 @@ export default function AdminDashboardHome() {
     } finally {
       setLoadingActivities(false);
     }
-  };
-
-  const formatTimeAgo = (date: Date) => {
-    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    if (seconds < 5) return 'เมื่อสักครู่';
-    if (seconds < 60) return `${seconds} วินาทีที่แล้ว`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} นาทีที่แล้ว`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`;
-    const days = Math.floor(hours / 24);
-    return `${days} วันที่แล้ว`;
   };
 
   return (
@@ -262,33 +259,7 @@ export default function AdminDashboardHome() {
         ) : activities.length > 0 ? (
           <div className="space-y-3">
             {activities.map((act) => (
-              <div
-                key={act.id}
-                className="p-4 bg-neutral-950/70 border border-neutral-800/80 rounded-xl flex items-center justify-between gap-4 hover:bg-neutral-800/40 transition-all"
-              >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg border shrink-0 ${act.colorClass}`}>
-                    {act.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-white truncate">
-                      {act.title}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">
-                      {act.detail}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-xs text-orange-400 font-mono font-bold">
-                    {formatTimeAgo(act.timestamp)}
-                  </span>
-                  <div className="text-[10px] text-neutral-500 font-mono mt-0.5">
-                    {act.timestamp.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
-                  </div>
-                </div>
-              </div>
+              <ActivityLogItem key={act.id} act={act} />
             ))}
           </div>
         ) : (
