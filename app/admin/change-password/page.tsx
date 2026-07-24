@@ -121,7 +121,7 @@ export default function AdminChangePasswordPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* คอลัมน์ซ้าย: ค้นหาและเลือกรายชื่อผู้ใช้งาน */}
-        <div className="lg:col-span-5 bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col h-[640px] shadow-2xl">
+        <div className="lg:col-span-5 bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col shadow-2xl">
           <div className="mb-4">
             <label className="block text-sm font-bold text-gray-300 uppercase tracking-wide mb-2">
               1. ค้นหาผู้ใช้งานที่ต้องการเปลี่ยนรหัสผ่าน
