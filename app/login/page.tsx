@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/supabase/service'
-import LoginForm from '@/components/login-form' // 💡 นำเข้าคอมโพเนนต์ฟอร์มที่เราจะสร้างในข้อ 2
+import LoginForm from '@/components/login-form' // 💡 นำเข้าคอมโพเนนต์ฟอร์ม
 
 export default async function LoginPage({
   searchParams,
@@ -18,7 +18,8 @@ export default async function LoginPage({
     // ตรวจสอบโครงสร้าง Email ด้วย Regex
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (!emailRegex.test(email)) {
-      return redirect('/login?message=รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง')
+      // 💡 แก้ไข: เข้ารหัสข้อความภาษาไทยและเอา return ออก
+      redirect(`/login?message=${encodeURIComponent('รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง')}`)
     }
 
     const supabase = await createClient()
@@ -29,10 +30,12 @@ export default async function LoginPage({
     })
 
     if (error) {
-      return redirect('/login?message=อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+      // 💡 แก้ไข: เข้ารหัสข้อความภาษาไทยและเอา return ออก
+      redirect(`/login?message=${encodeURIComponent('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}`)
     }
 
-    return redirect('/') // เข้าสู่ระบบสำเร็จ กลับไปหน้าแรก
+    // 💡 เอา return ออก เพราะ redirect จะทำการย้ายหน้าทันทีอยู่แล้ว
+    redirect('/') 
   }
 
   // ส่ง Action และ Message ไปทำงานฝั่งหน้าบ้าน
