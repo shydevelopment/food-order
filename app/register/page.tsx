@@ -26,18 +26,21 @@ export default async function RegisterPage({
     const displayName = formData.get('displayName') as string
     const phone = formData.get('phone') as string
 
-    // 💡 2. เช็คว่ารหัสผ่าน 2 ช่องตรงกันไหม (ถ้าไม่ตรงให้เด้งกลับไปแจ้งเตือน)
+    // 💡 2. เช็คว่ารหัสผ่าน 2 ช่องตรงกันไหม
     if (password !== confirmPassword) {
       redirect(`/register?message=${encodeURIComponent('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน')}`)
     }
 
+    // ⚡ ดึง Origin ให้แม่นยำรองรับทั้ง Localhost และ Production Domain
     const requestHeaders = await headers()
-    const origin = requestHeaders.get('origin') || 'http://localhost:3000'
+    const host = requestHeaders.get('host')
+    const proto = requestHeaders.get('x-forwarded-proto') || 'https'
+    const origin = requestHeaders.get('origin') || `${proto}://${host}`
 
     const supabase = await createClient()
 
-    // 💡 3. ส่งคำขอสมัครสมาชิก พร้อมแนบข้อมูลอื่นๆ ไปเก็บไว้ใน metadata
-    const { error } = await supabase.auth.signUp({
+    // 💡 3. ส่งคำขอสมัครสมาชิก
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -54,13 +57,18 @@ export default async function RegisterPage({
       redirect(`/register?message=${encodeURIComponent(error.message)}`)
     }
 
-    const successMsg = 'สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลของคุณเพื่อยืนยันตัวตน'
-    redirect(`/login?message=${encodeURIComponent(successMsg)}`)
+    // ⚡ ดักจับกรณีอีเมลนี้เคยสมัครและยืนยันตัวตนไปแล้ว
+    if (data?.user && data.user.identities && data.user.identities.length === 0) {
+      const msg = encodeURIComponent('อีเมลนี้ถูกใช้งานและยืนยันตัวตนแล้ว กรุณาเข้าสู่ระบบ')
+      redirect(`/login?message=${msg}`)
+    }
+
+    // ⚡ 4. ปรับแก้คำแจ้งเตือน + ส่ง type=success ไปด้วยเพื่อให้แสดงผลเป็นสีเขียว
+    const successMsg = encodeURIComponent('สมัครสมาชิกสำเร็จ! ระบบได้ส่งอีเมลสำหรับยืนยันตัวตนไปยังอีเมลของคุณแล้ว กรุณาตรวจสอบกล่องข้อความ (รวมถึงจดหมายขยะ) เพื่อเปิดใช้งานบัญชี')
+    
+    redirect(`/login?message=${successMsg}&type=success`)
   }
 
-  // ==========================================
-  // 🖥️ ส่วนที่ 2: ส่วนแสดงผลหน้าจอ (React Component)
-  // ==========================================
   return (
     <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
       <main className="w-full flex flex-col items-center justify-center p-4">
