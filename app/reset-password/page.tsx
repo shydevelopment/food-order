@@ -1,6 +1,6 @@
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
-import { ResetPasswordForm } from '@/components/reset-password-form'
+import { ResetPasswordForm } from '@/components/reset-password-form' 
 
 export default async function ResetPasswordPage() {
   const supabase = await createClient()
@@ -9,7 +9,6 @@ export default async function ResetPasswordPage() {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    // ⚡ ใช้ encodeURIComponent ครอบข้อความภาษาไทย ป้องกัน Invalid character in header
     const errorMessage = encodeURIComponent('เซสชันไม่ถูกต้อง กรุณาใช้ลิงก์กู้คืนรหัสผ่านจากอีเมลของคุณ')
     redirect(`/login?message=${errorMessage}`)
   }

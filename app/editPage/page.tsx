@@ -1,5 +1,6 @@
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import EditProfileForm from '@/components/edit-profile-form'
 
 export default async function EditProfilePage() {
@@ -11,6 +12,9 @@ export default async function EditProfilePage() {
     redirect('/login')
   }
 
+  // ⚡ เช็กสถานะว่ายืนยันอีเมลแล้วหรือยัง
+  const isEmailConfirmed = Boolean(user.email_confirmed_at)
+
   // 2. ดึงข้อมูลโปรไฟล์ปัจจุบัน
   const { data: profile } = await supabase
     .from('profiles')
@@ -18,7 +22,7 @@ export default async function EditProfilePage() {
     .eq('id', user.id)
     .single()
 
-  // 3. ปรับ Server Action ให้ส่งสถานะกลับเป็น Object เพื่อให้เข้าคู่กับฟอร์มระบบสลับแท็บ
+  // 3. Server Action สำหรับอัปเดตโปรไฟล์
   const updateProfile = async (formData: FormData) => {
     'use server'
     const username = formData.get('username') as string
@@ -37,7 +41,6 @@ export default async function EditProfilePage() {
       return { success: false, message: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' }
     }
 
-    // อัปเดตข้อมูลลงฐานข้อมูล
     const { error } = await supabaseServer
       .from('profiles')
       .update({
@@ -51,16 +54,55 @@ export default async function EditProfilePage() {
       return { success: false, message: error.message }
     }
 
-    // ส่ง success กลับไปบอกหน้าบ้าน เพื่อให้หน้าบ้านสั่ง redirect แบบปลอดภัย
     return { success: true }
+  }
+
+  // ⚡ 4. Server Action สำหรับส่งอีเมลยืนยันอีกครั้ง
+  const resendVerificationEmail = async () => {
+    'use server'
+    try {
+      const requestHeaders = await headers()
+      const host = requestHeaders.get('host')
+      const proto = requestHeaders.get('x-forwarded-proto') || 'https'
+      const origin = requestHeaders.get('origin') || `${proto}://${host}`
+
+      const supabaseServer = await createClient()
+      const { data: { user: currentUser } } = await supabaseServer.auth.getUser()
+
+      if (!currentUser?.email) {
+        return { success: false, message: 'ไม่พบข้อมูลอีเมลผู้ใช้งาน' }
+      }
+
+      // สั่งให้ Supabase ส่งอีเมลยืนยันอีกครั้ง
+      const { error } = await supabaseServer.auth.resend({
+        type: 'signup',
+        email: currentUser.email,
+        options: {
+          emailRedirectTo: `${origin}/auth/callback?next=/register-success`,
+        },
+      })
+
+      if (error) {
+        return { success: false, message: error.message }
+      }
+
+      return { success: true, message: 'ส่งลิงก์ยืนยันตัวตนไปยังอีเมลของคุณเรียบร้อยแล้ว!' }
+    } catch (err: any) {
+      return { success: false, message: err.message || 'เกิดข้อผิดพลาดในการส่งอีเมล' }
+    }
   }
 
   return (
     <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
       <main className="w-full flex flex-col items-center justify-center p-4">
         
-        {/* 💡 เอาบรรทัด message={...} ออกแล้ว ทำให้ Type ถูกต้องและเส้นแดงหายไปครับ */}
-        <EditProfileForm profile={profile} email={user.email} updateAction={updateProfile} />
+        <EditProfileForm 
+          profile={profile} 
+          email={user.email} 
+          isEmailConfirmed={isEmailConfirmed}
+          updateAction={updateProfile} 
+          resendAction={resendVerificationEmail}
+        />
 
       </main>
     </div>
