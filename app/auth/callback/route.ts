@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   
-  // รับค่า next ที่เราส่งมาจากหน้า Register
+  // รับค่า next ที่ส่งมาจากหน้า Forgot Password (เช่น /reset-password)
   const next = requestUrl.searchParams.get('next') ?? '/'
 
   if (code) {
@@ -15,15 +15,12 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      // 💡 บังคับ Logout เพื่อให้ผู้ใช้ต้องกรอกรหัสผ่านใหม่ที่หน้า Login
-      await supabase.auth.signOut() 
-
-      // 💡 ใช้ new URL() เพื่อให้ Next.js จัดการต่อ path ให้ถูกต้องเสมอ ป้องกันปัญหา Slash (/) ซ้อนกัน
+      // ⚡ ลบ supabase.auth.signOut() ออก เพื่อเก็บ Session สำหรับหน้า /reset-password
       return NextResponse.redirect(new URL(next, requestUrl.origin))
     }
   }
 
-  // 💡 เข้ารหัสภาษาไทยด้วย encodeURIComponent เพื่อป้องกัน URL Error บน Production
+  // เข้ารหัสภาษาไทยด้วย encodeURIComponent ป้องกัน Header Error
   const errorMessage = encodeURIComponent('ลิงก์ยืนยันตัวตนไม่ถูกต้องหรือหมดอายุแล้ว')
   return NextResponse.redirect(new URL(`/login?message=${errorMessage}`, requestUrl.origin))
 }
