@@ -2,37 +2,40 @@ import Link from 'next/link'
 
 export default function RegisterSuccessPage() {
   return (
-    // Main background: Dark/Zinc
-    <div className="flex flex-col items-center justify-center p-4 min-h-[80vh] bg-zinc-950">
+    <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
       <main className="w-full flex flex-col items-center justify-center p-4">
         
-        {/* Card box: Dark grey background with a thin orange accent border */}
-        <div className="max-w-md w-full bg-zinc-900 p-8 rounded-lg shadow-2xl text-center border border-orange-500/30">
+        {/* Card Container */}
+        <div className="max-w-md w-full bg-neutral-900 border border-neutral-800/80 p-8 rounded-2xl shadow-2xl text-center animate-in fade-in zoom-in-95 duration-300">
           
-          {/* Checkmark Icon: Green background, white text, green glow */}
-          <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+          {/* Glowing Checkmark Icon */}
+          <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-[0_0_30px_rgba(16,185,129,0.2)]">
             ✓
           </div>
 
-          {/* Heading: White text */}
-          <h1 className="text-2xl font-bold text-white mb-2">
-            Verification Successful!
+          {/* Heading */}
+          <h1 className="text-2xl font-black text-white mb-3 tracking-wide">
+            ยืนยันตัวตนสำเร็จ!
           </h1>
-          
-          {/* Description: Light grey text for readability on dark background */}
-          <p className="text-zinc-400 mb-8">
-            Your account has been successfully verified. You can now proceed to the login page to access your account.
+          <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">
+            Verification Successful
           </p>
 
-          {/* Button: Orange background, white text, darkens on hover */}
+          {/* Description */}
+          <p className="text-neutral-400 text-sm mb-8 leading-relaxed">
+            บัญชีของคุณได้รับการยืนยันเรียบร้อยแล้ว ตอนนี้คุณสามารถเข้าสู่ระบบเพื่อเริ่มใช้งานและสั่งอาหารอร่อยๆ ได้เลยครับ 🍔
+          </p>
+
+          {/* Primary Action Button */}
           <Link 
             href="/login" 
-            className="block w-full bg-orange-500 text-white font-semibold text-center py-2 px-4 rounded-md hover:bg-orange-600 transition-colors shadow-lg hover:shadow-orange-500/25"
+            className="block w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-3 px-4 rounded-xl transition-all active:scale-95 shadow-lg shadow-orange-500/20 text-center text-sm cursor-pointer"
           >
-            Go to Login
+            ไปที่หน้าเข้าสู่ระบบ (Go to Login)
           </Link>
 
         </div>
+
       </main>
     </div>
   )
