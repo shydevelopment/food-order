@@ -6,6 +6,7 @@ import { useFormStatus } from 'react-dom'
 
 interface RegisterFormProps {
   signUpAction: (formData: FormData) => Promise<never>
+  googleSignInAction: () => Promise<never>
   message?: string
 }
 
@@ -23,7 +24,7 @@ function SignUpButton() {
   )
 }
 
-export default function RegisterForm({ signUpAction, message }: RegisterFormProps) {
+export default function RegisterForm({ signUpAction, googleSignInAction, message }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isOpeningLogin, setIsOpeningLogin] = useState(false)
 
@@ -124,6 +125,16 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         </div>
 
         <SignUpButton />
+
+        <button
+          type="submit"
+          formAction={googleSignInAction}
+          formNoValidate
+          className="mb-3 flex items-center justify-center gap-2 rounded-md border border-neutral-800 bg-white px-4 py-2.5 text-sm font-bold text-neutral-950 shadow-lg shadow-white/5 transition-all hover:bg-neutral-100 active:scale-95"
+        >
+          <span className="text-base">G</span>
+          Sign up with Google
+        </button>
 
         <Link
           href="/login"

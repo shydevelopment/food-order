@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import EditProfileForm from '@/components/edit-profile-form'
 import { getSiteUrl } from '@/lib/site-url'
+import { getKmutnbStudentUsernameFromEmail, isKmutnbStudentEmail } from '@/lib/roles'
 
 export default async function EditProfilePage() {
   const supabase = await createClient()
@@ -19,15 +20,18 @@ export default async function EditProfilePage() {
   // 2. ดึงข้อมูลโปรไฟล์ปัจจุบัน
   const { data: profile } = await supabase
     .from('profiles')
-    .select('username, full_name, phone, avatar_url')
+    .select('username, full_name, phone, avatar_url, role')
     .eq('id', user.id)
     .single()
+
+  const isStudentAccount = profile?.role === 'student' || isKmutnbStudentEmail(user.email)
+  const studentUsername = getKmutnbStudentUsernameFromEmail(user.email)
 
   // 3. Server Action สำหรับอัปเดตโปรไฟล์
   const updateProfile = async (formData: FormData) => {
     'use server'
-    const username = formData.get('username') as string
-    const displayName = formData.get('displayName') as string
+    const submittedUsername = formData.get('username') as string
+    const submittedDisplayName = formData.get('displayName') as string
     const phone = formData.get('phone') as string
 
     const phoneRegex = /^0[0-9]{8,9}$/
@@ -41,6 +45,20 @@ export default async function EditProfilePage() {
     if (!currentUser) {
       return { success: false, message: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' }
     }
+
+    const { data: currentProfile } = await supabaseServer
+      .from('profiles')
+      .select('username, full_name, role')
+      .eq('id', currentUser.id)
+      .single()
+
+    const currentIsStudent = currentProfile?.role === 'student' || isKmutnbStudentEmail(currentUser.email)
+    const username = currentIsStudent
+      ? getKmutnbStudentUsernameFromEmail(currentUser.email) || currentProfile?.username || submittedUsername
+      : submittedUsername
+    const displayName = currentIsStudent
+      ? currentProfile?.full_name || submittedDisplayName
+      : submittedDisplayName
 
     const { error } = await supabaseServer
       .from('profiles')
@@ -100,6 +118,8 @@ export default async function EditProfilePage() {
           profile={profile} 
           email={user.email} 
           isEmailConfirmed={isEmailConfirmed}
+          isStudentAccount={isStudentAccount}
+          studentUsername={studentUsername}
           updateAction={updateProfile} 
           resendAction={resendVerificationEmail}
         />
