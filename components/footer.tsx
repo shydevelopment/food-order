@@ -15,9 +15,9 @@ export default function Footer() {
 
   return (
     <footer className="bg-black text-gray-500 w-full border-t border-neutral-900 mt-auto">
-      <div className="w-full px-6 py-6 md:py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="w-full px-3 py-5 sm:px-6 md:py-6 flex flex-col lg:flex-row justify-between items-center gap-4">
         
-        <div className="flex flex-col items-center md:items-start">
+        <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
           <span className="text-orange-500 font-black text-lg tracking-wide">shydeveloper.xyz</span>
           <p className="text-[11px] text-gray-600 mt-1">
             © {new Date().getFullYear()} FoodOrder App. All rights reserved.
@@ -27,7 +27,7 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 text-sm font-bold md:gap-4">
+        <div className="grid w-full grid-cols-2 gap-2 text-center text-xs font-bold sm:flex sm:flex-wrap sm:justify-center sm:text-sm lg:w-auto lg:gap-4">
           {links.map((link) => {
             const isActive = pathname === link.href;
 

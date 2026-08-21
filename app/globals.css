@@ -28,12 +28,27 @@ html[data-theme="light"] {
 html {
   background: var(--background);
   color: var(--foreground);
+  max-width: 100%;
 }
 
 body {
   background: transparent;
   color: inherit;
   font-family: Arial, Helvetica, sans-serif;
+  max-width: 100%;
+  overflow-x: hidden;
+  min-width: 320px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 html,
@@ -221,6 +236,22 @@ html[data-theme="light"] .shadow-lg {
 
 .page-fade-in {
   animation: page-fade-in 220ms ease-out both;
+}
+
+.responsive-table {
+  min-width: 760px;
+}
+
+.responsive-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 639px) {
+  .responsive-table {
+    min-width: 680px;
+  }
 }
 
 @keyframes page-fade-in {

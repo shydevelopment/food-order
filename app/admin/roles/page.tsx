@@ -147,8 +147,8 @@ export default function ManageRolesPage() {
         </div>
       ) : (
         <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-center border-collapse border border-neutral-800">
+          <div className="responsive-scroll">
+            <table className="responsive-table w-full text-center border-collapse border border-neutral-800">
               <thead>
                 <tr className="bg-neutral-950 text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
                   <th className="p-4 font-medium text-center border-r border-neutral-800 w-24">รูปภาพ</th>
@@ -253,7 +253,7 @@ export default function ManageRolesPage() {
             .animate-content-out { animation: smoothSlideDown 0.2s ease-in forwards; }
           `}</style>
 
-          <div className={`w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
+          <div className={`max-h-[92vh] w-full max-w-md overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6 ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
             
             {/* หัว Modal */}
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
@@ -308,7 +308,7 @@ export default function ManageRolesPage() {
               </div>
 
               {/* ปุ่มควบคุม */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800 mt-6">
+              <div className="flex flex-col-reverse gap-3 pt-4 border-t border-neutral-800 mt-6 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={handleCloseModal}

@@ -71,19 +71,19 @@ export default function LogoutConfirmButton({
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl sm:p-8">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/10 text-3xl">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-y-auto bg-black/80 px-3 py-4 backdrop-blur-sm sm:px-4">
+          <div className="w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-center shadow-2xl sm:p-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/10 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
               ⚠️
             </div>
 
             <p className="mt-4 text-xs font-black uppercase tracking-wide text-orange-400">{copy.badge}</p>
-            <h2 className="mt-2 text-2xl font-black text-white">{copy.title}</h2>
+            <h2 className="mt-2 text-xl font-black text-white sm:text-2xl">{copy.title}</h2>
             <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-neutral-300">
               {copy.description}
             </p>
 
-            <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-left text-xs font-bold leading-6 text-neutral-300">
+            <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-left text-xs font-bold leading-6 text-neutral-300 sm:mt-6 sm:p-4">
               <p><span className="mr-2 text-amber-400">•</span>ระบบจะออกจากบัญชีนี้ทันทีหลังยืนยัน</p>
               <p><span className="mr-2 text-amber-400">•</span>หากต้องการใช้งานต่อ ต้องเข้าสู่ระบบใหม่อีกครั้ง</p>
             </div>

@@ -99,19 +99,19 @@ export default function RestaurantSidebar() {
   }, [supabase]);
 
   return (
-    <aside className="w-full md:w-64 bg-neutral-900 border-b md:border-b-0 md:border-r border-neutral-800 p-4 md:p-6 flex flex-col justify-between shrink-0 h-auto md:min-h-[calc(100vh-68px)] relative">
+    <aside className="w-full lg:w-72 bg-neutral-900 border-b lg:border-b-0 lg:border-r border-neutral-800 p-4 lg:p-6 flex flex-col justify-between shrink-0 h-auto lg:min-h-[calc(100vh-68px)] relative">
       <div>
-        <div className="flex items-center justify-between pb-3 md:pb-4 border-b border-neutral-800">
-          <div>
-            <h1 className="text-lg md:text-xl font-black text-orange-500 tracking-wide uppercase">
+        <div className="flex items-center justify-between gap-3 pb-3 lg:pb-4 border-b border-neutral-800">
+          <div className="min-w-0">
+            <h1 className="text-lg lg:text-xl font-black text-orange-500 tracking-wide uppercase">
               Restaurant Workspace
             </h1>
-            <p className="text-[10px] md:text-xs text-gray-500">ORDER MANAGEMENT</p>
+            <p className="text-[10px] lg:text-xs text-gray-500">ORDER MANAGEMENT</p>
           </div>
 
           <button
             onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
+            className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
             aria-label="Toggle Restaurant Menu"
           >
             <span>{isMobileOpen ? 'ปิด' : 'เมนู'}</span>
@@ -119,11 +119,11 @@ export default function RestaurantSidebar() {
         </div>
 
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out md:block ${
-            isMobileOpen ? 'grid-rows-[1fr] opacity-100 pt-4' : 'grid-rows-[0fr] opacity-0 md:opacity-100 md:pt-4'
+          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out lg:block ${
+            isMobileOpen ? 'grid-rows-[1fr] opacity-100 pt-4' : 'grid-rows-[0fr] opacity-0 lg:opacity-100 lg:pt-4'
           }`}
         >
-          <div className="overflow-hidden md:overflow-visible">
+          <div className="overflow-hidden lg:overflow-visible">
             <div className="mb-6 rounded-xl border border-orange-500/20 bg-orange-500/5 p-3">
               <div className="flex items-center gap-3">
                 {profile?.avatar_url ? (

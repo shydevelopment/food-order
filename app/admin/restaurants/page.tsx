@@ -311,8 +311,8 @@ export default function AdminRestaurantsPage() {
         </div>
       ) : (
         <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-neutral-800 text-center">
+          <div className="responsive-scroll">
+            <table className="responsive-table w-full border-collapse border border-neutral-800 text-center">
               <thead>
                 <tr className="bg-neutral-950 text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
                   <th className="p-4 font-medium text-center border-r border-neutral-800 w-24">รูปภาพ</th>
@@ -473,7 +473,7 @@ export default function AdminRestaurantsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เวลาเปิดทำการ</label>
                   <input 
@@ -534,7 +534,7 @@ export default function AdminRestaurantsPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-neutral-800 mt-6">
+              <div className="flex flex-col gap-3 pt-4 border-t border-neutral-800 mt-6 sm:flex-row sm:items-center sm:justify-between">
                 {modalMode === 'edit' ? (
                   <button
                     type="button"
@@ -548,7 +548,7 @@ export default function AdminRestaurantsPage() {
                   <div></div> 
                 )}
 
-                <div className="flex gap-3">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row">
                   <button
                     type="button"
                     onClick={handleCloseModal}

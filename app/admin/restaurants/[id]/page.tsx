@@ -353,7 +353,7 @@ export default function RestaurantDetailPage() {
   if (!restaurant) return <div className="p-8 text-red-400 bg-neutral-950 min-h-screen">⚠️ ไม่พบข้อมูลร้านอาหาร</div>;
 
   return (
-    <div className="p-6 md:p-10 bg-neutral-950 min-h-screen text-white relative">
+    <div className="bg-neutral-950 min-h-screen text-white relative">
       
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <Link href="/admin/orders" className="text-xs font-bold text-neutral-500 hover:text-orange-500 transition-colors uppercase tracking-wider">
@@ -362,10 +362,10 @@ export default function RestaurantDetailPage() {
       </div>
 
       {/* 🏪 ส่วนแสดงข้อมูลร้าน */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 shadow-xl relative group">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 sm:p-6 mb-8 flex flex-col lg:flex-row gap-5 lg:gap-6 shadow-xl relative group">
         
         {/* 🔥 ปุ่มสำหรับแก้ไขข้อมูลร้านอาหาร & ปุ่มดูสมาชิกประจำร้าน */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className="static mb-2 flex flex-wrap items-center gap-2 lg:absolute lg:top-4 lg:right-4 lg:mb-0">
           <span className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide ${
             accessLevel === 'owner'
               ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
@@ -392,11 +392,11 @@ export default function RestaurantDetailPage() {
         </div>
 
         {restaurant.image_url ? (
-          <img src={restaurant.image_url} alt={restaurant.name} className="w-44 h-44 object-cover rounded-xl border border-neutral-800 shadow-md shrink-0 bg-neutral-950" />
+          <img src={restaurant.image_url} alt={restaurant.name} className="h-44 w-full object-cover rounded-xl border border-neutral-800 shadow-md shrink-0 bg-neutral-950 sm:w-44" />
         ) : (
-          <div className="w-44 h-44 bg-neutral-950 rounded-xl flex items-center justify-center border border-neutral-800 text-neutral-600 shrink-0">🏪 No Image</div>
+          <div className="h-44 w-full bg-neutral-950 rounded-xl flex items-center justify-center border border-neutral-800 text-neutral-600 shrink-0 sm:w-44">🏪 No Image</div>
         )}
-        <div className="flex-1 w-full pr-0 md:pr-48">
+        <div className="flex-1 w-full min-w-0 pr-0 lg:pr-48">
           <div className="flex flex-wrap items-center gap-3 mb-2">
             <h1 className="text-2xl font-black text-white">{restaurant.name}</h1>
             <span className={`px-2 py-0.5 text-[9px] font-black rounded uppercase tracking-wider border ${
@@ -420,12 +420,12 @@ export default function RestaurantDetailPage() {
 
       {/* 🍽️ ส่วนจัดการเมนูอาหาร */}
       <div>
-        <div className="flex justify-between items-center mb-6 border-b border-neutral-800 pb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6 border-b border-neutral-800 pb-4">
           <div>
             <h2 className="text-lg font-black text-orange-500 uppercase tracking-wide">Menu Management</h2>
             <p className="text-xs text-neutral-500 mt-0.5">รายการอาหารเฉพาะของร้านนี้ ({menus.length})</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button 
               onClick={openMembersModal}
               className="bg-neutral-800 hover:bg-neutral-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition-all border border-neutral-700 cursor-pointer"
@@ -446,7 +446,7 @@ export default function RestaurantDetailPage() {
         {menus.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {menus.map((menu) => (
-              <div key={menu.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex gap-4 hover:border-neutral-700 transition-all relative group shadow-md">
+              <div key={menu.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex flex-col gap-4 hover:border-neutral-700 transition-all relative group shadow-md sm:flex-row">
                 {canManage && (
                   <button 
                     disabled={actionLoading}
@@ -457,11 +457,11 @@ export default function RestaurantDetailPage() {
                   </button>
                 )}
                 {menu.image_url ? (
-                  <img src={menu.image_url} alt={menu.name} className="w-20 h-20 rounded-lg object-cover bg-neutral-950 border border-neutral-800/80 shrink-0" />
+                  <img src={menu.image_url} alt={menu.name} className="h-28 w-full rounded-lg object-cover bg-neutral-950 border border-neutral-800/80 shrink-0 sm:h-20 sm:w-20" />
                 ) : (
-                  <div className="w-20 h-20 rounded-lg bg-neutral-950 flex items-center justify-center text-[10px] text-neutral-600 font-bold border border-neutral-800 shrink-0">🍽️ NO PIC</div>
+                  <div className="h-28 w-full rounded-lg bg-neutral-950 flex items-center justify-center text-[10px] text-neutral-600 font-bold border border-neutral-800 shrink-0 sm:h-20 sm:w-20">🍽️ NO PIC</div>
                 )}
-                <div className="flex flex-col justify-between flex-1 min-w-0 pr-6">
+                <div className="flex flex-col justify-between flex-1 min-w-0 pr-0 sm:pr-6">
                   <div>
                     <h3 className="font-bold text-white text-sm truncate">{menu.name}</h3>
                     <p className="text-xs text-neutral-500 line-clamp-1 mt-0.5">{menu.description || 'ไม่มีรายละเอียด'}</p>
@@ -477,7 +477,7 @@ export default function RestaurantDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-neutral-900/40 border border-neutral-800 border-dashed rounded-2xl p-16 text-center">
+          <div className="bg-neutral-900/40 border border-neutral-800 border-dashed rounded-2xl p-8 text-center sm:p-16">
             <span className="text-4xl block mb-3">🍽️</span>
             <h4 className="text-sm font-bold text-neutral-400">ยังไม่มีเมนูอาหารในร้านนี้</h4>
           </div>
@@ -487,10 +487,10 @@ export default function RestaurantDetailPage() {
       {/* 👥 POPUP MODAL: รายชื่อสมาชิก / เจ้าของ / พนักงานในร้าน */}
       {isMembersModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-2xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-2xl rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col max-h-[85vh]">
             
             {/* Header Modal */}
-            <div className="flex justify-between items-center pb-4 border-b border-neutral-800 shrink-0">
+            <div className="flex items-start justify-between gap-3 pb-4 border-b border-neutral-800 shrink-0">
               <div>
                 <h3 className="text-lg font-black text-orange-500 uppercase tracking-wide flex items-center gap-2">
                   👥 รายชื่อสมาชิกประจำร้าน (Restaurant Staff / Members)
@@ -546,7 +546,7 @@ export default function RestaurantDetailPage() {
                   return (
                     <div 
                       key={member.id} 
-                      className="p-4 bg-neutral-950 border border-neutral-800 rounded-xl flex items-center justify-between gap-4 hover:border-neutral-700 transition-all"
+                      className="p-4 bg-neutral-950 border border-neutral-800 rounded-xl flex flex-col gap-4 hover:border-neutral-700 transition-all sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         {member.avatar_url ? (
@@ -572,7 +572,7 @@ export default function RestaurantDetailPage() {
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0">
+                      <div className="text-left shrink-0 sm:text-right">
                         <span className="text-xs font-mono text-neutral-400 block">
                           📞 {member.phone || 'ไม่ระบุเบอร์โทร'}
                         </span>
@@ -598,7 +598,7 @@ export default function RestaurantDetailPage() {
             </div>
 
             {/* Footer Modal */}
-            <div className="pt-4 border-t border-neutral-800 flex justify-between items-center text-xs text-neutral-500 shrink-0">
+            <div className="pt-4 border-t border-neutral-800 flex flex-col gap-3 text-xs text-neutral-500 shrink-0 sm:flex-row sm:items-center sm:justify-between">
               <span>จำนวนสมาชิกทั้งหมด {members.length} คน</span>
               <button
                 onClick={() => setIsMembersModalOpen(false)}
@@ -615,7 +615,7 @@ export default function RestaurantDetailPage() {
       {/* ✏️ POPUP MODAL: แก้ไขข้อมูลร้านอาหาร */}
       {isEditRestModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl">
+          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-lg rounded-2xl p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-neutral-800">
               <h3 className="text-base font-black text-orange-500 uppercase tracking-wide">✏️ แก้ไขข้อมูลร้านอาหาร</h3>
               <button onClick={() => setIsEditRestModalOpen(false)} className="text-neutral-500 hover:text-white text-sm font-bold">✕</button>
@@ -627,7 +627,7 @@ export default function RestaurantDetailPage() {
                 <input type="text" required value={editRestData.name} onChange={(e) => setEditRestData({...editRestData, name: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">เบอร์โทรศัพท์</label>
                   <input type="text" value={editRestData.phone} onChange={(e) => setEditRestData({...editRestData, phone: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
@@ -638,7 +638,7 @@ export default function RestaurantDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">เวลาเปิดบริการ</label>
                   <input type="time" step="1" required value={editRestData.open_time} onChange={(e) => setEditRestData({...editRestData, open_time: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
@@ -664,7 +664,7 @@ export default function RestaurantDetailPage() {
                 <textarea rows={2} value={editRestData.address} onChange={(e) => setEditRestData({...editRestData, address: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 resize-none" />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2 border-t border-neutral-800 mt-4">
+              <div className="flex flex-col-reverse gap-3 pt-2 border-t border-neutral-800 mt-4 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => setIsEditRestModalOpen(false)} className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-4 py-2 rounded-lg text-xs font-bold">ยกเลิก</button>
                 <button type="submit" disabled={actionLoading} className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider">
                   {actionLoading ? 'กำลังบันทึก...' : '💾 บันทึกการเปลี่ยนแปลง'}
@@ -678,7 +678,7 @@ export default function RestaurantDetailPage() {
       {/* ✨ POPUP MODAL: เพิ่มเมนูอาหาร */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+          <div className="bg-neutral-900 border border-neutral-800 w-full max-w-md rounded-2xl p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-neutral-800">
               <h3 className="text-base font-black text-orange-500 uppercase tracking-wide">✨ เพิ่มเมนูอาหารใหม่</h3>
               <button onClick={() => { setIsModalOpen(false); setImageFile(null); }} className="text-neutral-500 hover:text-white text-sm font-bold">✕</button>
@@ -688,7 +688,7 @@ export default function RestaurantDetailPage() {
                 <label className="block text-xs font-bold text-neutral-400 mb-1">ชื่อเมนูอาหาร *</label>
                 <input type="text" required placeholder="เช่น ข้าวกะเพราหมูกรอบไข่ดาว" value={newMenu.name} onChange={(e) => setNewMenu({...newMenu, name: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">ราคา (บาท) *</label>
                   <input type="number" required min="0" step="0.01" placeholder="50" value={newMenu.price} onChange={(e) => setNewMenu({...newMenu, price: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
@@ -709,7 +709,7 @@ export default function RestaurantDetailPage() {
                 <label className="block text-xs font-bold text-neutral-400 mb-1">รายละเอียดเมนูย่อย</label>
                 <textarea rows={2} placeholder="คำอธิบายสั้นๆ..." value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 resize-none" />
               </div>
-              <div className="flex justify-end gap-3 pt-2 border-t border-neutral-800 mt-4">
+              <div className="flex flex-col-reverse gap-3 pt-2 border-t border-neutral-800 mt-4 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => { setIsModalOpen(false); setImageFile(null); }} className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-4 py-2 rounded-lg text-xs font-bold">ยกเลิก</button>
                 <button type="submit" disabled={actionLoading} className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider disabled:bg-neutral-700 disabled:text-neutral-500">
                   {actionLoading ? 'กำลังอัปโหลด...' : '💾 บันทึกข้อมูล'}

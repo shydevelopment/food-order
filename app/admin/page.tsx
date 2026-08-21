@@ -168,22 +168,22 @@ export default function AdminDashboardHome() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* ส่วนหัวของหน้าจอ */}
       <div>
-        <h2 className="text-2xl font-black text-white uppercase tracking-wide">
+        <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-2xl">
           📊 ภาพรวมระบบ (Dashboard)
         </h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="mt-1 text-xs text-gray-400 sm:text-sm">
           ยินดีต้อนรับเข้าสู่ระบบจัดการ Food Order KMUTNB
         </p>
       </div>
 
       {/* การ์ดสรุปข้อมูลเด่นๆ */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl shadow-xl">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-6">
+        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">ผู้ใช้งานในระบบทั้งหมด</div>
-          <div className="text-3xl font-black text-white mt-2">
+          <div className="text-2xl font-black text-white mt-2 sm:text-3xl">
             {loadingStats ? (
               <span className="text-sm text-orange-500 animate-pulse font-normal">กำลังโหลด...</span>
             ) : (
@@ -194,9 +194,9 @@ export default function AdminDashboardHome() {
           </div>
         </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl shadow-xl">
+        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">ร้านอาหารพาร์ทเนอร์</div>
-          <div className="text-3xl font-black text-orange-500 mt-2">
+          <div className="text-2xl font-black text-orange-500 mt-2 sm:text-3xl">
             {loadingStats ? (
               <span className="text-sm text-orange-500 animate-pulse font-normal">กำลังโหลด...</span>
             ) : (
@@ -207,9 +207,9 @@ export default function AdminDashboardHome() {
           </div>
         </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl shadow-xl">
+        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">ออร์เดอร์วันนี้</div>
-          <div className="text-3xl font-black text-emerald-400 mt-2">
+          <div className="text-2xl font-black text-emerald-400 mt-2 sm:text-3xl">
             {loadingStats ? (
               <span className="text-sm text-orange-500 animate-pulse font-normal">กำลังโหลด...</span>
             ) : (
@@ -222,14 +222,14 @@ export default function AdminDashboardHome() {
       </div>
 
       {/* 📜 ส่วนแสดง Activity Log */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-800">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-black text-white uppercase tracking-wide">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6">
+        <div className="mb-5 flex flex-col gap-3 border-b border-neutral-800 pb-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <h3 className="text-base font-black text-white uppercase tracking-wide sm:text-lg">
                 📜 ประวัติกิจกรรมล่าสุด (Activity Log)
               </h3>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+              <span className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                 isRealtimeActive 
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
                   : 'bg-neutral-800 text-gray-400 border-neutral-700'
@@ -238,7 +238,7 @@ export default function AdminDashboardHome() {
                 {isRealtimeActive ? 'Real-time Live' : 'Connecting...'}
               </span>
             </div>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="mt-1 text-xs text-gray-400">
               ติดตามเหตุการณ์และกิจกรรมสำคัญภายในระบบแบบ Real-time
             </p>
           </div>
@@ -246,7 +246,7 @@ export default function AdminDashboardHome() {
           <button
             type="button"
             onClick={handleRealtimeUpdate}
-            className="text-xs text-orange-400 hover:text-orange-300 font-bold bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+            className="w-full text-xs text-orange-400 hover:text-orange-300 font-bold bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 px-3 py-2 rounded-lg transition-all cursor-pointer sm:w-auto sm:py-1.5"
           >
             🔄 รีเฟรช
           </button>

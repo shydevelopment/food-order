@@ -24,19 +24,17 @@ function SignUpButton() {
 }
 
 export default function RegisterForm({ signUpAction, message }: RegisterFormProps) {
-  // 💡 ปรับเหลือ State เดียวสำหรับควบคุมทั้ง 2 ช่องพร้อมกัน
   const [showPassword, setShowPassword] = useState(false)
   const [isOpeningLogin, setIsOpeningLogin] = useState(false)
 
   return (
-    <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2 mt-12 mx-auto text-white">
+    <div className="flex-1 flex flex-col w-full px-4 sm:max-w-md justify-center gap-2 mt-8 sm:mt-12 mx-auto text-white">
       <form action={signUpAction} className="animate-in flex-1 flex flex-col w-full justify-center gap-1">
         
         <h2 className="text-2xl font-black text-center mb-6 text-orange-500 tracking-wide">
           CREATE ACCOUNT
         </h2>
 
-        {/* ช่องกรอก Username */}
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="username">
           Username
         </label>
@@ -48,7 +46,6 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           required
         />
 
-        {/* ช่องกรอก Display Name */}
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="displayName">
           Display Name
         </label>
@@ -60,7 +57,6 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           required
         />
 
-        {/* ช่องกรอกเบอร์โทรศัพท์ */}
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="phone">
           Phone Number (เบอร์โทรศัพท์)
         </label>
@@ -74,7 +70,6 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           required
         />
 
-        {/* ช่องกรอก Email */}
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="email">
           Email
         </label>
@@ -88,52 +83,48 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           required
         />
 
-        {/* ช่องกรอก Password */}
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="password">
           Password
         </label>
         <div className="relative mb-4">
           <input
             className="w-full rounded-md pl-4 pr-14 py-2 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
-            type={showPassword ? "text" : "password"} // 💡 ใช้ตัวแปร showPassword
+            type={showPassword ? "text" : "password"}
             name="password"
             placeholder="••••••••"
             required
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)} // 💡 กดสลับแล้วจะเปลี่ยนสถานะพร้อมกันทั้งคู่
+            onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black tracking-widest text-neutral-500 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer select-none"
           >
             {showPassword ? "HIDE" : "SHOW"}
           </button>
         </div>
 
-        {/* ช่องกรอก Confirm Password */}
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="confirmPassword">
           Confirm Password
         </label>
         <div className="relative mb-6">
           <input
             className="w-full rounded-md pl-4 pr-14 py-2 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
-            type={showPassword ? "text" : "password"} // 💡 เปลี่ยนมาผูกกับตัวแปร showPassword ตัวเดียวกัน
+            type={showPassword ? "text" : "password"}
             name="confirmPassword"
             placeholder="••••••••"
             required
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)} // 💡 ผูกฟังก์ชันเข้าด้วยกัน กดตรงนี้อีกช่องก็เปลี่ยน
+            onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black tracking-widest text-neutral-500 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer select-none"
           >
             {showPassword ? "HIDE" : "SHOW"}
           </button>
         </div>
 
-        {/* ปุ่มหลัก Sign Up */}
         <SignUpButton />
 
-        {/* ปุ่มรอง Sign In */}
         <Link
           href="/login"
           onClick={() => setIsOpeningLogin(true)}
@@ -142,7 +133,6 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           {isOpeningLogin ? 'กำลังเปิดหน้า Login...' : 'Sign In'}
         </Link>
 
-        {/* แสดงข้อความแจ้งเตือน Error */}
         {message && (
           <p className="mt-4 p-4 bg-red-950/20 border border-red-900/40 text-center text-red-400 rounded-md text-sm font-medium">
             ⚠️ {message}

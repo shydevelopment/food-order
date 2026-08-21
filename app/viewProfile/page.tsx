@@ -86,7 +86,7 @@ export default async function ViewProfilePage() {
 
               {/* ชื่อ และ Username */}
               <h1 className="text-xl font-black text-white truncate max-w-full">{fullName}</h1>
-              <p className="text-xs text-orange-400 font-medium mb-2">@{username}</p>
+              <p className="max-w-full truncate text-xs text-orange-400 font-medium mb-2">@{username}</p>
 
               {/* 🎨 Role Badge ฝั่งซ้าย (อ้างอิงสีจาก Navbar) */}
               <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${getRoleStyle(userRole)}`}>
@@ -110,7 +110,7 @@ export default async function ViewProfilePage() {
           </div>
 
           {/* 👉 ฝั่งขวา: รายละเอียดโปรไฟล์ */}
-          <div className="flex-1 p-6 flex flex-col justify-between bg-neutral-900">
+          <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between bg-neutral-900 min-w-0">
             <div>
               <h2 className="text-lg font-black text-neutral-200 border-b border-neutral-800/80 pb-3 mb-4">
                 ข้อมูลโปรไฟล์ (Profile Details)
@@ -118,14 +118,14 @@ export default async function ViewProfilePage() {
 
               <div className="space-y-3 bg-neutral-950/60 p-4 rounded-xl border border-neutral-800/80 text-sm">
                 
-                <div className="flex justify-between items-center py-1 border-b border-neutral-800/60">
+                <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">อีเมล</span>
-                  <span className="text-neutral-200 font-medium text-xs truncate max-w-[180px]">
+                  <span className="text-neutral-200 font-medium text-xs break-all sm:max-w-[220px] sm:truncate">
                     {email}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center py-1 border-b border-neutral-800/60">
+                <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">เบอร์โทรศัพท์</span>
                   <span className="text-neutral-200 font-medium text-xs">
                     {phone}
@@ -133,21 +133,21 @@ export default async function ViewProfilePage() {
                 </div>
 
                 {/* 🎨 สิทธิ์การใช้งาน (Role) ในตาราง (อ้างอิงสีจาก Navbar) */}
-                <div className="flex justify-between items-center py-1 border-b border-neutral-800/60">
+                <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">สิทธิ์การใช้งาน (Role)</span>
                   <span className={`px-2.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider border ${getRoleStyle(userRole)}`}>
                     {userRole}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center py-1 border-b border-neutral-800/60">
+                <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">สถานะอีเมล</span>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${isEmailConfirmed ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' : 'bg-amber-950/60 text-amber-400 border border-amber-800/50'}`}>
                     {isEmailConfirmed ? '✓ ยืนยันเรียบร้อย' : '⚠️ ยังไม่ได้ยืนยัน'}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center py-1">
+                <div className="flex flex-col gap-1 py-1 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">สมาชิกเมื่อ</span>
                   <span className="text-neutral-300 font-medium text-xs">{createdAt}</span>
                 </div>

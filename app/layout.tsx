@@ -48,7 +48,7 @@ export default function RootLayout({
         <Navbar /> 
         
         {/* เนื้อหาด้านล่างขยายตัวเพื่อดัน Footer ลงไป */}
-        <main className=" w-full max-w-7xl mx-auto px-6 py-4">
+        <main className="w-full min-w-0 flex-1 max-w-7xl mx-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
           <PageTransition>{children}</PageTransition>
         </main>
 

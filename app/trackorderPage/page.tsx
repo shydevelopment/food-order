@@ -182,7 +182,7 @@ export default async function TrackOrderPage({
                       </p>
                     </div>
 
-                    <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-right">
+                    <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-left sm:text-right">
                       <p className="text-xs text-neutral-500">ยอดรวม</p>
                       <p className="text-xl font-black text-amber-400">
                         ฿{Number(order.total_price).toLocaleString('th-TH')}
@@ -201,8 +201,8 @@ export default async function TrackOrderPage({
                       const menu = menusById.get(item.menu_id)
 
                       return (
-                        <div key={item.id} className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-                          <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
+                        <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3 sm:flex-row sm:items-center">
+                          <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg bg-neutral-800 sm:h-14 sm:w-14">
                             <img
                               src={menu?.image_url || '/placeholder.jpg'}
                               alt={menu?.name || 'menu'}
@@ -213,7 +213,7 @@ export default async function TrackOrderPage({
                             <p className="truncate text-sm font-bold text-white">{menu?.name || 'เมนูที่ถูกลบแล้ว'}</p>
                             <p className="mt-0.5 text-xs text-neutral-500">จำนวน {item.quantity}</p>
                           </div>
-                          <p className="text-sm font-black text-neutral-300">
+                          <p className="text-sm font-black text-neutral-300 sm:text-right">
                             ฿{(Number(item.price) * item.quantity).toLocaleString('th-TH')}
                           </p>
                         </div>

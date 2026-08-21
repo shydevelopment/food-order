@@ -36,7 +36,7 @@ export default function CopyLineButton({ lineId }: CopyLineButtonProps) {
     <button
       type="button"
       onClick={copyLineId}
-      className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-4 text-left font-black text-emerald-400 transition-colors hover:bg-emerald-500 hover:text-black"
+      className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-4 text-left font-black text-emerald-400 transition-colors hover:bg-emerald-500 hover:text-black sm:px-5"
     >
       <span className="block text-sm">{copied ? 'คัดลอกแล้ว' : 'คัดลอกไอดี LINE'}</span>
       <span className="mt-1 block text-xs opacity-80">{lineId}</span>

@@ -340,7 +340,7 @@ export default function RestaurantAccessPage() {
       )}
 
       <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr_180px_auto] lg:items-end">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr_180px_auto] xl:items-end">
           <div>
             <SearchableSelect
               label="ร้านอาหาร"
@@ -394,8 +394,8 @@ export default function RestaurantAccessPage() {
       </form>
 
       <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-center text-sm">
+        <div className="responsive-scroll">
+          <table className="responsive-table w-full border-collapse text-center text-sm">
             <thead>
               <tr className="border-b border-neutral-800 bg-neutral-950 text-xs uppercase tracking-wide text-neutral-400">
                 <th className="border-r border-neutral-800 p-4">ร้านอาหาร</th>

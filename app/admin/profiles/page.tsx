@@ -246,8 +246,8 @@ export default function AdminUsersPage() {
         </div>
       ) : (
         <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-neutral-800 text-center">
+          <div className="responsive-scroll">
+            <table className="responsive-table w-full border-collapse border border-neutral-800 text-center">
               <thead>
                 <tr className="bg-neutral-950 text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
                   <th className="p-4 font-medium text-center border-r border-neutral-800 w-24">รูปภาพ</th>
@@ -325,7 +325,7 @@ export default function AdminUsersPage() {
       {/* ========================================== */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl sm:p-6">
             <div className="mb-4 flex items-center justify-between border-b border-neutral-800 pb-2">
               <div>
                 <h3 className="text-lg font-black text-white">➕ เพิ่มบัญชีผู้ใช้งาน</h3>
@@ -436,7 +436,7 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 border-t border-neutral-800 pt-4">
+              <div className="mt-6 flex flex-col-reverse gap-3 border-t border-neutral-800 pt-4 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={handleCloseAddModal}
@@ -488,7 +488,7 @@ export default function AdminUsersPage() {
             .animate-content-out { animation: smoothSlideDown 0.2s ease-in forwards; }
           `}</style>
 
-          <div className={`w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
+          <div className={`max-h-[92vh] w-full max-w-md overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6 ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
               <h3 className="text-lg font-black text-white">✏️ แก้ไขข้อมูลโปรไฟล์</h3>
               <button 
@@ -570,7 +570,7 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800 mt-6">
+              <div className="flex flex-col-reverse gap-3 pt-4 border-t border-neutral-800 mt-6 sm:flex-row sm:justify-end">
                 <button
                   type="button"
                   onClick={handleCloseModal}

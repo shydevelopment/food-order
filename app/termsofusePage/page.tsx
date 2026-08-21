@@ -27,19 +27,19 @@ export default function TermsOfUsePage() {
   ]
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 text-white">
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl md:p-8">
+    <div className="mx-auto max-w-4xl px-0 py-4 text-white sm:px-4 sm:py-12">
+      <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl sm:p-6 md:p-8">
         <p className="text-sm font-bold uppercase tracking-wide text-amber-400">Terms of Use</p>
-        <h1 className="mt-3 text-3xl font-black md:text-4xl">เงื่อนไขการใช้งาน</h1>
+        <h1 className="mt-3 text-2xl font-black sm:text-3xl md:text-4xl">เงื่อนไขการใช้งาน</h1>
         <p className="mt-4 text-sm leading-7 text-neutral-400">
           ข้อกำหนดสำหรับการใช้งานเว็บไซต์ Food Order KMUTNB เพื่อให้การดูร้านอาหาร การสั่งอาหาร
           และการจัดการระบบเป็นไปอย่างถูกต้องและปลอดภัย
         </p>
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-6 space-y-3 md:mt-8 md:space-y-4">
           {sections.map((section) => (
-            <article key={section.title} className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-              <h2 className="text-lg font-black text-white">{section.title}</h2>
+            <article key={section.title} className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 sm:p-5">
+              <h2 className="text-base font-black text-white sm:text-lg">{section.title}</h2>
               <p className="mt-2 text-sm leading-7 text-neutral-400">{section.body}</p>
             </article>
           ))}
