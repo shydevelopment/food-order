@@ -1,69 +1,76 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
 
-export default function Sidebar() {
-  const pathname = usePathname();
-  const [adminProfile, setAdminProfile] = useState<any>(null);
-  
-  // State สำหรับเก็บข้อมูลร้านอาหาร และสถานะเปิด/ปิด Dropdown ร้านอาหาร
-  const [restaurants, setRestaurants] = useState<any[]>([]);
-  const [isRestaurantsOpen, setIsRestaurantsOpen] = useState(false);
+interface AdminProfile {
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+}
 
-  // 📌 State สำหรับเปิด-ปิด เมนู Sidebar บนมือถือ
+interface RestaurantSummary {
+  id: string;
+  name: string;
+}
+
+export default function AdminSidebar() {
+  const pathname = usePathname();
+  const [adminProfile, setAdminProfile] = useState<AdminProfile | null>(null);
+  const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([]);
+  const [isRestaurantsOpen, setIsRestaurantsOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
-  // Auto-open dropdown ร้านอาหาร ถ้า pathname ปัจจุบันอยู่ในหมวดหมู่จัดการร้านอาหาร
   useEffect(() => {
     if (pathname.startsWith('/admin/restaurants')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsRestaurantsOpen(true);
     }
   }, [pathname]);
 
-  // 📌 ปิด Sidebar บนมือถือให้อัตโนมัติ เมื่อมีการเปลี่ยนหน้า
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    const fetchCurrentAdmin = async () => {
+    const fetchAdminData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
+      if (!user) return;
+
+      const [{ data: profile }, { data: restaurantRows }] = await Promise.all([
+        supabase
           .from('profiles')
           .select('username, full_name, avatar_url, role')
           .eq('id', user.id)
-          .single();
-        if (data) setAdminProfile(data);
-      }
+          .single(),
+        supabase
+          .from('restaurants')
+          .select('id, name')
+          .order('created_at', { ascending: false }),
+      ]);
+
+      if (profile) setAdminProfile(profile);
+      if (restaurantRows) setRestaurants(restaurantRows);
     };
 
-    const fetchRestaurants = async () => {
-      const { data } = await supabase
-        .from('restaurants')
-        .select('id, name')
-        .order('created_at', { ascending: false });
-      
-      if (data) setRestaurants(data);
-    };
-
-    fetchCurrentAdmin();
-    fetchRestaurants();
+    fetchAdminData();
   }, [supabase]);
 
   return (
     <aside className="w-full md:w-64 bg-neutral-900 border-b md:border-b-0 md:border-r border-neutral-800 p-4 md:p-6 flex flex-col justify-between shrink-0 h-auto md:min-h-[calc(100vh-68px)] relative">
-      
       <div>
-        {/* --- 📌 HEADER BAR (บนมือถือจะมีปุ่ม Toggle สวิตช์เมนู) --- */}
         <div className="flex items-center justify-between pb-3 md:pb-4 border-b border-neutral-800">
           <div>
             <h1 className="text-lg md:text-xl font-black text-orange-500 tracking-wide uppercase">
@@ -72,25 +79,21 @@ export default function Sidebar() {
             <p className="text-[10px] md:text-xs text-gray-500">FOOD ORDER KMUTNB</p>
           </div>
 
-          {/* ปุ่ม Hamburger Toggle แสดงเฉพาะบนจอมือถือ (md:hidden) */}
           <button
             onClick={() => setIsMobileOpen(!isMobileOpen)}
             className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
             aria-label="Toggle Admin Menu"
           >
-            <span>{isMobileOpen ? '❌ ปิด' : '📊 เมนู'}</span>
+            <span>{isMobileOpen ? 'ปิด' : 'เมนู'}</span>
           </button>
         </div>
 
-        {/* --- 📌 เมนูหลัก (บนมือถือใช้ CSS Grid สไลด์เปิด-ปิด / บนคอมแสดงตลอด) --- */}
-        <div 
+        <div
           className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out md:block ${
             isMobileOpen ? 'grid-rows-[1fr] opacity-100 pt-4' : 'grid-rows-[0fr] opacity-0 md:opacity-100 md:pt-4'
           }`}
         >
           <div className="overflow-hidden md:overflow-visible">
-            
-            {/* ส่วนแสดงผลโปรไฟล์ผู้ใช้งาน Admin */}
             <div className="mb-6 p-3 bg-neutral-950 rounded-lg border border-neutral-800 flex items-center gap-3">
               {adminProfile?.avatar_url ? (
                 <img
@@ -108,15 +111,12 @@ export default function Sidebar() {
                   {adminProfile?.full_name || adminProfile?.username || 'Admin'}
                 </p>
                 <span className="inline-block text-[9px] font-black px-1.5 py-0.2 bg-red-500/20 text-red-500 border border-red-500/40 rounded uppercase tracking-wide mt-0.5">
-                  {adminProfile?.role || 'admin'}
+                  ADMIN
                 </span>
               </div>
             </div>
 
-            {/* รายการเมนูลิงก์เปลี่ยนหน้า */}
             <nav className="space-y-2">
-              
-              {/* 1. หน้าแรกแอดมิน */}
               <Link
                 href="/admin"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
@@ -128,7 +128,17 @@ export default function Sidebar() {
                 <span>📊</span> หน้าแรกแอดมิน
               </Link>
 
-              {/* 2. ข้อมูลผู้ใช้งาน */}
+              <Link
+                href="/admin/orders"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
+                  pathname === '/admin/orders'
+                    ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <span>🧾</span> รับออเดอร์
+              </Link>
+
               <Link
                 href="/admin/profiles"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
@@ -140,7 +150,6 @@ export default function Sidebar() {
                 <span>👥</span> ข้อมูลผู้ใช้งาน
               </Link>
 
-              {/* 3. จัดการ Role & สิทธิ์ */}
               <Link
                 href="/admin/roles"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
@@ -152,7 +161,17 @@ export default function Sidebar() {
                 <span>🔑</span> จัดการ Role & สิทธิ์
               </Link>
 
-              {/* 4. เปลี่ยนรหัสผ่านผู้ใช้งาน */}
+              <Link
+                href="/admin/restaurant-access"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
+                  pathname === '/admin/restaurant-access'
+                    ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <span>🧩</span> สิทธิ์ร้านอาหาร
+              </Link>
+
               <Link
                 href="/admin/change-password"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
@@ -164,7 +183,6 @@ export default function Sidebar() {
                 <span>🔐</span> เปลี่ยนรหัสผ่านผู้ใช้งาน
               </Link>
 
-              {/* 5. ประวัติกิจกรรม (Activity Logs) */}
               <Link
                 href="/admin/activity-logs"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
@@ -175,8 +193,7 @@ export default function Sidebar() {
               >
                 <span>📜</span> ประวัติกิจกรรม
               </Link>
-              
-              {/* 6. จัดการร้านอาหาร (Accordion Dropdown) */}
+
               <div>
                 <button
                   onClick={() => setIsRestaurantsOpen(!isRestaurantsOpen)}
@@ -194,7 +211,6 @@ export default function Sidebar() {
                   </span>
                 </button>
 
-                {/* แสดงรายชื่อร้านอาหารย่อยลงมา */}
                 {isRestaurantsOpen && (
                   <div className="mt-1 ml-4 pl-2 border-l border-neutral-800 space-y-1 transition-all">
                     <Link
@@ -230,20 +246,17 @@ export default function Sidebar() {
               </div>
             </nav>
 
-            {/* ปุ่มออกจากระบบ Admin (ย้ายเข้ามารวมใน Accordion บนมือถือ) */}
             <div className="mt-8 pt-4 border-t border-neutral-800">
               <Link
                 href="/"
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-black text-red-400 bg-red-950/20 border border-red-900/30 hover:bg-red-950/45 hover:text-red-300 active:scale-95 transition-all shadow-md uppercase tracking-wider"
               >
-                <span>🚪</span> ออกจากระบบ Admin
+                <span>🚪</span> ออกจากหน้า ADMIN
               </Link>
             </div>
-
           </div>
         </div>
       </div>
-
     </aside>
   );
 }

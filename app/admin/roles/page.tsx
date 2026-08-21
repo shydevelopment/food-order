@@ -1,40 +1,60 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { ACCOUNT_ROLES, getAccountRoleMeta } from '@/lib/roles';
+
+interface Profile {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  role: string | null;
+  email: string | null;
+}
 
 export default function ManageRolesPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [roles, setRoles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // ⚡ State สำหรับระบบ Popup Modal (เพิ่มสเตตตอนปิดเพิ่มเข้ามา)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false); // เช็คว่ากำลังเล่นอนิเมชันปิดอยู่ไหม
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [roleInput, setRoleInput] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const { data: profileData } = await supabase.from('profiles').select('*');
-      const { data: roleData } = await supabase.from('roles').select('role_name');
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('username', { ascending: true });
 
-      if (profileData) setProfiles(profileData);
-      if (roleData) setRoles(roleData);
-      setLoading(false);
+    if (profileError) {
+      alert('ไม่สามารถดึงข้อมูล role ได้: ' + profileError.message);
     }
-    fetchData();
-  }, []);
 
-  const handleOpenEditModal = (user: any) => {
+    if (profileData) setProfiles(profileData);
+    setLoading(false);
+  }, [supabase]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
+
+  const handleOpenEditModal = (user: Profile) => {
     setSelectedUser(user);
     setRoleInput(user.role || '');
     setIsModalOpen(true);
@@ -56,38 +76,34 @@ export default function ManageRolesPage() {
 
     setSubmitLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: roleInput })
-        .eq('id', selectedUser.id);
+      const res = await fetch('/api/admin/update-role', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          role: roleInput,
+        }),
+      });
 
-      if (error) throw error;
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'ไม่สามารถเปลี่ยน role ได้');
+      }
 
       alert('💾 เปลี่ยนบทบาทผู้ใช้งานสำเร็จ!');
-      setProfiles(profiles.map(p => p.id === selectedUser.id ? { ...p, role: roleInput } : p));
+      await fetchData();
       handleCloseModal(); // ใช้ฟังก์ชันปิดแบบสมูท
-    } catch (error: any) {
-      alert('เกิดข้อผิดพลาด: ' + error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเปลี่ยน role';
+      alert('เกิดข้อผิดพลาด: ' + message);
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  const getRoleBadgeStyle = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case 'admin':
-        return 'bg-red-500/10 text-red-500 border-red-500/30';
-      case 'customer':
-        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'restaurant':
-        return 'bg-amber-500/10 text-amber-500 border-amber-500/30';
-      case 'student':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
-      case 'teacher':
-        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
-      default:
-        return 'bg-gray-500/10 text-gray-400 border-gray-500/30';
-    }
+  const getRoleBadgeStyle = (role: string | null) => {
+    return getAccountRoleMeta(role)?.badgeClass || 'bg-gray-500/10 text-gray-400 border-gray-500/30';
   };
 
   const filteredProfiles = profiles.filter(user => {
@@ -109,7 +125,7 @@ export default function ManageRolesPage() {
             👥 จัดการบทบาทผู้ใช้งาน
           </h2>
           <p className="text-sm text-gray-400">
-            ดูรายละเอียดโปรไฟล์ ชื่อผู้ใช้ และเปลี่ยนสิทธิ์การเข้าถึงระบบได้ทันที
+            Role หลักมี Customer, Student, Restaurant และ Admin ส่วน Owner/Staff ของร้านให้จัดในหน้า สิทธิ์ร้านอาหาร
           </p>
         </div>
 
@@ -152,7 +168,7 @@ export default function ManageRolesPage() {
                         {user.avatar_url ? (
                           <img
                             src={user.avatar_url}
-                            alt={user.username}
+                            alt={user.username || 'avatar'}
                             className="w-10 h-10 rounded-full border border-neutral-700 object-cover"
                           />
                         ) : (
@@ -261,16 +277,29 @@ export default function ManageRolesPage() {
               {/* Dropdown เลือกบทบาท */}
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เลือกบทบาทใหม่ / New Role</label>
+                <div className="mb-2 grid gap-2">
+                  {ACCOUNT_ROLES.map((role) => (
+                    <div key={role.value} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className={`rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${role.badgeClass}`}>
+                          {role.label}
+                        </span>
+                        <span className="text-xs font-bold text-neutral-300">{role.thaiLabel}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-neutral-500">{role.description}</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="relative">
                   <select
                     value={roleInput}
                     onChange={(e) => setRoleInput(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors appearance-none cursor-pointer"
-                  >
+                    >
                     <option value="" disabled className="text-neutral-600">-- กรุณาเลือกบทบาท --</option>
-                    {roles.map((r) => (
-                      <option key={r.role_name} value={r.role_name} className="text-white bg-neutral-950">
-                        {r.role_name.toUpperCase()}
+                    {ACCOUNT_ROLES.map((r) => (
+                      <option key={r.value} value={r.value} className="text-white bg-neutral-950">
+                        {r.label.toUpperCase()}
                       </option>
                     ))}
                   </select>

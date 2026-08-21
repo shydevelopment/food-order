@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Kanit } from "next/font/google"; 
 import Navbar from "@/components/navbar"; 
 import Footer from "@/components/footer"; 
+import PageTransition from "@/components/page-transition";
 import "./globals.css";
 
 // 2. ตั้งค่าน้ำหนักฟอนต์และเปิดตัวรองรับภาษาไทย (thai)
@@ -23,16 +24,32 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className="h-full antialiased">
-      {/* 3. สั่งเรียกใช้ฟอนต์ผ่าน className และปรับ body เป็นธีมมืด bg-neutral-950 text-white */}
-      <body className={`${kanit.className} min-h-screen w-full flex flex-col m-0 p-0 bg-neutral-950 text-white`}>
+    <html lang="th" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('food-order-theme') === 'light' ? 'light' : 'dark';
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+              } catch (_) {
+                document.documentElement.dataset.theme = 'dark';
+                document.documentElement.style.colorScheme = 'dark';
+              }
+            `,
+          }}
+        />
+      </head>
+      {/* 3. สั่งเรียกใช้ฟอนต์ผ่าน className โดยให้ธีมพื้นหลังคุมจาก globals.css */}
+      <body className={`${kanit.className} min-h-screen w-full flex flex-col m-0 p-0`}>
         
         {/* Navbar ยืดเต็มจอซ้ายขวาด้านบน */}
         <Navbar /> 
         
         {/* เนื้อหาด้านล่างขยายตัวเพื่อดัน Footer ลงไป */}
         <main className=" w-full max-w-7xl mx-auto px-6 py-4">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
 
         {/* ส่วนท้ายของเว็บยืดเต็มจอ */}

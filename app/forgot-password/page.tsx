@@ -23,7 +23,7 @@ export default async function ForgotPasswordPage() {
       
       // 💡 อัปเดต redirectTo ให้ปลายทางวิ่งไปที่ /reset-password แทนหน้าเดิมแล้วครับ
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/auth/callback?next=/reset-password`,
+        redirectTo: `${origin}/reset-password`,
       })
 
       if (error) {
@@ -31,8 +31,9 @@ export default async function ForgotPasswordPage() {
       }
 
       return { success: true }
-    } catch (err: any) {
-      return { success: false, message: err.message || 'ระบบหลังบ้านเกิดข้อผิดพลาด' }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'ระบบหลังบ้านเกิดข้อผิดพลาด'
+      return { success: false, message }
     }
   }
 

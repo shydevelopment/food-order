@@ -78,7 +78,7 @@ export default async function EditProfilePage() {
         type: 'signup',
         email: currentUser.email,
         options: {
-          emailRedirectTo: `${origin}/auth/callback?next=/register-success`,
+          emailRedirectTo: `${origin}/register-success`,
         },
       })
 
@@ -87,8 +87,9 @@ export default async function EditProfilePage() {
       }
 
       return { success: true, message: 'ส่งลิงก์ยืนยันตัวตนไปยังอีเมลของคุณเรียบร้อยแล้ว!' }
-    } catch (err: any) {
-      return { success: false, message: err.message || 'เกิดข้อผิดพลาดในการส่งอีเมล' }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการส่งอีเมล'
+      return { success: false, message }
     }
   }
 
