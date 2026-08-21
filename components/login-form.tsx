@@ -7,6 +7,7 @@ import { useFormStatus } from 'react-dom'
 interface LoginFormProps {
   signInAction: (formData: FormData) => Promise<never>
   message?: string
+  messageType?: 'success' | 'error'
 }
 
 function SignInButton() {
@@ -23,7 +24,7 @@ function SignInButton() {
   )
 }
 
-export default function LoginForm({ signInAction, message }: LoginFormProps) {
+export default function LoginForm({ signInAction, message, messageType = 'error' }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isOpeningRegister, setIsOpeningRegister] = useState(false)
 
@@ -92,8 +93,14 @@ export default function LoginForm({ signInAction, message }: LoginFormProps) {
           </Link>
 
           {message && (
-            <p className="mt-4 p-4 bg-red-950/20 border border-red-900/40 text-center text-red-400 rounded-md text-sm font-medium">
-              ⚠️ {message}
+            <p
+              className={`mt-4 rounded-md border p-4 text-center text-sm font-medium ${
+                messageType === 'success'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                  : 'border-red-900/40 bg-red-950/20 text-red-400'
+              }`}
+            >
+              {messageType === 'success' ? '✅' : '⚠️'} {message}
             </p>
           )}
         </form>

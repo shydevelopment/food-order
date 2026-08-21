@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/supabase/service'
-import LoginForm from '@/components/login-form' // 💡 นำเข้าคอมโพเนนต์ฟอร์ม
+import LoginForm from '@/components/login-form'
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message: string }>
+  searchParams: Promise<{ message?: string; type?: string }>
 }) {
   const resolvedSearchParams = await searchParams
   const currentSupabase = await createClient()
@@ -15,35 +15,49 @@ export default async function LoginPage({
     redirect('/')
   }
 
-  // Server Action สำหรับเข้าสู่ระบบ (รันฝั่ง Server ปลอดภัยสูงสุด)
   const signIn = async (formData: FormData) => {
     'use server'
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     
-    // ตรวจสอบโครงสร้าง Email ด้วย Regex
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (!emailRegex.test(email)) {
-      // 💡 แก้ไข: เข้ารหัสข้อความภาษาไทยและเอา return ออก
       redirect(`/login?message=${encodeURIComponent('รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง')}`)
     }
 
     const supabase = await createClient()
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (error) {
-      // 💡 แก้ไข: เข้ารหัสข้อความภาษาไทยและเอา return ออก
+      const normalizedMessage = error.message.toLowerCase()
+      if (
+        normalizedMessage.includes('email not confirmed') ||
+        normalizedMessage.includes('email_not_confirmed') ||
+        normalizedMessage.includes('confirm')
+      ) {
+        redirect(`/login?message=${encodeURIComponent('บัญชีนี้ยังไม่ได้ยืนยันอีเมล กรุณาตรวจสอบกล่องข้อความหรือจดหมายขยะ แล้วกดลิงก์ยืนยันก่อนเข้าสู่ระบบ')}`)
+      }
+
       redirect(`/login?message=${encodeURIComponent('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}`)
     }
 
-    // 💡 เอา return ออก เพราะ redirect จะทำการย้ายหน้าทันทีอยู่แล้ว
+    if (data.user && !data.user.email_confirmed_at) {
+      await supabase.auth.signOut()
+      redirect(`/login?message=${encodeURIComponent('บัญชีนี้ยังไม่ได้ยืนยันอีเมล กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ')}`)
+    }
+
     redirect('/') 
   }
 
-  // ส่ง Action และ Message ไปทำงานฝั่งหน้าบ้าน
-  return <LoginForm signInAction={signIn} message={resolvedSearchParams?.message} />
+  return (
+    <LoginForm
+      signInAction={signIn}
+      message={resolvedSearchParams?.message}
+      messageType={resolvedSearchParams?.type === 'success' ? 'success' : 'error'}
+    />
+  )
 }
