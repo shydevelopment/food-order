@@ -7,12 +7,14 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import LogoutConfirmButton from './logout-confirm-button';
 import ThemeToggle from './theme-toggle';
+import { isKmutnbStudentEmail } from '@/lib/roles';
 
 interface Profile {
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
   role: string | null;
+  email: string | null;
 }
 
 export default function Navbar() {
@@ -37,12 +39,26 @@ export default function Navbar() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, full_name, avatar_url, role') 
+        .select('username, full_name, avatar_url, role, email') 
         .eq('id', userId)
         .single();
 
       if (error) throw error;
-      if (data) setProfile(data as Profile);
+      if (!data) return;
+
+      const nextProfile = data as Profile;
+
+      if (isKmutnbStudentEmail(nextProfile.email) && !['student', 'admin', 'restaurant'].includes(nextProfile.role || '')) {
+        setProfile({ ...nextProfile, role: 'student' });
+        const res = await fetch('/api/profile/sync-student-role', { method: 'POST' });
+        const result = await res.json().catch(() => null);
+        if (result?.role) {
+          setProfile((current) => current ? { ...current, role: result.role } : current);
+        }
+        return;
+      }
+
+      setProfile(nextProfile);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error fetching profile:', message);
@@ -196,6 +212,7 @@ export default function Navbar() {
                           <span className={`text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide
                             ${profile.role === 'admin' ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 
                               profile.role === 'restaurant' ? 'bg-orange-500/20 text-orange-500 border border-orange-500/50' : 
+                              profile.role === 'student' ? 'bg-white/10 text-white border border-white/40' :
                               profile.role === 'rider' ? 'bg-green-500/20 text-green-500 border border-green-500/50' : 
                               'bg-gray-500/20 text-gray-400 border border-gray-500/50'}`}
                           >
@@ -290,7 +307,11 @@ export default function Navbar() {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-xs text-orange-400 truncate">@{profile?.username || 'user'}</span>
                       {profile?.role && (
-                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 uppercase">
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border uppercase ${
+                          profile.role === 'student'
+                            ? 'bg-white/10 text-white border-white/40'
+                            : 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+                        }`}>
                           {profile.role}
                         </span>
                       )}
