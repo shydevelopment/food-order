@@ -78,8 +78,8 @@ export default async function RegisterPage({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
-      <main className="w-full flex flex-col items-center justify-center p-4">
+    <div className="flex min-h-[80vh] flex-col items-center justify-center p-2 sm:p-4">
+      <main className="flex w-full flex-col items-center justify-center p-0 sm:p-4">
         <RegisterForm
           signUpAction={signUpAction}
           message={resolvedSearchParams?.message}

@@ -108,20 +108,20 @@ export default function AdminChangePasswordPage() {
   });
 
   return (
-    <div className="relative p-2">
+    <div className="relative">
       {/* ส่วนหัวของหน้าจอ */}
-      <div className="mb-8">
-        <h2 className="text-3xl font-black text-white uppercase tracking-wide">
+      <div className="mb-5 sm:mb-8">
+        <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-3xl">
           🔐 รีเซ็ต / เปลี่ยนรหัสผ่านผู้ใช้งาน
         </h2>
-        <p className="text-base text-gray-300 mt-1.5">
+        <p className="mt-1.5 text-sm text-gray-300 sm:text-base">
           เลือกผู้ใช้งานที่ต้องการ และกำหนดรหัสผ่านใหม่สำหรับเข้าสู่ระบบ
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
         {/* คอลัมน์ซ้าย: ค้นหาและเลือกรายชื่อผู้ใช้งาน */}
-        <div className="lg:col-span-5 bg-neutral-900 border border-neutral-800 rounded-xl p-5 flex flex-col shadow-2xl">
+        <div className="lg:col-span-5 bg-neutral-900 border border-neutral-800 rounded-xl p-3 flex flex-col shadow-2xl sm:p-5">
           <div className="mb-4">
             <label className="block text-sm font-bold text-gray-300 uppercase tracking-wide mb-2">
               1. ค้นหาผู้ใช้งานที่ต้องการเปลี่ยนรหัสผ่าน
@@ -150,7 +150,7 @@ export default function AdminChangePasswordPage() {
                   <div
                     key={u.id}
                     onClick={() => setSelectedUser(u)}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center gap-3.5 ${
+                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
                       isSelected
                         ? 'bg-orange-500/10 border-orange-500/60 shadow-md ring-1 ring-orange-500/30'
                         : 'bg-neutral-950/70 border-neutral-800/80 hover:bg-neutral-800/60'
@@ -187,7 +187,7 @@ export default function AdminChangePasswordPage() {
         </div>
 
         {/* คอลัมน์ขวา: ฟอร์มตั้งรหัสผ่านใหม่ */}
-        <div className="lg:col-span-7 bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl flex flex-col justify-between sm:p-6">
           <div>
             <h3 className="text-base font-bold text-gray-200 uppercase tracking-wide mb-5 border-b border-neutral-800 pb-3">
               2. กรอกรหัสผ่านใหม่
@@ -196,7 +196,7 @@ export default function AdminChangePasswordPage() {
             {selectedUser ? (
               <div>
                 {/* ข้อมูลสรุปของบัญชีที่เลือก */}
-                <div className="mb-6 p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center gap-4">
+                <div className="mb-6 p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col gap-4 text-center sm:flex-row sm:items-center sm:text-left">
                   {selectedUser.avatar_url ? (
                     <img
                       src={selectedUser.avatar_url}
@@ -209,7 +209,7 @@ export default function AdminChangePasswordPage() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex flex-wrap items-center justify-center gap-2.5 sm:justify-start">
                       <p className="text-lg font-bold text-white truncate">
                         {selectedUser.full_name || 'ไม่ได้ระบุชื่อจริง'}
                       </p>
@@ -217,8 +217,8 @@ export default function AdminChangePasswordPage() {
                         {selectedUser.role || 'user'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-300 mt-1">Username: @{selectedUser.username || '-'}</p>
-                    <p className="text-sm text-gray-400 truncate">Email: {selectedUser.email || '-'}</p>
+                    <p className="text-sm text-gray-300 mt-1 break-all">Username: @{selectedUser.username || '-'}</p>
+                    <p className="text-sm text-gray-400 break-all">Email: {selectedUser.email || '-'}</p>
                   </div>
                 </div>
 
@@ -252,11 +252,11 @@ export default function AdminChangePasswordPage() {
                     />
                   </div>
 
-                  <div className="pt-5 border-t border-neutral-800 mt-8 flex justify-end">
+                  <div className="pt-5 border-t border-neutral-800 mt-8 flex justify-stretch sm:justify-end">
                     <button
                       type="submit"
                       disabled={submitLoading}
-                      className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 text-black px-7 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 active:scale-95 cursor-pointer"
+                      className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 text-black px-7 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 active:scale-95 cursor-pointer sm:w-auto"
                     >
                       {submitLoading ? 'กำลังบันทึกรหัสผ่านใหม่...' : '💾 บันทึกรหัสผ่านใหม่'}
                     </button>
@@ -264,7 +264,7 @@ export default function AdminChangePasswordPage() {
                 </form>
               </div>
             ) : (
-              <div className="py-28 text-center border-2 border-dashed border-neutral-800 rounded-xl bg-neutral-950/30">
+              <div className="py-14 text-center border-2 border-dashed border-neutral-800 rounded-xl bg-neutral-950/30 sm:py-28">
                 <p className="text-4xl mb-3">👈</p>
                 <p className="text-base font-bold text-gray-300">กรุณาเลือกผู้ใช้งานจากรายการทางด้านซ้าย</p>
                 <p className="text-sm text-neutral-500 mt-1">เพื่อเริ่มต้นกำหนดรหัสผ่านใหม่ให้กับผู้ใช้งานนั้น</p>
@@ -278,7 +278,7 @@ export default function AdminChangePasswordPage() {
       {/* ⚠️ POP-UP แจ้งเตือนข้อควรระวังพร้อมอนิเมชัน Fade-In / Fade-Out */}
       {/* ========================================================= */}
       {(showWarningModal || isWarningClosing) && (
-        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md ${isWarningClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}>
+        <div className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-3 bg-black/80 backdrop-blur-md sm:p-4 ${isWarningClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}>
           <style>{`
             @keyframes smoothFadeIn {
               from { opacity: 0; backdrop-filter: blur(0px); }
@@ -303,7 +303,7 @@ export default function AdminChangePasswordPage() {
             .animate-modal-out { animation: smoothSlideDown 0.2s ease-in forwards; }
           `}</style>
 
-          <div className={`w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl p-6 md:p-8 shadow-2xl text-center relative overflow-hidden ${isWarningClosing ? 'animate-modal-out' : 'animate-modal-in'}`}>
+          <div className={`w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl p-4 shadow-2xl text-center relative overflow-hidden sm:p-6 md:p-8 ${isWarningClosing ? 'animate-modal-out' : 'animate-modal-in'}`}>
             {/* แถบสีไฮไลท์ด้านบน */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-amber-500" />
 
@@ -311,7 +311,7 @@ export default function AdminChangePasswordPage() {
               ⚠️
             </div>
 
-            <h3 className="text-2xl font-black text-white mb-2">
+            <h3 className="text-xl font-black text-white mb-2 sm:text-2xl">
               คำเตือนความปลอดภัยแอดมิน
             </h3>
             

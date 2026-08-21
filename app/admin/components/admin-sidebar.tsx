@@ -69,19 +69,19 @@ export default function AdminSidebar() {
   }, [supabase]);
 
   return (
-    <aside className="w-full md:w-64 bg-neutral-900 border-b md:border-b-0 md:border-r border-neutral-800 p-4 md:p-6 flex flex-col justify-between shrink-0 h-auto md:min-h-[calc(100vh-68px)] relative">
+    <aside className="w-full lg:w-72 bg-neutral-900 border-b lg:border-b-0 lg:border-r border-neutral-800 p-4 lg:p-6 flex flex-col justify-between shrink-0 h-auto lg:min-h-[calc(100vh-68px)] relative">
       <div>
-        <div className="flex items-center justify-between pb-3 md:pb-4 border-b border-neutral-800">
-          <div>
-            <h1 className="text-lg md:text-xl font-black text-orange-500 tracking-wide uppercase">
+        <div className="flex items-center justify-between gap-3 pb-3 lg:pb-4 border-b border-neutral-800">
+          <div className="min-w-0">
+            <h1 className="text-lg lg:text-xl font-black text-orange-500 tracking-wide uppercase">
               Admin Workspace
             </h1>
-            <p className="text-[10px] md:text-xs text-gray-500">FOOD ORDER KMUTNB</p>
+            <p className="text-[10px] lg:text-xs text-gray-500">FOOD ORDER KMUTNB</p>
           </div>
 
           <button
             onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
+            className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
             aria-label="Toggle Admin Menu"
           >
             <span>{isMobileOpen ? 'ปิด' : 'เมนู'}</span>
@@ -89,11 +89,11 @@ export default function AdminSidebar() {
         </div>
 
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out md:block ${
-            isMobileOpen ? 'grid-rows-[1fr] opacity-100 pt-4' : 'grid-rows-[0fr] opacity-0 md:opacity-100 md:pt-4'
+          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out lg:block ${
+            isMobileOpen ? 'grid-rows-[1fr] opacity-100 pt-4' : 'grid-rows-[0fr] opacity-0 lg:opacity-100 lg:pt-4'
           }`}
         >
-          <div className="overflow-hidden md:overflow-visible">
+          <div className="overflow-hidden lg:overflow-visible">
             <div className="mb-6 p-3 bg-neutral-950 rounded-lg border border-neutral-800 flex items-center gap-3">
               {adminProfile?.avatar_url ? (
                 <img
@@ -125,7 +125,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>📊</span> หน้าแรกแอดมิน
+                    <span className="shrink-0">📊</span> <span className="min-w-0 truncate">หน้าแรกแอดมิน</span>
               </Link>
 
               <Link
@@ -136,7 +136,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>🧾</span> รับออเดอร์
+                <span className="shrink-0">🧾</span> <span className="min-w-0 truncate">รับออเดอร์</span>
               </Link>
 
               <Link
@@ -147,7 +147,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>👥</span> ข้อมูลผู้ใช้งาน
+                <span className="shrink-0">👥</span> <span className="min-w-0 truncate">ข้อมูลผู้ใช้งาน</span>
               </Link>
 
               <Link
@@ -158,7 +158,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>🔑</span> จัดการ Role & สิทธิ์
+                <span className="shrink-0">🔑</span> <span className="min-w-0 truncate">จัดการ Role & สิทธิ์</span>
               </Link>
 
               <Link
@@ -169,7 +169,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>🧩</span> สิทธิ์ร้านอาหาร
+                <span className="shrink-0">🧩</span> <span className="min-w-0 truncate">สิทธิ์ร้านอาหาร</span>
               </Link>
 
               <Link
@@ -180,7 +180,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>🔐</span> เปลี่ยนรหัสผ่านผู้ใช้งาน
+                <span className="shrink-0">🔐</span> <span className="min-w-0 truncate">เปลี่ยนรหัสผ่านผู้ใช้งาน</span>
               </Link>
 
               <Link
@@ -191,7 +191,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>📜</span> ประวัติกิจกรรม
+                <span className="shrink-0">📜</span> <span className="min-w-0 truncate">ประวัติกิจกรรม</span>
               </Link>
 
               <div>
@@ -204,7 +204,7 @@ export default function AdminSidebar() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span>🏪</span> จัดการร้านอาหาร
+                    <span className="shrink-0">🏪</span> <span className="min-w-0 truncate">จัดการร้านอาหาร</span>
                   </div>
                   <span className={`text-[10px] transition-transform duration-200 ${isRestaurantsOpen ? 'rotate-180' : ''}`}>
                     ▼

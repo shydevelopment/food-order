@@ -107,18 +107,18 @@ export default function Navbar() {
 
   return (
     <header className="bg-black text-white shadow-md w-full relative z-50 border-b border-neutral-900">
-      <div className="w-full px-4 sm:px-6 py-3 flex justify-between items-center relative z-20 bg-black">
+      <div className="w-full px-3 py-3 flex justify-between items-center gap-2 relative z-20 bg-black sm:px-6 sm:gap-3">
 
         {/* LOGO */}
         <div 
-          className="text-lg sm:text-xl font-black cursor-pointer text-orange-500 tracking-wide transition-transform active:scale-95" 
+          className="min-w-0 shrink text-sm font-black cursor-pointer text-orange-500 tracking-wide transition-transform active:scale-95 truncate sm:text-xl" 
           onClick={() => window.location.href = '/'}
         >
-          FOOD <span className="text-white">ORDER</span> KMUTNB 🍔
+          FOOD <span className="text-white">ORDER</span> <span className="hidden min-[390px]:inline">KMUTNB</span> 🍔
         </div>
 
         {/* DESKTOP NAVIGATION */}
-        <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
+        <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium">
           <Link href="/" className={`transition-all active:scale-90 ${pathname === '/' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
             Home
           </Link>
@@ -141,13 +141,13 @@ export default function Navbar() {
         </nav>
 
         {/* RIGHT SECTION */}
-        <div className="flex items-center space-x-3 sm:space-x-6">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-4 lg:gap-6">
           <ThemeToggle />
           
           {/* CART ICON */}
           {user && (
             <a href="/cartPage" className="relative text-gray-300 hover:text-orange-500 transition-all active:scale-75 p-1 group">
-              <svg className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 transition-transform duration-200 group-hover:scale-110 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
               {cartCount > 0 && (
@@ -162,7 +162,7 @@ export default function Navbar() {
           {loading ? (
             <div className="hidden h-9 w-24 animate-pulse rounded-full bg-neutral-900 md:block" aria-label="กำลังตรวจสอบบัญชี" />
           ) : user ? (
-            <div className="relative hidden md:block">
+            <div className="relative hidden lg:block">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="flex items-center space-x-3 hover:text-orange-500 transition-all active:scale-95 focus:outline-none cursor-pointer group"
@@ -225,7 +225,7 @@ export default function Navbar() {
             </div>
           ) : (
             /* ถ้ายังไม่ได้ Login แสดงปุ่ม Login / Register บนคอม */
-            <div className="hidden md:flex space-x-3">
+            <div className="hidden lg:flex space-x-3">
               <a href="/login" className="text-gray-300 hover:text-orange-400 text-sm transition-all active:scale-95 flex items-center">
                 Login
               </a>
@@ -238,7 +238,7 @@ export default function Navbar() {
           {/* HAMBURGER BUTTON */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden relative w-8 h-8 text-gray-300 hover:text-orange-500 focus:outline-none transition-all active:scale-75 duration-300"
+            className="lg:hidden relative h-8 w-8 shrink-0 text-gray-300 hover:text-orange-500 focus:outline-none transition-all active:scale-75 duration-300"
             aria-label="Toggle Menu"
           >
             <svg 
@@ -261,12 +261,12 @@ export default function Navbar() {
 
       {/* 📌 MOBILE DRAWER / MENU */}
       <div 
-        className={`md:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out absolute w-full left-0 bg-neutral-950 z-10 shadow-2xl ${
+        className={`lg:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out absolute w-full left-0 bg-neutral-950 z-10 shadow-2xl ${
           isMobileMenuOpen ? 'grid-rows-[1fr] opacity-100 border-b border-neutral-900' : 'grid-rows-[0fr] opacity-0 border-transparent'
         }`}
       >
         <div className="overflow-hidden">
-          <div className="px-6 py-5 border-t border-neutral-900">
+          <div className="px-4 py-5 border-t border-neutral-900 sm:px-6">
             
             {loading ? (
               <div className="space-y-3">

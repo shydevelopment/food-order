@@ -25,27 +25,27 @@ export default async function Index() {
   const restaurantCount = restaurants?.length || 0
 
   return (
-    <div className="min-h-screen text-white">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-0 pb-10">
+    <div className="min-h-screen overflow-x-hidden text-white">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-0 pb-8 sm:gap-10 sm:pb-10">
         {!user ? (
           <>
             <section
-              className="relative min-h-[520px] overflow-hidden rounded-none border border-orange-500/20 md:rounded-2xl"
+              className="relative min-h-[460px] overflow-hidden rounded-none border border-orange-500/20 md:rounded-2xl"
               style={{
                 background:
                   'radial-gradient(circle at 18% 18%, rgba(255, 122, 0, 0.34), transparent 32%), linear-gradient(135deg, #111827 0%, #1f2937 52%, #431407 100%)',
                 color: '#ffffff',
               }}
             >
-              <div className="relative flex min-h-[520px] flex-col justify-between p-6 md:p-10">
-                <div className="max-w-3xl pt-8 md:pt-16">
+              <div className="relative flex min-h-[460px] flex-col justify-between p-5 sm:p-6 md:min-h-[520px] md:p-10">
+                <div className="max-w-3xl pt-6 md:pt-16">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-400">
                     Food Order KMUTNB
                   </p>
-                  <h1 className="mt-4 text-4xl font-black leading-tight md:text-6xl" style={{ color: '#ffffff' }}>
+                  <h1 className="mt-4 text-3xl font-black leading-tight sm:text-4xl md:text-6xl" style={{ color: '#ffffff' }}>
                     สมัครครั้งเดียว แล้วสั่งอาหารในมหาลัยได้ทันที
                   </h1>
-                  <p className="mt-5 max-w-2xl text-base font-medium leading-7 md:text-lg" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                  <p className="mt-5 max-w-2xl text-sm font-medium leading-7 sm:text-base md:text-lg" style={{ color: 'rgba(255,255,255,0.78)' }}>
                     สำหรับคนที่เพิ่งเข้าเว็บครั้งแรก คุณดูร้านและเมนูได้ก่อนเลย แต่ถ้าจะเพิ่มลงตะกร้า สั่งอาหาร หรือติดตามออเดอร์ ต้องสมัครสมาชิกหรือเข้าสู่ระบบก่อน
                   </p>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -114,7 +114,7 @@ export default async function Index() {
           </>
         ) : (
           <section className="w-full rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-orange-600/5 px-6 py-10 text-center shadow-lg shadow-amber-500/5">
-            <h1 className="text-3xl font-extrabold text-white md:text-5xl">
+            <h1 className="text-2xl font-extrabold text-white sm:text-3xl md:text-5xl">
               ยินดีต้อนรับกลับสู่ Food Order KMUTNB
             </h1>
             <p className="mt-4 text-sm text-neutral-400 md:text-base">
@@ -125,8 +125,8 @@ export default async function Index() {
 
         {/* --- ส่วนร้านอาหารแบบสุ่ม (Random Restaurant) --- */}
         <section className="w-full">
-          <div className="flex items-center gap-3 mb-6 justify-center">
-            <h2 className="text-2xl font-bold text-white">🎲 ร้านเด็ดสุ่มมาให้คุณ</h2>
+          <div className="flex items-center gap-3 mb-6 justify-center text-center">
+            <h2 className="text-xl font-bold text-white sm:text-2xl">🎲 ร้านเด็ดสุ่มมาให้คุณ</h2>
           </div>
 
           {!randomRestaurant ? (
@@ -135,7 +135,7 @@ export default async function Index() {
             </div>
           ) : (
             /* Card สุ่มร้านอาหาร */
-            <div className="bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-stretch group hover:border-amber-500/50 transition-all duration-500">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-stretch group hover:border-amber-500/50 transition-all duration-500">
               
               {/* 📌 แก้ไขส่วนนี้: ภาพปก (ฝั่งซ้าย) */}
               {/* ใช้ min-h-[250px] สำหรับมือถือ และล็อกความกว้างด้วย md:w-80 lg:w-96 */}
@@ -158,9 +158,9 @@ export default async function Index() {
               </div>
 
               {/* รายละเอียด (ฝั่งขวา) */}
-              <div className="p-6 md:p-8 flex flex-col justify-between flex-1 w-full">
+              <div className="p-5 sm:p-6 md:p-8 flex flex-col justify-between flex-1 w-full">
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
                     {randomRestaurant.name}
                   </h3>
                   

@@ -29,7 +29,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
   const [isOpeningLogin, setIsOpeningLogin] = useState(false)
 
   return (
-    <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2 mt-12 mx-auto text-white">
+    <div className="flex-1 flex flex-col w-full px-4 sm:max-w-md justify-center gap-2 mt-8 sm:mt-12 mx-auto text-white">
       <form action={signUpAction} className="animate-in flex-1 flex flex-col w-full justify-center gap-1">
         
         <h2 className="text-2xl font-black text-center mb-6 text-orange-500 tracking-wide">
