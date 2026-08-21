@@ -12,21 +12,21 @@ export default function RegisterSuccessPage() {
           </div>
 
           <h1 className="text-2xl font-black text-white mb-3 tracking-wide">
-            ยืนยันตัวตนสำเร็จ!
+            สมัครสมาชิกสำเร็จ!
           </h1>
           <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">
-            Verification Successful
+            Registration Successful
           </p>
 
           <p className="text-neutral-400 text-sm mb-8 leading-relaxed">
-            บัญชีของคุณได้รับการยืนยันเรียบร้อยแล้ว ตอนนี้คุณสามารถเข้าสู่ระบบเพื่อเริ่มใช้งานและสั่งอาหารอร่อยๆ ได้เลยครับ 🍔
+            สมัครสมาชิกสำเร็จแล้ว! ตอนนี้คุณสามารถเข้าสู่ระบบเพื่อเริ่มใช้งานและสั่งอาหารอร่อยๆ ได้เลยครับ 🍔
           </p>
 
           <Link 
-            href="/login" 
+            href="/"
             className="block w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-3 px-4 rounded-xl transition-all active:scale-95 shadow-lg shadow-orange-500/20 text-center text-sm cursor-pointer"
           >
-            ไปที่หน้าเข้าสู่ระบบ (Go to Login)
+            กลับเข้าสู่หน้าเว็บ (Go to Homepage)
           </Link>
 
         </div>

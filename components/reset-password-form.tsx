@@ -2,11 +2,14 @@
 
 import React, { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy'
+import PasswordRequirements from '@/components/password-requirements'
 
 export function ResetPasswordForm() {
   const [isPending, setIsPending] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [newPasswordValue, setNewPasswordValue] = useState('')
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,9 +34,9 @@ export function ResetPasswordForm() {
       return
     }
 
-    // 2. ตรวจสอบความยาวรหัสตามกฎพื้นฐานของ Supabase Auth
-    if (newPassword.length < 6) {
-      setErrorMessage('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษรขึ้นไป')
+    const passwordPolicyError = validatePasswordPolicy(newPassword)
+    if (passwordPolicyError) {
+      setErrorMessage(passwordPolicyError)
       setIsPending(false)
       return
     }
@@ -45,6 +48,7 @@ export function ResetPasswordForm() {
       if (error) throw error
 
       setSuccessMessage('ตั้งรหัสผ่านใหม่ของคุณสำเร็จเรียบร้อยแล้ว! 🔒')
+      setNewPasswordValue('')
       formTarget.reset()
 
       // 4. สั่ง Sign Out ออกจากเซสชันกู้คืน เพื่อบังคับให้ล็อกอินใหม่อีกครั้ง
@@ -55,8 +59,9 @@ export function ResetPasswordForm() {
         window.location.href = '/login?message=เปลี่ยนรหัสผ่านเรียบร้อย! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่ของคุณ'
       }, 2000)
 
-    } catch (err: any) {
-      setErrorMessage(err.message || 'เกิดข้อผิดพลาดในการตั้งรหัสผ่านใหม่')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการตั้งรหัสผ่านใหม่'
+      setErrorMessage(message)
       setIsPending(false)
     }
   }
@@ -84,9 +89,15 @@ export function ResetPasswordForm() {
               className="rounded-md px-4 py-2.5 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm transition-all placeholder:text-neutral-700" 
               name="newPassword" 
               type="password" 
-              placeholder="รหัสผ่านใหม่ของคุณ" 
+              value={newPasswordValue}
+              onChange={(event) => setNewPasswordValue(event.target.value)}
+              placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @"
+              minLength={8}
+              pattern={PASSWORD_PATTERN}
+              title={PASSWORD_REQUIREMENTS_TEXT}
               required 
             />
+            <PasswordRequirements password={newPasswordValue} className="mt-2" />
           </div>
 
           {/* ช่องยืนยันรหัสผ่านใหม่ */}
@@ -99,6 +110,9 @@ export function ResetPasswordForm() {
               name="confirmPassword" 
               type="password" 
               placeholder="ยืนยันรหัสผ่านใหม่อีกครั้ง" 
+              minLength={8}
+              pattern={PASSWORD_PATTERN}
+              title={PASSWORD_REQUIREMENTS_TEXT}
               required 
             />
           </div>

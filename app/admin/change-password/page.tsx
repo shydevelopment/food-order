@@ -1,18 +1,34 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
+import PasswordRequirements from '@/components/password-requirements';
+
+interface PasswordTargetUser {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  role: string | null;
+  phone: string | null;
+}
 
 export default function AdminChangePasswordPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ),
+    []
   );
 
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<PasswordTargetUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<PasswordTargetUser | null>(null);
 
   // 🔔 State สำหรับ Pop-up แจ้งเตือน (พร้อมตัวแปรจัดการจังหวะปิด Fade Out)
   const [showWarningModal, setShowWarningModal] = useState(true);
@@ -24,26 +40,36 @@ export default function AdminChangePasswordPage() {
   const [submitLoading, setSubmitLoading] = useState(false);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    let isActive = true;
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url, email, role, phone')
-        .order('username', { ascending: true });
+    const loadUsers = async () => {
+      await Promise.resolve();
+      if (!isActive) return;
 
-      if (error) throw error;
-      if (data) setUsers(data);
-    } catch (error: any) {
-      console.error('Error fetching users:', error.message);
-      alert('ไม่สามารถดึงข้อมูลผู้ใช้ได้: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url, email, role, phone')
+          .order('username', { ascending: true });
+
+        if (error) throw error;
+        if (data && isActive) setUsers(data);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้';
+        console.error('Error fetching users:', message);
+        alert('ไม่สามารถดึงข้อมูลผู้ใช้ได้: ' + message);
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    void loadUsers();
+
+    return () => {
+      isActive = false;
+    };
+  }, [supabase]);
 
   // ⚡ ฟังก์ชันปิด Pop-up เตือนความปลอดภัยพร้อมเล่นอนิเมชัน Fade-Out
   const handleCloseWarningModal = () => {
@@ -62,8 +88,9 @@ export default function AdminChangePasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      alert('❌ รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+    const passwordPolicyError = validatePasswordPolicy(newPassword);
+    if (passwordPolicyError) {
+      alert('❌ ' + passwordPolicyError);
       return;
     }
 
@@ -92,8 +119,9 @@ export default function AdminChangePasswordPage() {
       alert(`✨ เปลี่ยนรหัสผ่านให้บัญชี "${selectedUser.full_name || selectedUser.username}" เรียบร้อยแล้ว!`);
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
-      alert('เกิดข้อผิดพลาด: ' + error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน';
+      alert('เกิดข้อผิดพลาด: ' + message);
     } finally {
       setSubmitLoading(false);
     }
@@ -231,11 +259,15 @@ export default function AdminChangePasswordPage() {
                     <input
                       type="password"
                       required
+                      minLength={8}
+                      pattern={PASSWORD_PATTERN}
+                      title={PASSWORD_REQUIREMENTS_TEXT}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="ระบุรหัสผ่านใหม่อย่างน้อย 6 ตัวอักษร..."
+                      placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @"
                       className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-orange-550 transition-colors"
                     />
+                    <PasswordRequirements password={newPassword} className="mt-2" />
                   </div>
 
                   <div>
@@ -245,6 +277,9 @@ export default function AdminChangePasswordPage() {
                     <input
                       type="password"
                       required
+                      minLength={8}
+                      pattern={PASSWORD_PATTERN}
+                      title={PASSWORD_REQUIREMENTS_TEXT}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="กรอกรหัสผ่านใหม่อีกครั้ง..."

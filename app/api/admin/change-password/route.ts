@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { validatePasswordPolicy } from '@/lib/password-policy';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,9 +13,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (newPassword.length < 6) {
+    const passwordPolicyError = validatePasswordPolicy(newPassword);
+    if (passwordPolicyError) {
       return NextResponse.json(
-        { error: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' },
+        { error: passwordPolicyError },
         { status: 400 }
       );
     }
@@ -34,7 +36,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, message: 'เปลี่ยนรหัสผ่านสำเร็จ' });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในระบบ';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

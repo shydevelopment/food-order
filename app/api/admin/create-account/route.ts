@@ -2,6 +2,7 @@ import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
 import { resolveAccountRoleForEmail } from '@/lib/roles'
+import { validatePasswordPolicy } from '@/lib/password-policy'
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,9 +33,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (password.length < 6) {
+    const passwordPolicyError = validatePasswordPolicy(password)
+    if (passwordPolicyError) {
       return NextResponse.json(
-        { error: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' },
+        { error: passwordPolicyError },
         { status: 400 }
       )
     }
