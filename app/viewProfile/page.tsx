@@ -1,6 +1,7 @@
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import LogoutConfirmButton from '@/components/logout-confirm-button'
 
 export default async function ViewProfilePage() {
   const supabase = await createClient()
@@ -18,14 +19,6 @@ export default async function ViewProfilePage() {
     .select('username, full_name, phone, avatar_url, role')
     .eq('id', user.id)
     .single()
-
-  // 3. Server Action สำหรับ Sign Out
-  const handleSignOut = async () => {
-    'use server'
-    const supabaseServer = await createClient()
-    await supabaseServer.auth.signOut()
-    redirect('/login')
-  }
 
   // กำหนดค่าตัวแปรผู้ใช้งาน
   const fullName = profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || 'ผู้ใช้งาน'
@@ -45,6 +38,8 @@ export default async function ViewProfilePage() {
         return 'bg-red-500/20 text-red-400 border-red-500/50'
       case 'restaurant':
         return 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+      case 'student':
+        return 'bg-purple-500/20 text-purple-400 border-purple-500/50'
       case 'rider':
         return 'bg-green-500/20 text-green-400 border-green-500/50'
       default:
@@ -97,20 +92,21 @@ export default async function ViewProfilePage() {
               <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${getRoleStyle(userRole)}`}>
                 {userRole === 'admin' ? '📊 ADMIN' : 
                  userRole === 'restaurant' ? '🍔 RESTAURANT' : 
+                 userRole === 'student' ? '🎓 STUDENT' :
                  userRole === 'rider' ? '🛵 RIDER' : '👤 CUSTOMER'}
               </span>
 
             </div>
 
             {/* ปุ่ม Sign Out */}
-            <form action={handleSignOut} className="w-full mt-6">
-              <button
-                type="submit"
+            <div className="w-full mt-6">
+              <LogoutConfirmButton
+                context={userRole === 'admin' ? 'admin' : userRole === 'restaurant' ? 'restaurant' : 'default'}
                 className="w-full py-2.5 text-xs font-bold text-red-400 bg-red-950/40 hover:bg-red-900/60 active:scale-95 rounded-xl transition-all border border-red-900/50 cursor-pointer shadow-lg"
               >
                 ออกจากระบบ
-              </button>
-            </form>
+              </LogoutConfirmButton>
+            </div>
           </div>
 
           {/* 👉 ฝั่งขวา: รายละเอียดโปรไฟล์ */}

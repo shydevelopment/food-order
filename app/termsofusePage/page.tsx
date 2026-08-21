@@ -1,31 +1,50 @@
-import { createClient } from '@/supabase/service'
-import { redirect } from 'next/navigation'
-
-export default async function Index() {
-  const supabase = await createClient()
-
-  // ตรวจสอบข้อมูล User ปัจจุบัน
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    // ถ้ายังไม่ล็อกอิน ให้โยนไปหน้า /login
-    redirect('/login')
-  }
-
-  // แยก Server Action สำหรับ Sign Out
-  const handleSignOut = async () => {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
+export default function TermsOfUsePage() {
+  const sections = [
+    {
+      title: '1. การยอมรับเงื่อนไข',
+      body: 'เมื่อคุณเข้าใช้งาน Food Order KMUTNB ถือว่าคุณยอมรับเงื่อนไขการใช้งานนี้ ผู้ใช้สามารถดูร้านอาหารและเมนูได้โดยไม่ต้องสมัครสมาชิก แต่การสั่งอาหาร ติดตามคำสั่งซื้อ และจัดการบัญชีจำเป็นต้องเข้าสู่ระบบก่อน',
+    },
+    {
+      title: '2. บัญชีผู้ใช้และบทบาท',
+      body: 'ผู้ใช้ต้องกรอกข้อมูลบัญชีให้ถูกต้อง ระบบอาจกำหนดบทบาทตามข้อมูลบัญชี เช่น นักศึกษา เจ้าของร้าน หรือผู้ดูแลระบบ โดยสิทธิ์การเข้าถึงแต่ละหน้าจะขึ้นอยู่กับบทบาทและสิทธิ์ที่ได้รับ',
+    },
+    {
+      title: '3. การสั่งอาหาร',
+      body: 'ผู้ใช้ที่เข้าสู่ระบบแล้วสามารถเพิ่มเมนูลงตะกร้า ยืนยันคำสั่งซื้อ และติดตามสถานะออเดอร์ได้ คำสั่งซื้อควรระบุข้อมูลจัดส่งหรือรายละเอียดเพิ่มเติมให้ถูกต้องก่อนยืนยันรายการ',
+    },
+    {
+      title: '4. การจัดการร้านอาหาร',
+      body: 'เจ้าของร้านและพนักงานร้านที่ได้รับสิทธิ์สามารถจัดการข้อมูลร้าน เมนู และออเดอร์ได้เฉพาะร้านที่ตนได้รับสิทธิ์เท่านั้น ห้ามแก้ไขข้อมูลร้านหรือออเดอร์ที่ไม่ได้รับอนุญาต',
+    },
+    {
+      title: '5. ข้อห้ามในการใช้งาน',
+      body: 'ห้ามใช้ระบบเพื่อปลอมแปลงข้อมูล แทรกแซงการทำงานของระบบ เข้าถึงข้อมูลของผู้อื่นโดยไม่ได้รับอนุญาต หรือกระทำการใด ๆ ที่ทำให้ระบบหรือผู้ใช้อื่นได้รับความเสียหาย',
+    },
+    {
+      title: '6. การเปลี่ยนแปลงเงื่อนไข',
+      body: 'ระบบอาจปรับปรุงเงื่อนไขการใช้งานตามความเหมาะสม หากมีการเปลี่ยนแปลงสำคัญ ผู้ดูแลระบบจะแจ้งให้ผู้ใช้ทราบผ่านช่องทางที่เหมาะสม',
+    },
+  ]
 
   return (
-    // 2. ปรับโครงสร้างหลักให้เป็น flex-col แบบเต็มหน้าจอ
-    <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
+    <div className="mx-auto max-w-4xl px-4 py-12 text-white">
+      <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl md:p-8">
+        <p className="text-sm font-bold uppercase tracking-wide text-amber-400">Terms of Use</p>
+        <h1 className="mt-3 text-3xl font-black md:text-4xl">เงื่อนไขการใช้งาน</h1>
+        <p className="mt-4 text-sm leading-7 text-neutral-400">
+          ข้อกำหนดสำหรับการใช้งานเว็บไซต์ Food Order KMUTNB เพื่อให้การดูร้านอาหาร การสั่งอาหาร
+          และการจัดการระบบเป็นไปอย่างถูกต้องและปลอดภัย
+        </p>
 
-      <main className=" flex flex-col items-center justify-center p-4"></main>
-
+        <div className="mt-8 space-y-4">
+          {sections.map((section) => (
+            <article key={section.title} className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+              <h2 className="text-lg font-black text-white">{section.title}</h2>
+              <p className="mt-2 text-sm leading-7 text-neutral-400">{section.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

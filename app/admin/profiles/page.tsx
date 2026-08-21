@@ -1,35 +1,55 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import { ACCOUNT_ROLES, getAccountRoleMeta, resolveAccountRoleForEmail } from '@/lib/roles';
+
+interface Profile {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  role: string | null;
+  email: string | null;
+}
 
 export default function AdminUsersPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
-  const [profiles, setProfiles] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   // ⚡ State สำหรับระบบ Popup Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   // 🆕 เพิ่ม State สำหรับ Username และ Email
   const [usernameInput, setUsernameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [fullNameInput, setFullNameInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
+  const [roleInput, setRoleInput] = useState('customer');
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [newUsernameInput, setNewUsernameInput] = useState('');
+  const [newEmailInput, setNewEmailInput] = useState('');
+  const [newFullNameInput, setNewFullNameInput] = useState('');
+  const [newPhoneInput, setNewPhoneInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [newConfirmPasswordInput, setNewConfirmPasswordInput] = useState('');
+  const [newRoleInput, setNewRoleInput] = useState('customer');
+  const [createLoading, setCreateLoading] = useState(false);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -39,21 +59,44 @@ export default function AdminUsersPage() {
 
       if (error) throw error;
       if (data) setProfiles(data);
-    } catch (error: any) {
-      console.error('Error:', error.message);
-      alert('ไม่สามารถดึงข้อมูลได้: ' + error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error:', message);
+      alert('ไม่สามารถดึงข้อมูลได้: ' + message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
 
-  const handleOpenEditModal = (user: any) => {
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProfiles();
+  }, [fetchProfiles]);
+
+  const handleOpenEditModal = (user: Profile) => {
     setSelectedUser(user);
     setUsernameInput(user.username || '');
     setEmailInput(user.email || '');
     setFullNameInput(user.full_name || '');
     setPhoneInput(user.phone || '');
+    setRoleInput(user.role || 'customer');
     setIsModalOpen(true);
+  };
+
+  const handleOpenAddModal = () => {
+    setNewUsernameInput('');
+    setNewEmailInput('');
+    setNewFullNameInput('');
+    setNewPhoneInput('');
+    setNewPasswordInput('');
+    setNewConfirmPasswordInput('');
+    setNewRoleInput('customer');
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseAddModal = () => {
+    if (createLoading) return;
+    setIsAddModalOpen(false);
   };
 
   const handleCloseModal = () => {
@@ -84,13 +127,71 @@ export default function AdminUsersPage() {
 
       if (error) throw error;
 
+      if (roleInput !== (selectedUser.role || 'customer')) {
+        const roleRes = await fetch('/api/admin/update-role', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: selectedUser.id,
+          role: resolveAccountRoleForEmail(emailInput, roleInput),
+          }),
+        });
+
+        const roleResult = await roleRes.json();
+
+        if (!roleRes.ok) {
+          throw new Error(roleResult.error || 'ไม่สามารถเปลี่ยน role ได้');
+        }
+      }
+
       alert('💾 บันทึกการแก้ไขข้อมูลสำเร็จ!');
       handleCloseModal();
       fetchProfiles(); 
-    } catch (error: any) {
-      alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      alert('เกิดข้อผิดพลาดในการบันทึก: ' + message);
     } finally {
       setSubmitLoading(false);
+    }
+  };
+
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPasswordInput !== newConfirmPasswordInput) {
+      alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      const res = await fetch('/api/admin/create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: newEmailInput.trim(),
+          password: newPasswordInput,
+          username: newUsernameInput.trim(),
+          fullName: newFullNameInput.trim(),
+          phone: newPhoneInput.trim(),
+          role: resolveAccountRoleForEmail(newEmailInput, newRoleInput),
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'ไม่สามารถเพิ่มบัญชีได้');
+      }
+
+      alert('✅ เพิ่มบัญชีผู้ใช้สำเร็จ!');
+      setIsAddModalOpen(false);
+      fetchProfiles();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      alert('เกิดข้อผิดพลาดในการเพิ่มบัญชี: ' + message);
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -116,15 +217,26 @@ export default function AdminUsersPage() {
           </p>
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">🔍</span>
-          <input
-            type="text"
-            placeholder="ค้นหาชื่อ, Username, อีเมล หรือเบอร์โทร..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-gray-550 focus:outline-none focus:border-orange-550 transition-colors"
-          />
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-orange-500/10 transition-all hover:bg-orange-600 active:scale-95"
+          >
+            <span>➕</span>
+            เพิ่มบัญชี
+          </button>
+
+          <div className="relative w-full sm:w-72">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">🔍</span>
+            <input
+              type="text"
+              placeholder="ค้นหาชื่อ, Username, อีเมล หรือเบอร์โทร..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-gray-550 focus:outline-none focus:border-orange-550 transition-colors"
+            />
+          </div>
         </div>
       </div>
 
@@ -178,13 +290,7 @@ export default function AdminUsersPage() {
                       {user.phone || <span className="text-neutral-600 font-normal italic">ไม่มีข้อมูล</span>}
                     </td>
                     <td className="p-4 text-center border-r border-neutral-800">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border
-                        ${user.role === 'admin' ? 'bg-red-500/10 text-red-500 border-red-500/30' : 
-                          user.role === 'customer' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                          user.role === 'restaurant' ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' : 
-                          user.role === 'student' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' : 
-                          user.role === 'teacher' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 
-                          'bg-gray-500/10 text-gray-400 border-gray-500/30'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${getAccountRoleMeta(user.role)?.badgeClass || 'bg-gray-500/10 text-gray-400 border-gray-500/30'}`}>
                         {user.role || 'user'}
                       </span>
                     </td>
@@ -210,6 +316,144 @@ export default function AdminUsersPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================== */}
+      {/* 🆕 POP-UP MODAL เพิ่มบัญชีผู้ใช้งาน */}
+      {/* ========================================== */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between border-b border-neutral-800 pb-2">
+              <div>
+                <h3 className="text-lg font-black text-white">➕ เพิ่มบัญชีผู้ใช้งาน</h3>
+                <p className="mt-0.5 text-xs text-neutral-500">สร้างบัญชีใหม่พร้อมกำหนดบทบาทในระบบ</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseAddModal}
+                className="text-xl font-bold text-gray-500 transition-colors hover:text-white"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">Username *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUsernameInput}
+                    onChange={(e) => setNewUsernameInput(e.target.value)}
+                    placeholder="เช่น somchai"
+                    className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">Role *</label>
+                  <div className="relative">
+                    <select
+                      value={newRoleInput}
+                      onChange={(e) => setNewRoleInput(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white transition-colors focus:border-orange-550 focus:outline-none"
+                    >
+                      {ACCOUNT_ROLES.map((role) => (
+                        <option key={role.value} value={role.value} className="bg-neutral-950 text-white">
+                          {role.label.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-neutral-500">▼</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">อีเมล *</label>
+                <input
+                  type="email"
+                  required
+                  value={newEmailInput}
+                  onChange={(e) => setNewEmailInput(e.target.value)}
+                  placeholder="example@mail.com"
+                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">ชื่อจริง / Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={newFullNameInput}
+                  onChange={(e) => setNewFullNameInput(e.target.value)}
+                  placeholder="กรอกชื่อ-นามสกุล..."
+                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">เบอร์โทรศัพท์</label>
+                <input
+                  type="text"
+                  value={newPhoneInput}
+                  onChange={(e) => setNewPhoneInput(e.target.value)}
+                  placeholder="เช่น 0891234567"
+                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">รหัสผ่าน *</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    placeholder="อย่างน้อย 6 ตัวอักษร"
+                    className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">ยืนยันรหัสผ่าน *</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={newConfirmPasswordInput}
+                    onChange={(e) => setNewConfirmPasswordInput(e.target.value)}
+                    placeholder="กรอกรหัสผ่านซ้ำ"
+                    className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3 border-t border-neutral-800 pt-4">
+                <button
+                  type="button"
+                  onClick={handleCloseAddModal}
+                  disabled={createLoading}
+                  className="rounded-lg bg-neutral-800 px-4 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-neutral-700 disabled:opacity-50"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-orange-500/10 transition-colors hover:bg-orange-600 disabled:bg-orange-800"
+                >
+                  {createLoading ? 'กำลังเพิ่มบัญชี...' : '✅ เพิ่มบัญชี'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -306,6 +550,24 @@ export default function AdminUsersPage() {
                   placeholder="เช่น 0891234567..."
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">บทบาท / Role</label>
+                <div className="relative">
+                  <select
+                    value={roleInput}
+                    onChange={(e) => setRoleInput(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white transition-colors focus:border-orange-550 focus:outline-none"
+                  >
+                    {ACCOUNT_ROLES.map((role) => (
+                      <option key={role.value} value={role.value} className="bg-neutral-950 text-white">
+                        {role.label.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-neutral-500">▼</span>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800 mt-6">
