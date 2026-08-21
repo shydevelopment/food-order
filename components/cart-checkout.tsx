@@ -105,7 +105,7 @@ export default function CartCheckout() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl rounded-2xl border border-neutral-800 bg-neutral-900 p-10 text-center">
+      <div className="mx-auto max-w-3xl rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center sm:p-10">
         <h1 className="text-2xl font-black text-white">ตะกร้าว่าง</h1>
         <p className="mt-2 text-sm text-neutral-400">เลือกเมนูจากหน้าร้านอาหารก่อน แล้วกลับมายืนยันคำสั่งซื้อที่นี่</p>
         <a
@@ -119,7 +119,7 @@ export default function CartCheckout() {
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="rounded-2xl border border-neutral-800 bg-neutral-900">
         <div className="border-b border-neutral-800 p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-amber-400">Cart</p>
@@ -129,8 +129,8 @@ export default function CartCheckout() {
 
         <div className="divide-y divide-neutral-800">
           {items.map((item) => (
-            <div key={item.menuId} className="flex gap-4 p-5">
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-800">
+            <div key={item.menuId} className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
+              <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-xl bg-neutral-800 sm:h-20 sm:w-20">
                 <img
                   src={item.imageUrl || '/placeholder.jpg'}
                   alt={item.name}
@@ -139,7 +139,7 @@ export default function CartCheckout() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                   <div className="min-w-0">
                     <h2 className="truncate text-base font-bold text-white">{item.name}</h2>
                     <p className="mt-1 text-sm font-black text-amber-400">
@@ -155,7 +155,7 @@ export default function CartCheckout() {
                   </button>
                 </div>
 
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.menuId, item.quantity - 1)}
@@ -173,7 +173,7 @@ export default function CartCheckout() {
                   >
                     +
                   </button>
-                  <span className="ml-auto text-sm font-bold text-neutral-300">
+                  <span className="ml-0 w-full text-right text-sm font-bold text-neutral-300 sm:ml-auto sm:w-auto">
                     ฿{(item.price * item.quantity).toLocaleString('th-TH')}
                   </span>
                 </div>

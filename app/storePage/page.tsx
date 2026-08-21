@@ -63,8 +63,8 @@ export default async function Index() {
   })
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white pb-12">
-      <main className="max-w-6xl mx-auto px-4 pt-8">
+    <div className="min-h-screen overflow-x-hidden bg-neutral-950 text-white pb-12">
+      <main className="max-w-6xl mx-auto px-3 pt-6 sm:px-4 sm:pt-8">
         <section className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-white">เลือกร้านอาหาร</h1>
@@ -76,7 +76,7 @@ export default async function Index() {
           {!user && (
             <a
               href="/login"
-              className="inline-flex items-center justify-center rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-800 transition hover:bg-orange-500 hover:text-black"
+              className="inline-flex w-full items-center justify-center rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-black text-orange-800 transition hover:bg-orange-500 hover:text-black sm:w-auto"
             >
               Login เพื่อสั่งอาหาร
             </a>
@@ -162,7 +162,7 @@ export default async function Index() {
                     </div>
 
                     <div className="border-t border-neutral-800 bg-neutral-950/35 p-5">
-                      <div className="flex items-center justify-between gap-3 mb-4">
+                            <div className="flex items-center justify-between gap-3 mb-4">
                         <h4 className="text-sm font-black text-amber-400">เมนูอาหาร</h4>
                         <span className="text-[11px] text-neutral-500">{storeMenus.length} เมนู</span>
                       </div>
@@ -179,9 +179,9 @@ export default async function Index() {
                             return (
                               <div
                                 key={menu.id}
-                                className="flex gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3"
+                                className="flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3 sm:flex-row"
                               >
-                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
+                                <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-lg bg-neutral-800 sm:h-20 sm:w-20">
                                   <img
                                     src={menu.image_url || '/placeholder.jpg'}
                                     alt={menu.name}
@@ -190,7 +190,7 @@ export default async function Index() {
                                 </div>
 
                                 <div className="min-w-0 flex-1">
-                                  <div className="flex items-start justify-between gap-3">
+                                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                                     <div className="min-w-0">
                                       <h5 className="truncate text-sm font-bold text-white">{menu.name}</h5>
                                       <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">
@@ -202,7 +202,7 @@ export default async function Index() {
                                     </span>
                                   </div>
 
-                                  <div className="mt-3 flex items-center justify-between gap-3">
+                                  <div className="mt-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
                                       menu.is_available
                                         ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
@@ -226,7 +226,7 @@ export default async function Index() {
                                     ) : (
                                       <a
                                         href="/login"
-                                        className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-xs font-black text-orange-800 transition hover:bg-orange-500 hover:text-black"
+                                        className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-1.5 text-center text-xs font-black text-orange-800 transition hover:bg-orange-500 hover:text-black"
                                       >
                                         Login เพื่อสั่ง
                                       </a>

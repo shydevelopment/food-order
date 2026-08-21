@@ -82,12 +82,8 @@ export default function AdminLayout({
         และทำให้เส้นเหลืองหายไปทันที โดยไม่เสียโครงสร้าง UI เดิมครับ
       */
       <div 
-        className="relative w-screen bg-black flex flex-col md:flex-row items-stretch md:overflow-hidden overflow-x-hidden m-0 p-0 -mt-6 -mb-6"
+        className="relative w-full bg-black flex flex-col lg:flex-row items-stretch overflow-x-hidden m-0 p-0 -mt-4 -mb-4"
         style={{
-          left: '50%',
-          right: '50%',
-          marginLeft: '-50vw',
-          marginRight: '-50vw',
           minHeight: 'calc(100vh - 44px)'
         }}
       >
@@ -95,7 +91,7 @@ export default function AdminLayout({
         {role === 'admin' ? <AdminSidebar /> : <RestaurantSidebar />}
 
         {/* 📄 ส่วนแสดงเนื้อหาฝั่งขวา */}
-        <main className="flex-1 p-6 md:p-10 bg-neutral-950 overflow-y-auto h-full">
+        <main className="min-w-0 flex-1 bg-neutral-950 p-4 sm:p-6 lg:p-10 overflow-x-hidden lg:overflow-y-auto">
           {children}
         </main>
 

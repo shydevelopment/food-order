@@ -19,14 +19,14 @@ export default function AdminActivityLogsPage() {
   });
 
   return (
-    <div className="relative p-2 space-y-6">
+    <div className="relative space-y-5 sm:p-2 sm:space-y-6">
       {/* หัวข้อหน้า */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-white uppercase tracking-wide">
+          <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-3xl">
             📜 ประวัติกิจกรรมทั้งหมด (Activity Logs)
           </h2>
-          <p className="text-base text-gray-300 mt-1.5">
+          <p className="mt-1.5 text-sm text-gray-300 sm:text-base">
             บันทึกการทำรายการ สมาชิก ร้านอาหาร เมนูอาหาร และกิจกรรมในระบบ
           </p>
         </div>
@@ -34,14 +34,14 @@ export default function AdminActivityLogsPage() {
         <button
           type="button"
           onClick={refetch}
-          className="self-start md:self-auto bg-orange-500 hover:bg-orange-600 text-black px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 cursor-pointer"
+          className="w-full justify-center bg-orange-500 hover:bg-orange-600 text-black px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 cursor-pointer md:w-auto md:self-auto"
         >
           <span>🔄</span> รีเฟรชประวัติ
         </button>
       </div>
 
       {/* แถบค้นหาและตัวกรอง */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-xl flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 shadow-xl flex flex-col md:flex-row gap-3 md:gap-4 justify-between items-stretch md:items-center sm:p-4">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">🔍</span>
           <input
@@ -74,7 +74,7 @@ export default function AdminActivityLogsPage() {
       </div>
 
       {/* รายการแสดงผล */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 shadow-2xl sm:p-6">
         {loading ? (
           <div className="py-20 text-center text-sm text-orange-500 animate-pulse font-bold">
             กำลังโหลดประวัติกิจกรรมทั้งหมด...

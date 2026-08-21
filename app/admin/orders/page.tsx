@@ -264,7 +264,7 @@ export default async function AdminOrdersPage({
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
           <AdminOrdersRealtime />
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm">
             <span className="font-bold text-amber-400">{pendingCount}</span>
@@ -273,7 +273,8 @@ export default async function AdminOrdersPage({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="responsive-scroll">
+        <div className="flex min-w-max gap-2 pb-1">
         <a
           href={buildOrdersHref({ restaurantId: isAdmin ? selectedRestaurantId : undefined })}
           className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
@@ -293,6 +294,7 @@ export default async function AdminOrdersPage({
             {status.label}
           </a>
         ))}
+        </div>
       </div>
 
       {isAdmin && (
@@ -385,7 +387,7 @@ export default async function AdminOrdersPage({
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-right">
+                  <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-4 py-3 text-left sm:text-right">
                     <p className="text-xs text-neutral-500">ยอดรวม</p>
                     <p className="text-xl font-black text-orange-500">
                       ฿{Number(order.total_price).toLocaleString('th-TH')}
@@ -414,8 +416,8 @@ export default async function AdminOrdersPage({
                     const menu = menusById.get(item.menu_id)
 
                     return (
-                      <div key={item.id} className="flex items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-800">
+                      <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3 sm:flex-row sm:items-center">
+                        <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg bg-neutral-800 sm:h-14 sm:w-14">
                           <img
                             src={menu?.image_url || '/placeholder.jpg'}
                             alt={menu?.name || 'menu'}
@@ -428,7 +430,7 @@ export default async function AdminOrdersPage({
                             {item.quantity} x ฿{Number(item.price).toLocaleString('th-TH')}
                           </p>
                         </div>
-                        <p className="text-sm font-black text-neutral-300">
+                        <p className="text-sm font-black text-neutral-300 sm:text-right">
                           ฿{(Number(item.price) * item.quantity).toLocaleString('th-TH')}
                         </p>
                       </div>
