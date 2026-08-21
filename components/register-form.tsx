@@ -2,15 +2,31 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useFormStatus } from 'react-dom'
 
 interface RegisterFormProps {
   signUpAction: (formData: FormData) => Promise<never>
   message?: string
 }
 
+function SignUpButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="bg-orange-500 rounded-md px-4 py-2 text-black mb-3 hover:bg-orange-600 transition-colors font-bold tracking-wide cursor-pointer shadow-lg shadow-orange-500/10 disabled:cursor-wait disabled:opacity-70"
+    >
+      {pending ? 'กำลังสมัครสมาชิก...' : 'Sign Up'}
+    </button>
+  )
+}
+
 export default function RegisterForm({ signUpAction, message }: RegisterFormProps) {
   // 💡 ปรับเหลือ State เดียวสำหรับควบคุมทั้ง 2 ช่องพร้อมกัน
   const [showPassword, setShowPassword] = useState(false)
+  const [isOpeningLogin, setIsOpeningLogin] = useState(false)
 
   return (
     <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2 mt-12 mx-auto text-white">
@@ -115,19 +131,15 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         </div>
 
         {/* ปุ่มหลัก Sign Up */}
-        <button
-          type="submit"
-          className="bg-orange-500 rounded-md px-4 py-2 text-black mb-3 hover:bg-orange-600 transition-colors font-bold tracking-wide cursor-pointer shadow-lg shadow-orange-500/10"
-        >
-          Sign Up
-        </button>
+        <SignUpButton />
 
         {/* ปุ่มรอง Sign In */}
         <Link
           href="/login"
+          onClick={() => setIsOpeningLogin(true)}
           className="border border-neutral-800 rounded-md px-4 py-2 text-neutral-400 mb-2 text-center hover:bg-neutral-900 hover:text-orange-500 hover:border-orange-500 transition-all font-medium"
         >
-          Sign In
+          {isOpeningLogin ? 'กำลังเปิดหน้า Login...' : 'Sign In'}
         </Link>
 
         {/* แสดงข้อความแจ้งเตือน Error */}

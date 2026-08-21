@@ -2,6 +2,7 @@ import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import EditProfileForm from '@/components/edit-profile-form'
+import { getSiteUrl } from '@/lib/site-url'
 
 export default async function EditProfilePage() {
   const supabase = await createClient()
@@ -62,9 +63,7 @@ export default async function EditProfilePage() {
     'use server'
     try {
       const requestHeaders = await headers()
-      const host = requestHeaders.get('host')
-      const proto = requestHeaders.get('x-forwarded-proto') || 'https'
-      const origin = requestHeaders.get('origin') || `${proto}://${host}`
+      const siteUrl = getSiteUrl(requestHeaders)
 
       const supabaseServer = await createClient()
       const { data: { user: currentUser } } = await supabaseServer.auth.getUser()
@@ -78,7 +77,7 @@ export default async function EditProfilePage() {
         type: 'signup',
         email: currentUser.email,
         options: {
-          emailRedirectTo: `${origin}/register-success`,
+          emailRedirectTo: `${siteUrl}/register-success`,
         },
       })
 

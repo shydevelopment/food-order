@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import { resolveAccountRoleForEmail } from '@/lib/roles'
+import { getSiteUrl } from '@/lib/site-url'
 
 // 💡 นำเข้าฟอร์มหน้าบ้าน
 import RegisterForm from '@/components/register-form'
@@ -39,11 +40,9 @@ export default async function RegisterPage({
       redirect(`/register?message=${encodeURIComponent('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน')}`)
     }
 
-    // ⚡ ดึง Origin ให้แม่นยำรองรับทั้ง Localhost และ Production Domain
+    // ⚡ ดึง URL กลาง รองรับ Production, Vercel Preview และ Localhost
     const requestHeaders = await headers()
-    const host = requestHeaders.get('host')
-    const proto = requestHeaders.get('x-forwarded-proto') || 'https'
-    const origin = requestHeaders.get('origin') || `${proto}://${host}`
+    const siteUrl = getSiteUrl(requestHeaders)
 
     const supabase = await createClient()
 
@@ -52,7 +51,7 @@ export default async function RegisterPage({
       email,
       password,
       options: {
-        emailRedirectTo: `${origin}/register-success`,
+        emailRedirectTo: `${siteUrl}/register-success`,
         data: {
           username: username,
           display_name: displayName,
