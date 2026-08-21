@@ -11,7 +11,7 @@ export const ACCOUNT_ROLES = [
     label: 'Student',
     thaiLabel: 'นักศึกษา',
     description: 'บัญชีที่ใช้อีเมลมหาลัย @email.kmutnb.ac.th สำหรับสั่งอาหารและสิทธินักศึกษา',
-    badgeClass: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+    badgeClass: 'bg-white/10 text-white border-white/40',
   },
   {
     value: 'restaurant',
@@ -59,6 +59,15 @@ export const canHaveRestaurantAccess = (role: string | null | undefined) => (
 export const isKmutnbStudentEmail = (email: string | null | undefined) => (
   Boolean(email?.trim().toLowerCase().endsWith('@email.kmutnb.ac.th'))
 )
+
+export const getKmutnbStudentUsernameFromEmail = (email: string | null | undefined) => {
+  if (!isKmutnbStudentEmail(email)) return null
+
+  const username = email?.trim().toLowerCase().split('@')[0]
+  if (!username) return null
+
+  return username.replace(/^s(?=\d)/, '')
+}
 
 export const resolveAccountRoleForEmail = (
   email: string | null | undefined,

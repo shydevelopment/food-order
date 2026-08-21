@@ -4,18 +4,30 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 
+interface EditableProfile {
+  username: string | null
+  full_name: string | null
+  phone: string | null
+  avatar_url: string | null
+  role?: string | null
+}
+
 interface EditProfileFormProps {
-  profile: any
+  profile: EditableProfile | null
   email: string | undefined
-  isEmailConfirmed?: boolean // ⚡ รับสถานะการยืนยันอีเมล
+  isEmailConfirmed?: boolean
+  isStudentAccount?: boolean
+  studentUsername?: string | null
   updateAction: (formData: FormData) => Promise<{ success: boolean; message?: string }>
-  resendAction?: () => Promise<{ success: boolean; message?: string }> // ⚡ รับฟังก์ชันส่งอีเมลซ้ำ
+  resendAction?: () => Promise<{ success: boolean; message?: string }>
 }
 
 export default function EditProfileForm({
   profile,
   email,
   isEmailConfirmed = false,
+  isStudentAccount = false,
+  studentUsername,
   updateAction,
   resendAction,
 }: EditProfileFormProps) {
@@ -24,6 +36,10 @@ export default function EditProfileForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
+  const lockedUsername = studentUsername || profile?.username || ''
+  const lockedDisplayName = profile?.full_name || ''
+  const lockedInputClass = 'cursor-not-allowed border-white/20 bg-white/10 text-white/70'
+  const editableInputClass = 'bg-neutral-950 border-neutral-800 focus:outline-none focus:border-orange-500 text-white'
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,7 +66,7 @@ export default function EditProfileForm({
       } else {
         setErrorMessage(res.message || 'เกิดข้อผิดพลาดในการส่งอีเมล')
       }
-    } catch (err) {
+    } catch {
       setErrorMessage('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์')
     } finally {
       setIsPending(false)
@@ -92,8 +108,9 @@ export default function EditProfileForm({
 
       setAvatarUrl(publicUrl)
       setSuccessMessage('Profile picture updated successfully! 🎉')
-    } catch (err: any) {
-      setErrorMessage(err.message || 'An error occurred while uploading the image.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred while uploading the image.'
+      setErrorMessage(message)
     } finally {
       setIsPending(false)
     }
@@ -114,7 +131,7 @@ export default function EditProfileForm({
       } else {
         setErrorMessage(res.message || 'An error occurred while updating information.')
       }
-    } catch (err) {
+    } catch {
       setErrorMessage('An error occurred while connecting to the server.')
     } finally {
       setIsPending(false)
@@ -170,8 +187,9 @@ export default function EditProfileForm({
       await supabase.auth.signOut()
       window.location.href = '/login?message=Password changed successfully! Please log in again using your new password.'
 
-    } catch (err: any) {
-      setErrorMessage(err.message || 'An error occurred while updating the password.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An error occurred while updating the password.'
+      setErrorMessage(message)
       setIsPending(false)
     }
   }
@@ -217,11 +235,14 @@ export default function EditProfileForm({
                 <div className="space-y-3">
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Username</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="username" type="text" defaultValue={profile?.username || ''} required />
+                    <input className={`w-full rounded-xl px-4 py-2.5 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="username" type="text" value={isStudentAccount ? lockedUsername : undefined} defaultValue={isStudentAccount ? undefined : profile?.username || ''} readOnly={isStudentAccount} required />
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Display Name</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="displayName" type="text" defaultValue={profile?.full_name || ''} required />
+                    <input className={`w-full rounded-xl px-4 py-2.5 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="displayName" type="text" value={isStudentAccount ? lockedDisplayName : undefined} defaultValue={isStudentAccount ? undefined : profile?.full_name || ''} readOnly={isStudentAccount} required />
+                    {isStudentAccount && (
+                      <p className="mt-1 text-[11px] font-medium text-white/60">บัญชี Student ไม่สามารถแก้ Username และ Display Name ได้</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Phone Number</label>
@@ -368,11 +389,16 @@ export default function EditProfileForm({
                 <div className="space-y-4 max-w-xl">
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Username</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="username" type="text" defaultValue={profile?.username || ''} required />
+                    <input className={`col-span-2 rounded-xl px-4 py-2 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="username" type="text" value={isStudentAccount ? lockedUsername : undefined} defaultValue={isStudentAccount ? undefined : profile?.username || ''} readOnly={isStudentAccount} required />
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Display Name</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="displayName" type="text" defaultValue={profile?.full_name || ''} required />
+                    <div className="col-span-2">
+                      <input className={`w-full rounded-xl px-4 py-2 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="displayName" type="text" value={isStudentAccount ? lockedDisplayName : undefined} defaultValue={isStudentAccount ? undefined : profile?.full_name || ''} readOnly={isStudentAccount} required />
+                      {isStudentAccount && (
+                        <p className="mt-1 text-xs font-medium text-white/60">บัญชี Student ไม่สามารถแก้ Username และ Display Name ได้</p>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Phone Number</label>

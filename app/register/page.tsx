@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
-import { resolveAccountRoleForEmail } from '@/lib/roles'
+import { getKmutnbStudentUsernameFromEmail, resolveAccountRoleForEmail } from '@/lib/roles'
 import { getSiteUrl } from '@/lib/site-url'
 import RegisterForm from '@/components/register-form'
 
@@ -24,10 +24,11 @@ export default async function RegisterPage({
     const email = formData.get('email') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
-    const username = formData.get('username') as string
+    const rawUsername = formData.get('username') as string
     const displayName = formData.get('displayName') as string
     const phone = formData.get('phone') as string
     const accountRole = resolveAccountRoleForEmail(email)
+    const username = getKmutnbStudentUsernameFromEmail(email) || rawUsername
 
     if (password !== confirmPassword) {
       redirect(`/register?message=${encodeURIComponent('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน')}`)
@@ -66,11 +67,33 @@ export default async function RegisterPage({
     redirect(`/login?message=${successMsg}&type=success`)
   }
 
+  const signUpWithGoogle = async () => {
+    'use server'
+
+    const requestHeaders = await headers()
+    const siteUrl = getSiteUrl(requestHeaders)
+    const supabase = await createClient()
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${siteUrl}/auth/callback?next=/oauth-profile`,
+      },
+    })
+
+    if (error || !data.url) {
+      redirect(`/register?message=${encodeURIComponent(error?.message || 'ไม่สามารถสมัครด้วย Google ได้')}`)
+    }
+
+    redirect(data.url)
+  }
+
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center p-2 sm:p-4">
       <main className="flex w-full flex-col items-center justify-center p-0 sm:p-4">
         <RegisterForm
           signUpAction={signUpAction}
+          googleSignInAction={signUpWithGoogle}
           message={resolvedSearchParams?.message}
         />
       </main>
