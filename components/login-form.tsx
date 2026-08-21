@@ -2,14 +2,30 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useFormStatus } from 'react-dom'
 
 interface LoginFormProps {
   signInAction: (formData: FormData) => Promise<never>
   message?: string
 }
 
+function SignInButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="bg-orange-500 rounded-md px-4 py-2.5 text-black mb-3 hover:bg-orange-600 transition-colors font-bold tracking-wide cursor-pointer shadow-lg shadow-orange-500/10 text-sm disabled:cursor-wait disabled:opacity-70"
+    >
+      {pending ? 'กำลังเข้าสู่ระบบ...' : 'Sign In'}
+    </button>
+  )
+}
+
 export default function LoginForm({ signInAction, message }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
+  const [isOpeningRegister, setIsOpeningRegister] = useState(false)
 
   return (
     <div className="flex flex-col w-full px-4 sm:max-w-md justify-center gap-2 mt-12 mx-auto text-white">
@@ -65,18 +81,14 @@ export default function LoginForm({ signInAction, message }: LoginFormProps) {
             </button>
           </div>
           
-          <button
-            type="submit"
-            className="bg-orange-500 rounded-md px-4 py-2.5 text-black mb-3 hover:bg-orange-600 transition-colors font-bold tracking-wide cursor-pointer shadow-lg shadow-orange-500/10 text-sm"
-          >
-            Sign In
-          </button>
+          <SignInButton />
           
           <Link
             href="/register"
+            onClick={() => setIsOpeningRegister(true)}
             className="border border-neutral-800 rounded-md px-4 py-2.5 text-neutral-400 text-center hover:bg-neutral-900 hover:text-orange-500 hover:border-orange-500 transition-all font-bold text-sm"
           >
-            Sign Up
+            {isOpeningRegister ? 'กำลังเปิดหน้า Register...' : 'Sign Up'}
           </Link>
 
           {message && (

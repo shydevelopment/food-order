@@ -5,6 +5,8 @@ import { createBrowserClient } from '@supabase/ssr';
 import type { User } from '@supabase/supabase-js';
 import { usePathname } from 'next/navigation'; 
 import Link from 'next/link';
+import LogoutConfirmButton from './logout-confirm-button';
+import ThemeToggle from './theme-toggle';
 
 interface Profile {
   username: string | null;
@@ -100,18 +102,6 @@ export default function Navbar() {
     };
   }, [pathname]);
 
-  const handleLogout = async () => {
-    const shouldLogout = window.confirm('ต้องการออกจากระบบใช่ไหม?');
-    if (!shouldLogout) return;
-
-    await supabase.auth.signOut();
-    window.location.href = '/login';
-  };
-
-  if (loading) {
-    return <header className="bg-black text-gray-300 p-4 border-b border-neutral-900">กำลังโหลด...</header>;
-  }
-
   const isAdmin = profile?.role === 'admin';
   const isRestaurantOwner = profile?.role === 'restaurant';
 
@@ -152,6 +142,7 @@ export default function Navbar() {
 
         {/* RIGHT SECTION */}
         <div className="flex items-center space-x-3 sm:space-x-6">
+          <ThemeToggle />
           
           {/* CART ICON */}
           {user && (
@@ -168,7 +159,9 @@ export default function Navbar() {
           )}
 
           {/* USER PROFILE / LOGIN BUTTONS (Desktop) */}
-          {user ? (
+          {loading ? (
+            <div className="hidden h-9 w-24 animate-pulse rounded-full bg-neutral-900 md:block" aria-label="กำลังตรวจสอบบัญชี" />
+          ) : user ? (
             <div className="relative hidden md:block">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -220,9 +213,12 @@ export default function Navbar() {
                       ⚙️ Edit Profile
                     </a>
                     <hr className="border-neutral-800 my-1" />
-                    <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-950/30 font-medium transition-colors active:bg-red-900/50 cursor-pointer">
+                    <LogoutConfirmButton
+                      context={isAdmin ? 'admin' : isRestaurantOwner ? 'restaurant' : 'default'}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-950/30 font-medium transition-colors active:bg-red-900/50 cursor-pointer"
+                    >
                       🚪 Log Out
-                    </button>
+                    </LogoutConfirmButton>
                   </div>
                 </>
               )}
@@ -272,7 +268,13 @@ export default function Navbar() {
         <div className="overflow-hidden">
           <div className="px-6 py-5 border-t border-neutral-900">
             
-            {user ? (
+            {loading ? (
+              <div className="space-y-3">
+                <div className="h-16 animate-pulse rounded-xl border border-neutral-800 bg-neutral-900" />
+                <div className="h-10 animate-pulse rounded-lg bg-neutral-900" />
+                <div className="h-10 animate-pulse rounded-lg bg-neutral-900" />
+              </div>
+            ) : user ? (
               /* กรณี Login แล้ว: แสดงโปรไฟล์ + เมนูนำทาง + บัญชีผู้ใช้ */
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 bg-neutral-900 rounded-xl border border-neutral-800 mb-2 transition-transform active:scale-[0.98]">
@@ -322,9 +324,13 @@ export default function Navbar() {
                   <a href="/editPage" className="block p-2 rounded-lg text-sm text-gray-300 hover:bg-neutral-900 hover:text-orange-400 transition-all active:scale-95 active:bg-neutral-800" onClick={() => setIsMobileMenuOpen(false)}>
                     ⚙️ Edit Profile
                   </a>
-                  <button onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }} className="w-full text-left p-2 rounded-lg text-sm font-bold text-red-400 bg-red-950/20 hover:bg-red-900/40 transition-all active:scale-95 active:bg-red-900/60">
+                  <LogoutConfirmButton
+                    context={isAdmin ? 'admin' : isRestaurantOwner ? 'restaurant' : 'default'}
+                    onBeforeOpen={() => setIsMobileMenuOpen(false)}
+                    className="w-full text-left p-2 rounded-lg text-sm font-bold text-red-400 bg-red-950/20 hover:bg-red-900/40 transition-all active:scale-95 active:bg-red-900/60"
+                  >
                     🚪 Log Out
-                  </button>
+                  </LogoutConfirmButton>
                 </div>
               </div>
             ) : (

@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { ForgotPasswordForm } from '@/components/forgot-password-form' 
+import { getSiteUrl } from '@/lib/site-url'
 
 export default async function ForgotPasswordPage() {
   
@@ -10,9 +11,9 @@ export default async function ForgotPasswordPage() {
     try {
       const email = formData.get('email') as string
       
-      // ดักจับค่า origin และใส่ค่า fallback ป้องกันกรณีหลุดเป็น null
+      // ดึง URL กลาง รองรับ Production, Vercel Preview และ Localhost
       const requestHeaders = await headers()
-      const origin = requestHeaders.get('origin') || 'http://localhost:3000'
+      const siteUrl = getSiteUrl(requestHeaders)
 
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
       if (!emailRegex.test(email)) {
@@ -23,7 +24,7 @@ export default async function ForgotPasswordPage() {
       
       // 💡 อัปเดต redirectTo ให้ปลายทางวิ่งไปที่ /reset-password แทนหน้าเดิมแล้วครับ
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password`,
       })
 
       if (error) {
