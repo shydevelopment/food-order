@@ -8,6 +8,12 @@ export default async function LoginPage({
   searchParams: Promise<{ message: string }>
 }) {
   const resolvedSearchParams = await searchParams
+  const currentSupabase = await createClient()
+  const { data: { user: currentUser } } = await currentSupabase.auth.getUser()
+
+  if (currentUser) {
+    redirect('/')
+  }
 
   // Server Action สำหรับเข้าสู่ระบบ (รันฝั่ง Server ปลอดภัยสูงสุด)
   const signIn = async (formData: FormData) => {

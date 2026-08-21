@@ -1,10 +1,11 @@
 // app/admin/layout.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { useRouter } from 'next/navigation';
-import Sidebar from './components/sidebar'; // อิมพอร์ต Sidebar Component
+import { usePathname, useRouter } from 'next/navigation';
+import AdminSidebar from './components/admin-sidebar';
+import RestaurantSidebar from './components/restaurant-sidebar';
 
 export default function AdminLayout({
   children,
@@ -13,11 +14,16 @@ export default function AdminLayout({
 }) {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
   useEffect(() => {
@@ -35,24 +41,34 @@ export default function AdminLayout({
         .eq('id', user.id)
         .single();
 
-      if (dbError || profile?.role !== 'admin') {
+      if (dbError || !['admin', 'restaurant'].includes(profile?.role)) {
         router.replace('/'); 
         return;
       }
 
+      const isRestaurantAllowedPage =
+        pathname === '/admin/orders' ||
+        pathname.startsWith('/admin/restaurants/');
+
+      if (profile.role === 'restaurant' && !isRestaurantAllowedPage) {
+        router.replace('/admin/orders');
+        return;
+      }
+
+      setRole(profile.role);
       setAuthorized(true);
       setLoading(false);
     };
 
     verifyAdmin();
-  }, [router, supabase]);
+  }, [pathname, router, supabase]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-2">
         <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-sm font-medium text-gray-400 tracking-wide mt-2">
-          กำลังตรวจสอบสิทธิ์ Admin...
+          กำลังตรวจสอบสิทธิ์...
         </p>
       </div>
     );
@@ -76,8 +92,7 @@ export default function AdminLayout({
         }}
       >
         
-        {/* 🧱 แทรก Sidebar ไว้ฝั่งซ้าย */}
-        <Sidebar />
+        {role === 'admin' ? <AdminSidebar /> : <RestaurantSidebar />}
 
         {/* 📄 ส่วนแสดงเนื้อหาฝั่งขวา */}
         <main className="flex-1 p-6 md:p-10 bg-neutral-950 overflow-y-auto h-full">

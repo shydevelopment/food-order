@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
+import { resolveAccountRoleForEmail } from '@/lib/roles'
 
 // 💡 นำเข้าฟอร์มหน้าบ้าน
 import RegisterForm from '@/components/register-form'
@@ -11,6 +12,12 @@ export default async function RegisterPage({
   searchParams: Promise<{ message: string }>
 }) {
   const resolvedSearchParams = await searchParams
+  const currentSupabase = await createClient()
+  const { data: { user: currentUser } } = await currentSupabase.auth.getUser()
+
+  if (currentUser) {
+    redirect('/')
+  }
 
   // ==========================================
   // ⚙️ ส่วนที่ 1: ระบบจัดการการสมัครสมาชิก (Server Action)
@@ -25,6 +32,7 @@ export default async function RegisterPage({
     const username = formData.get('username') as string
     const displayName = formData.get('displayName') as string
     const phone = formData.get('phone') as string
+    const accountRole = resolveAccountRoleForEmail(email)
 
     // 💡 2. เช็คว่ารหัสผ่าน 2 ช่องตรงกันไหม
     if (password !== confirmPassword) {
@@ -44,11 +52,12 @@ export default async function RegisterPage({
       email,
       password,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=/register-success`,
+        emailRedirectTo: `${origin}/register-success`,
         data: {
           username: username,
           display_name: displayName,
           phone: phone,
+          role: accountRole,
         },
       },
     })

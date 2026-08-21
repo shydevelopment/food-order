@@ -1,6 +1,7 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
@@ -12,6 +13,8 @@ export default function RestaurantDetailPage() {
   const [restaurant, setRestaurant] = useState<any>(null);
   const [menus, setMenus] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [canManage, setCanManage] = useState(false);
+  const [accessLevel, setAccessLevel] = useState<'owner' | 'staff'>('staff');
   
   // State สำหรับคำนวณสถานะเปิดปิด Real-time
   const [isOpenNow, setIsOpenNow] = useState(false);
@@ -44,10 +47,14 @@ export default function RestaurantDetailPage() {
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [newStaffIdentifier, setNewStaffIdentifier] = useState('');
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
   // ฟังก์ชันตรวจสอบสถานะร้านค้าจากเวลาจริง
@@ -69,12 +76,16 @@ export default function RestaurantDetailPage() {
 
   const fetchRestaurantAndMenus = async () => {
     if (!restaurantId) return;
+    setLoading(true);
     try {
-      const { data: restaurantData } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('id', restaurantId)
-        .single();
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`);
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'ไม่สามารถโหลดข้อมูลร้านอาหารได้');
+      }
+
+      const restaurantData = result.restaurant;
       
       if (restaurantData) {
         setRestaurant(restaurantData);
@@ -82,15 +93,13 @@ export default function RestaurantDetailPage() {
         setIsOpenNow(status);
       }
 
-      const { data: menuData } = await supabase
-        .from('menus')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('created_at', { ascending: false });
-
-      if (menuData) setMenus(menuData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      setMenus(result.menus || []);
+      setMembers(result.members || []);
+      setCanManage(Boolean(result.canManage));
+      setAccessLevel(result.accessLevel === 'owner' ? 'owner' : 'staff');
+    } catch (error: any) {
+      console.error('Error fetching data:', error.message);
+      alert('ไม่สามารถโหลดข้อมูลร้านอาหารได้: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -98,50 +107,21 @@ export default function RestaurantDetailPage() {
 
   // 👥 ฟังก์ชันดึงรายชื่อสมาชิก / เจ้าของ / พนักงานประจำร้านจากตาราง profiles
   const fetchRestaurantMembers = async () => {
-    if (!restaurant) return;
     setMembersLoading(true);
     try {
-      let memberList: any[] = [];
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`);
+      const result = await res.json();
 
-      // 1. ดึงโปรไฟล์เจ้าของร้านตาม owner_id (ถ้ามี)
-      if (restaurant.owner_id) {
-        const { data: ownerData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', restaurant.owner_id);
-
-        if (ownerData) memberList = [...ownerData];
+      if (!res.ok) {
+        throw new Error(result.error || 'ไม่สามารถโหลดสมาชิกในร้านได้');
       }
 
-      // 2. ค้นหาโปรไฟล์ที่มีอีเมลตรงกับอีเมลร้าน หรือ role = 'restaurant'
-      if (restaurant.email) {
-        const { data: emailMatchData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', restaurant.email);
-
-        if (emailMatchData) {
-          emailMatchData.forEach((p) => {
-            if (!memberList.some((m) => m.id === p.id)) {
-              memberList.push(p);
-            }
-          });
-        }
-      }
-
-      // 3. หากยังไม่พบ สามารถดึงสมาชิกที่เป็น Role restaurant ทั้งหมดเป็นทางเลือกสำรอง
-      if (memberList.length === 0) {
-        const { data: roleMatchData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'restaurant');
-
-        if (roleMatchData) memberList = roleMatchData;
-      }
-
-      setMembers(memberList);
+      setMembers(result.members || []);
+      setCanManage(Boolean(result.canManage));
+      setAccessLevel(result.accessLevel === 'owner' ? 'owner' : 'staff');
     } catch (err: any) {
       console.error('Error fetching members:', err.message);
+      alert('ไม่สามารถโหลดสมาชิกในร้านได้: ' + err.message);
     } finally {
       setMembersLoading(false);
     }
@@ -153,11 +133,13 @@ export default function RestaurantDetailPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRestaurantAndMenus();
   }, [restaurantId, supabase]);
 
   // ฟังก์ชันเปิด Modal แก้ไขข้อมูลร้าน
   const openEditRestModal = () => {
+    if (!canManage) return alert('เฉพาะเจ้าของร้านเท่านั้นที่แก้ไขข้อมูลร้านได้');
     if (!restaurant) return;
     setEditRestData({
       name: restaurant.name || '',
@@ -198,9 +180,10 @@ export default function RestaurantDetailPage() {
         uploadedImageUrl = publicUrl;
       }
 
-      const { data, error: updateError } = await supabase
-        .from('restaurants')
-        .update({
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: editRestData.name,
           description: editRestData.description || null,
           address: editRestData.address || null,
@@ -209,15 +192,15 @@ export default function RestaurantDetailPage() {
           open_time: editRestData.open_time,
           close_time: editRestData.close_time,
           image_url: uploadedImageUrl
-        })
-        .eq('id', restaurantId)
-        .select();
+        }),
+      });
+      const result = await res.json();
 
-      if (updateError) throw updateError;
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถแก้ไขร้านค้าได้');
 
-      if (data && data[0]) {
-        setRestaurant(data[0]);
-        const status = checkStoreStatus(data[0].open_time, data[0].close_time);
+      if (result.restaurant) {
+        setRestaurant(result.restaurant);
+        const status = checkStoreStatus(result.restaurant.open_time, result.restaurant.close_time);
         setIsOpenNow(status);
       }
       
@@ -233,6 +216,7 @@ export default function RestaurantDetailPage() {
   // ฟังก์ชันจัดการเพิ่มเมนูอาหาร
   const handleAddMenu = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManage) return alert('เฉพาะเจ้าของร้านเท่านั้นที่เพิ่มเมนูได้');
     if (!newMenu.name || !newMenu.price) return alert('กรุณากรอกชื่อเมนูและราคา');
 
     setActionLoading(true);
@@ -256,23 +240,23 @@ export default function RestaurantDetailPage() {
         uploadedImageUrl = publicUrl;
       }
 
-      const { data, error: insertError } = await supabase
-        .from('menus')
-        .insert([
-          {
-            restaurant_id: restaurantId,
-            name: newMenu.name,
-            price: parseFloat(newMenu.price),
-            description: newMenu.description || null,
-            image_url: uploadedImageUrl,
-            is_available: newMenu.is_available
-          }
-        ])
-        .select();
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'menu',
+          name: newMenu.name,
+          price: parseFloat(newMenu.price),
+          description: newMenu.description || null,
+          image_url: uploadedImageUrl,
+          is_available: newMenu.is_available
+        }),
+      });
+      const result = await res.json();
 
-      if (insertError) throw insertError;
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถเพิ่มเมนูได้');
 
-      if (data) setMenus([data[0], ...menus]);
+      if (result.menu) setMenus([result.menu, ...menus]);
       setNewMenu({ name: '', price: '', description: '', is_available: true });
       setImageFile(null);
       setIsModalOpen(false);
@@ -285,20 +269,84 @@ export default function RestaurantDetailPage() {
 
   // ฟังก์ชันลบเมนูอาหาร
   const handleDeleteMenu = async (menuId: string, menuName: string) => {
+    if (!canManage) return alert('เฉพาะเจ้าของร้านเท่านั้นที่ลบเมนูได้');
     if (!confirm(`คุณต้องการลบเมนู "${menuName}" ใช่หรือไม่?`)) return;
 
     setActionLoading(true);
-    const { error } = await supabase
-      .from('menus')
-      .delete()
-      .eq('id', menuId);
+    try {
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'menu', menuId }),
+      });
+      const result = await res.json();
 
-    if (error) {
-      alert('ไม่สามารถลบเมนูได้: ' + error.message);
-    } else {
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถลบเมนูได้');
+
       setMenus(menus.filter((menu) => menu.id !== menuId));
+    } catch (error: any) {
+      alert('ไม่สามารถลบเมนูได้: ' + error.message);
+    } finally {
+      setActionLoading(false);
     }
-    setActionLoading(false);
+  };
+
+  const handleAddStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canManage) return alert('เฉพาะเจ้าของร้านเท่านั้นที่เพิ่มลูกน้องได้');
+    if (!newStaffIdentifier.trim()) return alert('กรุณากรอก username ของลูกน้อง');
+
+    setMembersLoading(true);
+    try {
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'member',
+          identifier: newStaffIdentifier.trim(),
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถเพิ่มลูกน้องได้');
+
+      setNewStaffIdentifier('');
+      await fetchRestaurantMembers();
+      alert('เพิ่มลูกน้องเข้าร้านสำเร็จ');
+    } catch (error: any) {
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  const handleRemoveStaff = async (member: any) => {
+    if (!canManage) return alert('เฉพาะเจ้าของร้านเท่านั้นที่ลบลูกน้องได้');
+    if (member.access_level === 'owner') return alert('ไม่สามารถลบเจ้าของร้านจากหน้านี้ได้');
+
+    const displayName = member.full_name || member.username || member.email || 'ลูกน้องคนนี้';
+    if (!confirm(`ต้องการลบ ${displayName} ออกจากร้านใช่ไหม?`)) return;
+
+    setMembersLoading(true);
+    try {
+      const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'member',
+          memberId: member.member_id,
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถลบลูกน้องได้');
+
+      await fetchRestaurantMembers();
+    } catch (error: any) {
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    } finally {
+      setMembersLoading(false);
+    }
   };
 
   if (loading) return <div className="p-8 text-neutral-400 bg-neutral-950 min-h-screen">กำลังโหลดข้อมูลระบบร้านอาหาร...</div>;
@@ -308,8 +356,8 @@ export default function RestaurantDetailPage() {
     <div className="p-6 md:p-10 bg-neutral-950 min-h-screen text-white relative">
       
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <Link href="/admin/restaurants" className="text-xs font-bold text-neutral-500 hover:text-orange-500 transition-colors uppercase tracking-wider">
-          ← กลับไปหน้ารวมร้านอาหาร
+        <Link href="/admin/orders" className="text-xs font-bold text-neutral-500 hover:text-orange-500 transition-colors uppercase tracking-wider">
+          ← กลับไปหน้ารับออเดอร์
         </Link>
       </div>
 
@@ -318,6 +366,13 @@ export default function RestaurantDetailPage() {
         
         {/* 🔥 ปุ่มสำหรับแก้ไขข้อมูลร้านอาหาร & ปุ่มดูสมาชิกประจำร้าน */}
         <div className="absolute top-4 right-4 flex items-center gap-2">
+          <span className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide ${
+            accessLevel === 'owner'
+              ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+              : 'border-blue-500/30 bg-blue-500/10 text-blue-400'
+          }`}>
+            {accessLevel === 'owner' ? 'OWNER' : 'STAFF'}
+          </span>
           {/* 👥 ปุ่มเปิดดูรายชื่อสมาชิกในร้าน */}
           <button 
             onClick={openMembersModal}
@@ -326,12 +381,14 @@ export default function RestaurantDetailPage() {
             👥 สมาชิกในร้าน
           </button>
 
-          <button 
-            onClick={openEditRestModal}
-            className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-neutral-700/60 flex items-center gap-1.5 active:scale-95 cursor-pointer"
-          >
-            ✏️ แก้ไขข้อมูลร้าน
-          </button>
+          {canManage && (
+            <button 
+              onClick={openEditRestModal}
+              className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-neutral-700/60 flex items-center gap-1.5 active:scale-95 cursor-pointer"
+            >
+              ✏️ แก้ไขข้อมูลร้าน
+            </button>
+          )}
         </div>
 
         {restaurant.image_url ? (
@@ -375,12 +432,14 @@ export default function RestaurantDetailPage() {
             >
               👥 ดูสมาชิกในร้าน
             </button>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 cursor-pointer"
-            >
-              + เพิ่มเมนูใหม่
-            </button>
+            {canManage && (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 cursor-pointer"
+              >
+                + เพิ่มเมนูใหม่
+              </button>
+            )}
           </div>
         </div>
 
@@ -388,13 +447,15 @@ export default function RestaurantDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {menus.map((menu) => (
               <div key={menu.id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex gap-4 hover:border-neutral-700 transition-all relative group shadow-md">
-                <button 
-                  disabled={actionLoading}
-                  onClick={() => handleDeleteMenu(menu.id, menu.name)}
-                  className="absolute top-3 right-3 text-neutral-500 hover:text-red-400 p-1.5 rounded-md hover:bg-red-950/30 transition-all duration-200 opacity-80 lg:opacity-0 lg:group-hover:opacity-100"
-                >
-                  🗑️
-                </button>
+                {canManage && (
+                  <button 
+                    disabled={actionLoading}
+                    onClick={() => handleDeleteMenu(menu.id, menu.name)}
+                    className="absolute top-3 right-3 text-neutral-500 hover:text-red-400 p-1.5 rounded-md hover:bg-red-950/30 transition-all duration-200 opacity-80 lg:opacity-0 lg:group-hover:opacity-100"
+                  >
+                    🗑️
+                  </button>
+                )}
                 {menu.image_url ? (
                   <img src={menu.image_url} alt={menu.name} className="w-20 h-20 rounded-lg object-cover bg-neutral-950 border border-neutral-800/80 shrink-0" />
                 ) : (
@@ -444,6 +505,33 @@ export default function RestaurantDetailPage() {
               </button>
             </div>
 
+            {canManage && (
+              <form onSubmit={handleAddStaff} className="mt-4 rounded-xl border border-orange-500/15 bg-orange-500/5 p-4">
+                <label className="block text-xs font-black uppercase tracking-wide text-orange-400">
+                  เพิ่มลูกน้องเข้าร้าน
+                </label>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+                  <input
+                    type="text"
+                    value={newStaffIdentifier}
+                    onChange={(e) => setNewStaffIdentifier(e.target.value)}
+                    placeholder="กรอก username ของผู้ใช้ role restaurant"
+                    className="rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-orange-500 focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={membersLoading || !newStaffIdentifier.trim()}
+                    className="rounded-lg bg-orange-500 px-4 py-2 text-xs font-black text-black transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500"
+                  >
+                    เพิ่มลูกน้อง
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-neutral-500">
+                  ต้องกรอก username เท่านั้น และผู้ใช้ต้องมี role เป็น restaurant หรือ admin
+                </p>
+              </form>
+            )}
+
             {/* Member Cards List */}
             <div className="flex-1 overflow-y-auto py-4 space-y-3 custom-scrollbar">
               {membersLoading ? (
@@ -452,7 +540,7 @@ export default function RestaurantDetailPage() {
                 </div>
               ) : members.length > 0 ? (
                 members.map((member) => {
-                  const isOwner = restaurant.owner_id === member.id;
+                  const isOwner = restaurant.owner_id === member.id || member.access_level === 'owner';
                   const displayName = member.full_name || member.username || 'สมาชิกประจำร้าน';
 
                   return (
@@ -476,7 +564,7 @@ export default function RestaurantDetailPage() {
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
                                 : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                             }`}>
-                              {isOwner ? '👑 เจ้าของร้าน (Owner)' : `👤 ${member.role || 'พนักงาน'}`}
+                              {isOwner ? '👑 เจ้าของร้าน (Owner)' : `👤 ${member.access_level === 'staff' ? 'พนักงานร้าน' : member.role || 'พนักงาน'}`}
                             </span>
                           </div>
                           <p className="text-xs text-neutral-400 mt-1">Username: @{member.username || '-'}</p>
@@ -488,6 +576,16 @@ export default function RestaurantDetailPage() {
                         <span className="text-xs font-mono text-neutral-400 block">
                           📞 {member.phone || 'ไม่ระบุเบอร์โทร'}
                         </span>
+                        {canManage && !isOwner && member.member_id && (
+                          <button
+                            type="button"
+                            disabled={membersLoading}
+                            onClick={() => handleRemoveStaff(member)}
+                            className="mt-2 rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
+                          >
+                            ลบออก
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

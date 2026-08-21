@@ -1,22 +1,51 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import type { User } from '@supabase/supabase-js';
 import { usePathname } from 'next/navigation'; 
+import Link from 'next/link';
+
+interface Profile {
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+}
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const pathname = usePathname(); 
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, full_name, avatar_url, role') 
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      if (data) setProfile(data as Profile);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching profile:', message);
+    }
+  }, [supabase]);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -49,29 +78,32 @@ export default function Navbar() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [pathname]); 
+  }, [fetchProfile, pathname, supabase]); 
 
-  // ปิดเมนูเมื่อเปลี่ยนหน้าเว็บ
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    const syncCartCount = () => {
+      try {
+        const cart = JSON.parse(window.localStorage.getItem('food-order-cart') || '[]') as Array<{ quantity?: number }>;
+        setCartCount(cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0));
+      } catch {
+        setCartCount(0);
+      }
+    };
+
+    syncCartCount();
+    window.addEventListener('storage', syncCartCount);
+    window.addEventListener('food-order-cart-updated', syncCartCount);
+
+    return () => {
+      window.removeEventListener('storage', syncCartCount);
+      window.removeEventListener('food-order-cart-updated', syncCartCount);
+    };
   }, [pathname]);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, full_name, avatar_url, role') 
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      if (data) setProfile(data);
-    } catch (error: any) {
-      console.error('Error fetching profile:', error.message);
-    }
-  };
-
   const handleLogout = async () => {
+    const shouldLogout = window.confirm('ต้องการออกจากระบบใช่ไหม?');
+    if (!shouldLogout) return;
+
     await supabase.auth.signOut();
     window.location.href = '/login';
   };
@@ -81,6 +113,7 @@ export default function Navbar() {
   }
 
   const isAdmin = profile?.role === 'admin';
+  const isRestaurantOwner = profile?.role === 'restaurant';
 
   return (
     <header className="bg-black text-white shadow-md w-full relative z-50 border-b border-neutral-900">
@@ -94,28 +127,28 @@ export default function Navbar() {
           FOOD <span className="text-white">ORDER</span> KMUTNB 🍔
         </div>
 
-        {/* DESKTOP NAVIGATION (แสดงเฉพาะตอนที่ Login แล้วเท่านั้น) */}
-        {user && (
-          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
-            <a href="/" className={`transition-all active:scale-90 ${pathname === '/' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
-              Home
-            </a>
+        {/* DESKTOP NAVIGATION */}
+        <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
+          <Link href="/" className={`transition-all active:scale-90 ${pathname === '/' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+            Home
+          </Link>
 
-            <a href="/storePage" className={`transition-all active:scale-90 ${pathname === '/storePage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
-              Restaurant
-            </a>
+          <a href="/storePage" className={`transition-all active:scale-90 ${pathname === '/storePage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+            Restaurant
+          </a>
 
+          {user && (
             <a href="/trackorderPage" className={`transition-all active:scale-90 ${pathname === '/trackorderPage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
               Track Order
             </a>
+          )}
 
-            {isAdmin && (
-              <a href="/admin" className="text-red-400 hover:text-red-500 font-bold border border-red-900/50 px-2.5 py-0.5 rounded bg-red-950/20 transition-all active:scale-90 active:bg-red-900/50 text-xs tracking-wide">
-                📊 Admin
-              </a>
-            )}
-          </nav>
-        )}
+          {(isAdmin || isRestaurantOwner) && (
+            <a href={isAdmin ? '/admin' : '/admin/orders'} className="text-red-400 hover:text-red-500 font-bold border border-red-900/50 px-2.5 py-0.5 rounded bg-red-950/20 transition-all active:scale-90 active:bg-red-900/50 text-xs tracking-wide">
+              {isAdmin ? '📊 Admin' : '🧾 ร้านค้า'}
+            </a>
+          )}
+        </nav>
 
         {/* RIGHT SECTION */}
         <div className="flex items-center space-x-3 sm:space-x-6">
@@ -126,9 +159,11 @@ export default function Navbar() {
               <svg className="w-6 h-6 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
-              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-black text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-black animate-pulse">
-                2
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-black text-[10px] font-black min-w-4 h-4 px-1 rounded-full flex items-center justify-center border border-black animate-pulse">
+                  {cartCount}
+                </span>
+              )}
             </a>
           )}
 
@@ -262,18 +297,18 @@ export default function Navbar() {
                 </div>
 
                 <nav className="flex flex-col space-y-3 font-medium text-base">
-                  <a href="/" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                     🏠 Home
-                  </a>
+                  </Link>
                   <a href="/storePage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                     🍔 Restaurant
                   </a>
                   <a href="/trackorderPage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/trackorderPage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                     📍 Track Order
                   </a>
-                  {isAdmin && (
-                    <a href="/admin" className="p-2 rounded-lg text-red-400 bg-red-950/30 border border-red-900/50 font-bold flex items-center gap-2 transition-all active:scale-95 active:bg-red-900/50" onClick={() => setIsMobileMenuOpen(false)}>
-                      📊 Admin Dashboard
+                  {(isAdmin || isRestaurantOwner) && (
+                    <a href={isAdmin ? '/admin' : '/admin/orders'} className="p-2 rounded-lg text-red-400 bg-red-950/30 border border-red-900/50 font-bold flex items-center gap-2 transition-all active:scale-95 active:bg-red-900/50" onClick={() => setIsMobileMenuOpen(false)}>
+                      {isAdmin ? '📊 Admin Dashboard' : '🧾 รับออเดอร์ร้านค้า'}
                     </a>
                   )}
                 </nav>
@@ -293,8 +328,15 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              /* กรณี "ยังไม่ Login": ซ่อนเมนูนำทางทั้งหมด แสดงเฉพาะปุ่ม Login / Create Account */
+              /* กรณี "ยังไม่ Login": เปิดให้ดูเว็บและร้านอาหารได้ แต่ยังไม่ให้สั่งอาหาร */
               <div className="flex flex-col space-y-3">
+                <Link href="/" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  🏠 Home
+                </Link>
+                <a href="/storePage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  🍔 Restaurant
+                </a>
+                <hr className="border-neutral-900 my-1" />
                 <a 
                   href="/login" 
                   className="w-full text-center py-2.5 text-gray-300 hover:text-orange-400 text-sm font-semibold rounded-lg border border-neutral-800 transition-all active:scale-95 active:bg-neutral-900" 
