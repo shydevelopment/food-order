@@ -6,7 +6,6 @@ import { useFormStatus } from 'react-dom'
 
 interface LoginFormProps {
   signInAction: (formData: FormData) => Promise<never>
-  googleSignInAction: () => Promise<never>
   message?: string
   messageType?: 'success' | 'error'
 }
@@ -25,7 +24,7 @@ function SignInButton() {
   )
 }
 
-export default function LoginForm({ signInAction, googleSignInAction, message, messageType = 'error' }: LoginFormProps) {
+export default function LoginForm({ signInAction, message, messageType = 'error' }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isOpeningRegister, setIsOpeningRegister] = useState(false)
 
@@ -84,16 +83,6 @@ export default function LoginForm({ signInAction, googleSignInAction, message, m
           </div>
           
           <SignInButton />
-
-          <button
-            type="submit"
-            formAction={googleSignInAction}
-            formNoValidate
-            className="mb-3 flex items-center justify-center gap-2 rounded-md border border-neutral-800 bg-white px-4 py-2.5 text-sm font-bold text-neutral-950 shadow-lg shadow-white/5 transition-all hover:bg-neutral-100 active:scale-95"
-          >
-            <span className="text-base">G</span>
-            Continue with Google
-          </button>
           
           <Link
             href="/register"

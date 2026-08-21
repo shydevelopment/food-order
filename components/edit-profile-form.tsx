@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
+import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy'
+import PasswordRequirements from '@/components/password-requirements'
 
 interface EditableProfile {
   username: string | null
@@ -36,6 +38,7 @@ export default function EditProfileForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
+  const [newPasswordValue, setNewPasswordValue] = useState('')
   const lockedUsername = studentUsername || profile?.username || ''
   const lockedDisplayName = profile?.full_name || ''
   const lockedInputClass = 'cursor-not-allowed border-white/20 bg-white/10 text-white/70'
@@ -158,8 +161,9 @@ export default function EditProfileForm({
       return
     }
 
-    if (newPassword.length < 6) {
-      setErrorMessage('The new password must be at least 6 characters long.')
+    const passwordPolicyError = validatePasswordPolicy(newPassword)
+    if (passwordPolicyError) {
+      setErrorMessage(passwordPolicyError)
       setIsPending(false)
       return
     }
@@ -185,6 +189,7 @@ export default function EditProfileForm({
       formTarget.reset() 
 
       await supabase.auth.signOut()
+      setNewPasswordValue('')
       window.location.href = '/login?message=Password changed successfully! Please log in again using your new password.'
 
     } catch (err: unknown) {
@@ -343,11 +348,12 @@ export default function EditProfileForm({
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">New Password</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" placeholder="At least 6 characters" required />
+                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                    <PasswordRequirements password={newPasswordValue} className="mt-2" />
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Confirm Password</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" required />
+                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                   </div>
                 </div>
                 <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all mt-2 cursor-pointer disabled:bg-neutral-800">
@@ -482,11 +488,14 @@ export default function EditProfileForm({
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">New Password</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" placeholder="At least 6 characters" required />
+                    <div className="col-span-2">
+                      <input className="w-full rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                      <PasswordRequirements password={newPasswordValue} className="mt-2" />
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Confirm Password</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" required />
+                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-3 max-w-xl border-t border-neutral-800/80 pt-4 mt-2">

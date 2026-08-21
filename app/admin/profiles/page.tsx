@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { ACCOUNT_ROLES, getAccountRoleMeta, resolveAccountRoleForEmail } from '@/lib/roles';
+import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
+import PasswordRequirements from '@/components/password-requirements';
 
 interface Profile {
   id: string;
@@ -160,6 +162,12 @@ export default function AdminUsersPage() {
 
     if (newPasswordInput !== newConfirmPasswordInput) {
       alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+      return;
+    }
+
+    const passwordPolicyError = validatePasswordPolicy(newPasswordInput);
+    if (passwordPolicyError) {
+      alert(passwordPolicyError);
       return;
     }
 
@@ -414,12 +422,15 @@ export default function AdminUsersPage() {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
+                    pattern={PASSWORD_PATTERN}
+                    title={PASSWORD_REQUIREMENTS_TEXT}
                     value={newPasswordInput}
                     onChange={(e) => setNewPasswordInput(e.target.value)}
-                    placeholder="อย่างน้อย 6 ตัวอักษร"
+                    placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @"
                     className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                   />
+                  <PasswordRequirements password={newPasswordInput} className="mt-2" />
                 </div>
 
                 <div>
@@ -427,7 +438,9 @@ export default function AdminUsersPage() {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
+                    pattern={PASSWORD_PATTERN}
+                    title={PASSWORD_REQUIREMENTS_TEXT}
                     value={newConfirmPasswordInput}
                     onChange={(e) => setNewConfirmPasswordInput(e.target.value)}
                     placeholder="กรอกรหัสผ่านซ้ำ"
