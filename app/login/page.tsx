@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { syncStudentRoleForUser } from '@/lib/student-role-sync'
-import { getSiteUrl } from '@/lib/site-url'
 import LoginForm from '@/components/login-form'
 
 export default async function LoginPage({
@@ -64,31 +62,9 @@ export default async function LoginPage({
     redirect('/') 
   }
 
-  const signInWithGoogle = async () => {
-    'use server'
-
-    const requestHeaders = await headers()
-    const siteUrl = getSiteUrl(requestHeaders)
-    const supabase = await createClient()
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/oauth-profile`,
-      },
-    })
-
-    if (error || !data.url) {
-      redirect(`/login?message=${encodeURIComponent(error?.message || 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้')}`)
-    }
-
-    redirect(data.url)
-  }
-
   return (
     <LoginForm
       signInAction={signIn}
-      googleSignInAction={signInWithGoogle}
       message={resolvedSearchParams?.message}
       messageType={resolvedSearchParams?.type === 'success' ? 'success' : 'error'}
     />

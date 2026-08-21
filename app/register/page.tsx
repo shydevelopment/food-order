@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import { getKmutnbStudentUsernameFromEmail, resolveAccountRoleForEmail } from '@/lib/roles'
+import { validatePasswordPolicy } from '@/lib/password-policy'
 import { getSiteUrl } from '@/lib/site-url'
 import RegisterForm from '@/components/register-form'
 
@@ -27,11 +28,25 @@ export default async function RegisterPage({
     const rawUsername = formData.get('username') as string
     const displayName = formData.get('displayName') as string
     const phone = formData.get('phone') as string
+    const signupType = formData.get('signupType') as string
     const accountRole = resolveAccountRoleForEmail(email)
     const username = getKmutnbStudentUsernameFromEmail(email) || rawUsername
 
+    if (signupType === 'student' && !getKmutnbStudentUsernameFromEmail(email)) {
+      redirect(`/register?message=${encodeURIComponent('กรุณาใช้อีเมลมหาลัยรูปแบบ @email.kmutnb.ac.th สำหรับบัญชีนักศึกษา')}`)
+    }
+
+    if (!username?.trim()) {
+      redirect(`/register?message=${encodeURIComponent('กรุณากรอก Username ให้ถูกต้อง')}`)
+    }
+
     if (password !== confirmPassword) {
       redirect(`/register?message=${encodeURIComponent('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน')}`)
+    }
+
+    const passwordPolicyError = validatePasswordPolicy(password)
+    if (passwordPolicyError) {
+      redirect(`/register?message=${encodeURIComponent(passwordPolicyError)}`)
     }
 
     const requestHeaders = await headers()
@@ -67,33 +82,11 @@ export default async function RegisterPage({
     redirect(`/login?message=${successMsg}&type=success`)
   }
 
-  const signUpWithGoogle = async () => {
-    'use server'
-
-    const requestHeaders = await headers()
-    const siteUrl = getSiteUrl(requestHeaders)
-    const supabase = await createClient()
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback?next=/oauth-profile`,
-      },
-    })
-
-    if (error || !data.url) {
-      redirect(`/register?message=${encodeURIComponent(error?.message || 'ไม่สามารถสมัครด้วย Google ได้')}`)
-    }
-
-    redirect(data.url)
-  }
-
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center p-2 sm:p-4">
       <main className="flex w-full flex-col items-center justify-center p-0 sm:p-4">
         <RegisterForm
           signUpAction={signUpAction}
-          googleSignInAction={signUpWithGoogle}
           message={resolvedSearchParams?.message}
         />
       </main>
