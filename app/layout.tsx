@@ -4,6 +4,9 @@ import { Kanit } from "next/font/google";
 import Navbar from "@/components/navbar"; 
 import Footer from "@/components/footer"; 
 import PageTransition from "@/components/page-transition";
+import RealtimeRefresh from "@/components/realtime-refresh";
+import CustomerOrderStatusAlerts from "@/components/customer-order-status-alerts";
+import ChatMessageAlerts from "@/components/chat-message-alerts";
 import "./globals.css";
 
 // 2. ตั้งค่าน้ำหนักฟอนต์และเปิดตัวรองรับภาษาไทย (thai)
@@ -43,12 +46,15 @@ export default function RootLayout({
       </head>
       {/* 3. สั่งเรียกใช้ฟอนต์ผ่าน className โดยให้ธีมพื้นหลังคุมจาก globals.css */}
       <body className={`${kanit.className} min-h-screen w-full flex flex-col m-0 p-0`}>
+        <RealtimeRefresh />
+        <CustomerOrderStatusAlerts />
+        <ChatMessageAlerts />
         
         {/* Navbar ยืดเต็มจอซ้ายขวาด้านบน */}
         <Navbar /> 
         
         {/* เนื้อหาด้านล่างขยายตัวเพื่อดัน Footer ลงไป */}
-        <main className="w-full min-w-0 flex-1 max-w-7xl mx-auto px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
+        <main className="w-full min-w-0 flex-1 px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
           <PageTransition>{children}</PageTransition>
         </main>
 

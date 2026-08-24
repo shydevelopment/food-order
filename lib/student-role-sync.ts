@@ -37,6 +37,7 @@ export async function syncStudentRoleForUser(user: SyncableUser) {
 
   const metadata = user.userMetadata || {}
   const username = getKmutnbStudentUsernameFromEmail(user.email) || 'student'
+  const studentId = getKmutnbStudentUsernameFromEmail(user.email)
   const fullName = typeof metadata.full_name === 'string'
     ? metadata.full_name
     : typeof metadata.name === 'string'
@@ -51,7 +52,7 @@ export async function syncStudentRoleForUser(user: SyncableUser) {
   const { error } = profile?.id
     ? await supabaseAdmin
       .from('profiles')
-      .update({ role: 'student', username })
+      .update({ role: 'student', username, student_id: studentId })
       .eq('id', user.id)
     : await supabaseAdmin
       .from('profiles')
@@ -60,6 +61,7 @@ export async function syncStudentRoleForUser(user: SyncableUser) {
           id: user.id,
           email: user.email,
           username,
+          student_id: studentId,
           full_name: fullName,
           avatar_url: avatarUrl,
           role: 'student',

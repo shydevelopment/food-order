@@ -1,8 +1,9 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
-import { resolveAccountRoleForEmail } from '@/lib/roles'
+import { getKmutnbStudentUsernameFromEmail, resolveAccountRoleForEmail } from '@/lib/roles'
 import { validatePasswordPolicy } from '@/lib/password-policy'
+import { DUPLICATE_PHONE_MESSAGE, validateThaiPhone } from '@/lib/phone'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +26,8 @@ export async function POST(req: NextRequest) {
 
     const { email, password, username, fullName, phone, role } = await req.json()
     const accountRole = resolveAccountRoleForEmail(email, role)
+    const studentId = accountRole === 'student' ? getKmutnbStudentUsernameFromEmail(email) || username : null
+    const phoneValidation = validateThaiPhone(phone)
 
     if (!email || !password || !username || !fullName) {
       return NextResponse.json(
@@ -41,10 +44,31 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (!phoneValidation.success) {
+      return NextResponse.json(
+        { error: phoneValidation.message },
+        { status: 400 }
+      )
+    }
+
     const supabaseAdmin = createSupabaseAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    const { data: existingPhoneProfile, error: phoneLookupError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('phone', phoneValidation.phone)
+      .maybeSingle()
+
+    if (phoneLookupError) {
+      return NextResponse.json({ error: phoneLookupError.message }, { status: 400 })
+    }
+
+    if (existingPhoneProfile) {
+      return NextResponse.json({ error: DUPLICATE_PHONE_MESSAGE }, { status: 409 })
+    }
 
     const { data: createdUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -53,7 +77,8 @@ export async function POST(req: NextRequest) {
       user_metadata: {
         username,
         display_name: fullName,
-        phone: phone || null,
+        phone: phoneValidation.phone,
+        student_id: studentId,
         role: accountRole,
       },
     })
@@ -74,7 +99,8 @@ export async function POST(req: NextRequest) {
           username,
           email,
           full_name: fullName,
-          phone: phone || null,
+          phone: phoneValidation.phone,
+          student_id: studentId,
           role: accountRole,
         },
         { onConflict: 'id' }

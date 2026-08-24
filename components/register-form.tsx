@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useFormStatus } from 'react-dom'
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT } from '@/lib/password-policy'
+import { formatThaiPhoneInput, THAI_PHONE_INPUT_PATTERN, THAI_PHONE_REQUIREMENTS_TEXT } from '@/lib/phone'
+import { NON_STUDENT_LABEL } from '@/lib/roles'
 import PasswordRequirements from '@/components/password-requirements'
 
 interface RegisterFormProps {
@@ -138,14 +140,14 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         </div>
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="username">
-          Username
+          {isStudentSignup ? 'Student ID (รหัสนักศึกษา)' : 'Username'}
         </label>
         {isStudentSignup ? (
           <input
             className="mb-4 rounded-md border border-white/20 bg-white/5 px-4 py-2 text-white placeholder:text-neutral-600 transition-all focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
             name="username"
             type="text"
-            placeholder="ระบบจะใช้เลขจากอีเมลมหาลัย"
+            placeholder="กรอกอีเมลมหาลัยเพื่อสร้างรหัสนักศึกษา"
             value={studentUsername}
             readOnly
           />
@@ -157,6 +159,21 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
             placeholder="username"
             required
           />
+        )}
+
+        {!isStudentSignup && (
+          <>
+            <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="studentIdPreview">
+              Student ID (รหัสนักศึกษา)
+            </label>
+            <input
+              id="studentIdPreview"
+              className="mb-4 cursor-not-allowed rounded-md border border-white/20 bg-white/5 px-4 py-2 text-white/70 placeholder:text-white/70"
+              type="text"
+              value={NON_STUDENT_LABEL}
+              readOnly
+            />
+          </>
         )}
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="displayName">
@@ -177,9 +194,13 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           className="rounded-md px-4 py-2 bg-neutral-900 border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
           name="phone"
           type="tel"
+          inputMode="tel"
           placeholder="0812345678"
-          pattern="^0[0-9]{8,9}$"
-          title="กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง (ขึ้นต้นด้วย 0 และมีความยาว 9-10 หลัก)"
+          onChange={(event) => {
+            event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value)
+          }}
+          pattern={THAI_PHONE_INPUT_PATTERN}
+          title={THAI_PHONE_REQUIREMENTS_TEXT}
           required
         />
 
@@ -200,7 +221,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
 
         {isStudentSignup && (
           <p className="-mt-2 mb-4 text-xs font-medium text-neutral-500">
-            Username สำหรับ Student จะถูกตั้งจากเลขหน้าอีเมลโดยอัตโนมัติ เช่น s6614012620383 จะเป็น 6614012620383
+            รหัสนักศึกษาจะถูกตั้งจากเลขหน้าอีเมลโดยอัตโนมัติ เช่น s6614012620383 จะเป็น 6614012620383
           </p>
         )}
 

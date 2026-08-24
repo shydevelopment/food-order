@@ -238,6 +238,30 @@ html[data-theme="light"] .shadow-lg {
   animation: page-fade-in 220ms ease-out both;
 }
 
+.food-alert-overlay {
+  animation: food-alert-fade-in 180ms ease-out both;
+}
+
+.food-alert-overlay--exit {
+  animation: food-alert-fade-out 180ms ease-in both;
+}
+
+.food-alert-panel {
+  animation: food-alert-panel-in 220ms ease-out both;
+}
+
+.food-alert-panel--exit {
+  animation: food-alert-panel-out 180ms ease-in both;
+}
+
+.food-alert-card {
+  animation: food-alert-card-in 220ms ease-out both;
+}
+
+.food-alert-card--exit {
+  animation: food-alert-card-out 180ms ease-in both;
+}
+
 .responsive-table {
   min-width: 760px;
 }
@@ -264,6 +288,74 @@ html[data-theme="light"] .shadow-lg {
   }
 }
 
+@keyframes food-alert-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes food-alert-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes food-alert-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes food-alert-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@keyframes food-alert-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes food-alert-card-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html,
   body {
@@ -271,6 +363,15 @@ html[data-theme="light"] .shadow-lg {
   }
 
   .page-fade-in {
+    animation: none;
+  }
+
+  .food-alert-overlay,
+  .food-alert-overlay--exit,
+  .food-alert-panel,
+  .food-alert-panel--exit,
+  .food-alert-card,
+  .food-alert-card--exit {
     animation: none;
   }
 }

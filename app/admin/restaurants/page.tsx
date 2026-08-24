@@ -1,14 +1,11 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { DEFAULT_RESTAURANT_TYPE, getRestaurantTypeMeta, RESTAURANT_TYPES } from '@/lib/restaurant-types';
+import { formatThaiPhoneInput } from '@/lib/phone';
 
 export default function AdminRestaurantsPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,10 +28,12 @@ export default function AdminRestaurantsPage() {
   const [closeTimeInput, setCloseTimeInput] = useState('20:00:00');
   const [addressInput, setAddressInput] = useState('');
   const [statusInput, setStatusInput] = useState('open');
+  const [restaurantTypeInput, setRestaurantTypeInput] = useState(DEFAULT_RESTAURANT_TYPE);
   const [imageFile, setImageFile] = useState<File | null>(null); 
   const [submitLoading, setSubmitLoading] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     fetchRestaurants();
 
     // 🔄 ตัวนับเวลาให้อัปเดตสถานะอัตโนมัติทุกๆ 30 วินาที
@@ -101,13 +100,11 @@ export default function AdminRestaurantsPage() {
   const fetchRestaurants = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('id, name, image_url, email, phone, address, status, description, open_time, close_time')
-        .order('name', { ascending: true });
+      const res = await fetch('/api/admin/restaurants');
+      const result = await res.json();
 
-      if (error) throw error;
-      if (data) setRestaurants(data);
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถดึงข้อมูลร้านอาหารได้');
+      setRestaurants(result.restaurants || []);
     } catch (error: any) {
       console.error('Error:', error.message);
       alert('ไม่สามารถดึงข้อมูลร้านอาหารได้: ' + error.message);
@@ -127,6 +124,7 @@ export default function AdminRestaurantsPage() {
     setCloseTimeInput('20:00:00');
     setAddressInput('');
     setStatusInput('open');
+    setRestaurantTypeInput(DEFAULT_RESTAURANT_TYPE);
     setImageFile(null);
     setIsModalOpen(true);
   };
@@ -136,12 +134,13 @@ export default function AdminRestaurantsPage() {
     setSelectedRest(restaurant);
     setNameInput(restaurant.name || '');
     setEmailInput(restaurant.email || '');
-    setPhoneInput(restaurant.phone || '');
+    setPhoneInput(formatThaiPhoneInput(restaurant.phone || ''));
     setDescriptionInput(restaurant.description || '');
     setOpenTimeInput(restaurant.open_time || '08:00:00');
     setCloseTimeInput(restaurant.close_time || '20:00:00');
     setAddressInput(restaurant.address || '');
     setStatusInput(restaurant.status || 'open');
+    setRestaurantTypeInput(restaurant.restaurant_type || DEFAULT_RESTAURANT_TYPE);
     setImageFile(null);
     setIsModalOpen(true);
   };
@@ -172,12 +171,17 @@ export default function AdminRestaurantsPage() {
 
     setSubmitLoading(true);
     try {
-      const { error } = await supabase
-        .from('restaurants')
-        .delete()
-        .eq('id', selectedRest.id);
+      const res = await fetch('/api/admin/restaurants', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedRest.id,
+          name: selectedRest.name,
+        }),
+      });
+      const result = await res.json();
 
-      if (error) throw error;
+      if (!res.ok) throw new Error(result.error || 'ไม่สามารถลบร้านอาหารได้');
 
       alert('🗑️ ลบร้านอาหารออกจากระบบเรียบร้อยแล้ว!');
       handleCloseModal();
@@ -189,6 +193,24 @@ export default function AdminRestaurantsPage() {
     }
   };
 
+  const uploadRestaurantImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'restaurant-logos');
+
+    const res = await fetch('/api/admin/uploads', {
+      method: 'POST',
+      body: formData,
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.error || 'ไม่สามารถอัปโหลดรูปภาพร้านได้');
+    }
+
+    return result.publicUrl as string;
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
@@ -197,58 +219,45 @@ export default function AdminRestaurantsPage() {
       let uploadedImageUrl = selectedRest?.image_url || null;
 
       if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `logos/${Date.now()}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('menu-images')
-          .upload(fileName, imageFile, { cacheControl: '3600', upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('menu-images')
-          .getPublicUrl(fileName);
-
-        uploadedImageUrl = publicUrl;
+        uploadedImageUrl = await uploadRestaurantImage(imageFile);
       }
 
-      if (modalMode === 'add') {
-        const { error } = await supabase
-          .from('restaurants')
-          .insert([
-            {
-              name: nameInput,
-              email: emailInput || null,
-              phone: phoneInput || null,
-              address: addressInput || null,
-              status: statusInput,
-              image_url: uploadedImageUrl,
-              description: descriptionInput || null,
-              open_time: openTimeInput,
-              close_time: closeTimeInput
-            }
-          ]);
+      const restaurantPayload = {
+        name: nameInput,
+        email: emailInput || null,
+        phone: phoneInput || null,
+        address: addressInput || null,
+        status: statusInput,
+        image_url: uploadedImageUrl,
+        description: descriptionInput || null,
+        open_time: openTimeInput,
+        close_time: closeTimeInput,
+        restaurant_type: restaurantTypeInput,
+      };
 
-        if (error) throw error;
+      if (modalMode === 'add') {
+        const res = await fetch('/api/admin/restaurants', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(restaurantPayload),
+        });
+        const result = await res.json();
+
+        if (!res.ok) throw new Error(result.error || 'ไม่สามารถเพิ่มร้านอาหารได้');
         alert('✨ เพิ่มร้านอาหารใหม่เข้าสู่ระบบสำเร็จ!');
       } else {
         if (!selectedRest) return;
-        const { error } = await supabase
-          .from('restaurants')
-          .update({
-            name: nameInput,
-            phone: phoneInput,
-            address: addressInput,
-            status: statusInput,
-            image_url: uploadedImageUrl,
-            description: descriptionInput || null,
-            open_time: openTimeInput,
-            close_time: closeTimeInput
-          })
-          .eq('id', selectedRest.id);
+        const res = await fetch('/api/admin/restaurants', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: selectedRest.id,
+            ...restaurantPayload,
+          }),
+        });
+        const result = await res.json();
 
-        if (error) throw error;
+        if (!res.ok) throw new Error(result.error || 'ไม่สามารถแก้ไขร้านอาหารได้');
         alert('💾 บันทึกการแก้ไขข้อมูลร้านอาหารสำเร็จ!');
       }
 
@@ -347,6 +356,11 @@ export default function AdminRestaurantsPage() {
                       </td>
                       <td className="p-4 font-bold text-white border-r border-neutral-800 text-center">
                         <div>{rest.name}</div>
+                        <div className="mt-1">
+                          <span className="rounded border border-orange-500/25 bg-orange-500/10 px-2 py-0.5 text-[10px] font-black text-orange-300">
+                            {getRestaurantTypeMeta(rest.restaurant_type).label}
+                          </span>
+                        </div>
                         {rest.description && <div className="text-[11px] text-gray-500 font-normal mt-0.5 max-w-xs truncate mx-auto">{rest.description}</div>}
                       </td>
                       
@@ -355,7 +369,7 @@ export default function AdminRestaurantsPage() {
                       </td>
 
                       <td className="p-4 text-gray-300 border-r border-neutral-800 text-center break-all">{rest.email || '-'}</td>
-                      <td className="p-4 font-mono text-gray-400 border-r border-neutral-800 text-center">{rest.phone || '-'}</td>
+                      <td className="p-4 font-mono text-gray-400 border-r border-neutral-800 text-center">{rest.phone ? formatThaiPhoneInput(rest.phone) : '-'}</td>
                       
                       {/* 🔥 แสดงเฉพาะ "เปิดบริการ" หรือ "ปิดร้าน" */}
                       <td className="p-4 text-center border-r border-neutral-800">
@@ -452,6 +466,36 @@ export default function AdminRestaurantsPage() {
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รูปแบบร้าน *</label>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {RESTAURANT_TYPES.map((type) => (
+                    <label
+                      key={type.value}
+                      className={`cursor-pointer rounded-xl border p-3 transition ${
+                        restaurantTypeInput === type.value
+                          ? 'border-orange-500 bg-orange-500/10'
+                          : 'border-neutral-800 bg-neutral-950 hover:border-neutral-700'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="restaurant_type"
+                        value={type.value}
+                        checked={restaurantTypeInput === type.value}
+                        onChange={() => setRestaurantTypeInput(type.value)}
+                        className="sr-only"
+                      />
+                      <span className="flex items-center gap-2 text-sm font-black text-white">
+                        <span className="text-lg">{type.icon}</span>
+                        {type.label}
+                      </span>
+                      <span className="mt-1 block text-[11px] leading-4 text-neutral-500">{type.description}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">คำอธิบายรายละเอียดร้าน</label>
                 <textarea 
                   rows={2}
@@ -467,7 +511,7 @@ export default function AdminRestaurantsPage() {
                 <input 
                   type="text" 
                   value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
+                  onChange={(e) => setPhoneInput(formatThaiPhoneInput(e.target.value))}
                   placeholder="กรอกเบอร์โทรติดต่อร้าน..."
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
                 />

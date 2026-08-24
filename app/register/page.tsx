@@ -3,6 +3,7 @@ import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import { getKmutnbStudentUsernameFromEmail, resolveAccountRoleForEmail } from '@/lib/roles'
 import { validatePasswordPolicy } from '@/lib/password-policy'
+import { DUPLICATE_PHONE_MESSAGE, validateThaiPhone } from '@/lib/phone'
 import { getSiteUrl } from '@/lib/site-url'
 import RegisterForm from '@/components/register-form'
 
@@ -27,12 +28,18 @@ export default async function RegisterPage({
     const confirmPassword = formData.get('confirmPassword') as string
     const rawUsername = formData.get('username') as string
     const displayName = formData.get('displayName') as string
-    const phone = formData.get('phone') as string
+    const phoneValidation = validateThaiPhone(formData.get('phone'))
+    if (!phoneValidation.success) {
+      redirect(`/register?message=${encodeURIComponent(phoneValidation.message)}`)
+    }
+
+    const phone = phoneValidation.phone
     const signupType = formData.get('signupType') as string
     const accountRole = resolveAccountRoleForEmail(email)
-    const username = getKmutnbStudentUsernameFromEmail(email) || rawUsername
+    const studentId = getKmutnbStudentUsernameFromEmail(email)
+    const username = studentId || rawUsername
 
-    if (signupType === 'student' && !getKmutnbStudentUsernameFromEmail(email)) {
+    if (signupType === 'student' && !studentId) {
       redirect(`/register?message=${encodeURIComponent('กรุณาใช้อีเมลมหาลัยรูปแบบ @email.kmutnb.ac.th สำหรับบัญชีนักศึกษา')}`)
     }
 
@@ -54,6 +61,20 @@ export default async function RegisterPage({
 
     const supabase = await createClient()
 
+    const { data: existingPhoneProfile, error: phoneLookupError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('phone', phone)
+      .maybeSingle()
+
+    if (phoneLookupError) {
+      redirect(`/register?message=${encodeURIComponent(phoneLookupError.message)}`)
+    }
+
+    if (existingPhoneProfile) {
+      redirect(`/register?message=${encodeURIComponent(DUPLICATE_PHONE_MESSAGE)}`)
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -63,6 +84,7 @@ export default async function RegisterPage({
           username: username,
           display_name: displayName,
           phone: phone,
+          student_id: accountRole === 'student' ? studentId : null,
           role: accountRole,
         },
       },

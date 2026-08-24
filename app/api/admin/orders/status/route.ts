@@ -13,10 +13,15 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'กรุณาเข้าสู่ระบบก่อน' }, { status: 401 })
     }
 
-    const { orderId, status } = await req.json()
+    const { orderId, status, cancellationReason } = await req.json()
 
     if (!orderId || !allowedStatuses.includes(status)) {
       return NextResponse.json({ error: 'ข้อมูลสถานะออร์เดอร์ไม่ถูกต้อง' }, { status: 400 })
+    }
+
+    const cleanedCancellationReason = String(cancellationReason || '').trim().slice(0, 300)
+    if (status === 'cancelled' && cleanedCancellationReason.length < 3) {
+      return NextResponse.json({ error: 'กรุณากรอกเหตุผลการยกเลิกอย่างน้อย 3 ตัวอักษร' }, { status: 400 })
     }
 
     const supabaseAdmin = createSupabaseAdminClient(
@@ -74,9 +79,18 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    const updatePayload = status === 'cancelled'
+      ? {
+        status,
+        cancellation_reason: cleanedCancellationReason,
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: user.id,
+      }
+      : { status }
+
     const { error: updateError } = await supabaseAdmin
       .from('orders')
-      .update({ status })
+      .update(updatePayload)
       .eq('id', orderId)
 
     if (updateError) {
@@ -89,7 +103,9 @@ export async function PATCH(req: NextRequest) {
         user_id: user.id,
         action_type: 'order_status_updated',
         title: 'อัปเดตสถานะออร์เดอร์',
-        detail: `Order #${order.order_no || String(orderId).slice(0, 8)} เปลี่ยนสถานะเป็น ${status}`,
+        detail: status === 'cancelled'
+          ? `Order #${order.order_no || String(orderId).slice(0, 8)} ถูกยกเลิก: ${cleanedCancellationReason}`
+          : `Order #${order.order_no || String(orderId).slice(0, 8)} เปลี่ยนสถานะเป็น ${status}`,
       })
 
     return NextResponse.json({ success: true })

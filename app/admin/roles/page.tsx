@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { ACCOUNT_ROLES, getAccountRoleMeta } from '@/lib/roles';
+import { formatThaiPhoneInput } from '@/lib/phone';
 
 interface Profile {
   id: string;
@@ -188,7 +189,7 @@ export default function ManageRolesPage() {
                       {user.email || <span className="text-neutral-600 font-normal italic">ไม่มีข้อมูล</span>}
                     </td>
                     <td className="p-4 font-mono text-gray-400 border-r border-neutral-800 text-center">
-                      {user.phone || <span className="text-neutral-600 font-normal italic">ไม่มีข้อมูล</span>}
+                      {user.phone ? formatThaiPhoneInput(user.phone) : <span className="text-neutral-600 font-normal italic">ไม่มีข้อมูล</span>}
                     </td>
                     <td className="p-4 text-center border-r border-neutral-800">
                       <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${getRoleBadgeStyle(user.role)}`}>

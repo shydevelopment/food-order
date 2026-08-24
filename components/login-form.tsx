@@ -1,13 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Script from 'next/script'
 import { useFormStatus } from 'react-dom'
 
 interface LoginFormProps {
   signInAction: (formData: FormData) => Promise<never>
   message?: string
   messageType?: 'success' | 'error'
+  turnstileSiteKey?: string
 }
 
 function SignInButton() {
@@ -24,16 +26,54 @@ function SignInButton() {
   )
 }
 
-export default function LoginForm({ signInAction, message, messageType = 'error' }: LoginFormProps) {
+const REMEMBERED_EMAIL_KEY = 'food-order-login-email'
+
+export default function LoginForm({
+  signInAction,
+  message,
+  messageType = 'error',
+  turnstileSiteKey,
+}: LoginFormProps) {
+  const [email, setEmail] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(false)
   const [isOpeningRegister, setIsOpeningRegister] = useState(false)
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const rememberedEmail = window.localStorage.getItem(REMEMBERED_EMAIL_KEY)
+      if (rememberedEmail) {
+        setEmail(rememberedEmail)
+        setRemember(true)
+      }
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [])
+
+  function handleSubmit() {
+    const trimmedEmail = email.trim()
+
+    if (remember && trimmedEmail) {
+      window.localStorage.setItem(REMEMBERED_EMAIL_KEY, trimmedEmail)
+    } else {
+      window.localStorage.removeItem(REMEMBERED_EMAIL_KEY)
+    }
+  }
 
   return (
     <div className="flex flex-col w-full px-4 sm:max-w-md justify-center gap-2 mt-12 mx-auto text-white">
+      {turnstileSiteKey && (
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+      )}
       
       <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 sm:p-8 shadow-2xl w-full">
         
-        <form action={signInAction} className="animate-in flex-1 flex flex-col w-full justify-center gap-1">
+        <form
+          action={signInAction}
+          onSubmit={handleSubmit}
+          className="animate-in flex-1 flex flex-col w-full justify-center gap-1"
+        >
           
           <h2 className="text-2xl font-black text-center mb-6 text-orange-500 tracking-wide uppercase">
             Log In
@@ -47,6 +87,8 @@ export default function LoginForm({ signInAction, message, messageType = 'error'
             name="email"
             type="email"
             placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
             title="กรุณากรอกรูปแบบอีเมลให้ถูกต้อง"
             required
@@ -81,6 +123,29 @@ export default function LoginForm({ signInAction, message, messageType = 'error'
               {showPassword ? "HIDE" : "SHOW"}
             </button>
           </div>
+
+          {turnstileSiteKey && (
+            <div className="mb-4 flex min-h-[65px] w-full items-center justify-center overflow-hidden rounded-md border border-neutral-800 bg-neutral-900">
+              <div
+                className="cf-turnstile w-full"
+                data-sitekey={turnstileSiteKey}
+                data-theme="dark"
+                data-size="flexible"
+                data-action="login"
+              />
+            </div>
+          )}
+
+          <label className="mb-4 flex cursor-pointer items-center gap-2 text-xs font-semibold text-neutral-400 transition-colors hover:text-orange-400">
+            <input
+              type="checkbox"
+              name="remember"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+              className="h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-orange-500 accent-orange-500"
+            />
+            <span>Remember me</span>
+          </label>
           
           <SignInButton />
           

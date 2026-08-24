@@ -3,7 +3,20 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
+import {
+  normalizeNotificationPreferences,
+  systemNotificationOptions,
+  type CustomNotificationSound,
+  type NotificationPreferences,
+  type SystemNotificationId,
+} from '@/lib/notification-preferences'
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy'
+import {
+  formatThaiPhoneInput,
+  THAI_PHONE_INPUT_PATTERN,
+  THAI_PHONE_REQUIREMENTS_TEXT,
+} from '@/lib/phone'
+import { getProfileStudentIdDisplay, NON_STUDENT_LABEL } from '@/lib/roles'
 import PasswordRequirements from '@/components/password-requirements'
 
 interface EditableProfile {
@@ -12,6 +25,8 @@ interface EditableProfile {
   phone: string | null
   avatar_url: string | null
   role?: string | null
+  student_id?: string | null
+  notification_preferences?: unknown
 }
 
 interface EditProfileFormProps {
@@ -21,6 +36,7 @@ interface EditProfileFormProps {
   isStudentAccount?: boolean
   studentUsername?: string | null
   updateAction: (formData: FormData) => Promise<{ success: boolean; message?: string }>
+  updateNotificationAction?: (formData: FormData) => Promise<{ success: boolean; message?: string }>
   resendAction?: () => Promise<{ success: boolean; message?: string }>
 }
 
@@ -31,28 +47,43 @@ export default function EditProfileForm({
   isStudentAccount = false,
   studentUsername,
   updateAction,
+  updateNotificationAction,
   resendAction,
 }: EditProfileFormProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'avatar' | 'password' | null>('profile')
+  const [activeTab, setActiveTab] = useState<'profile' | 'avatar' | 'password' | 'notifications' | null>('profile')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
   const [newPasswordValue, setNewPasswordValue] = useState('')
+  const initialNotificationPreferences = normalizeNotificationPreferences(profile?.notification_preferences)
+  const [selectedSystemNotifications, setSelectedSystemNotifications] = useState<SystemNotificationId[]>(
+    initialNotificationPreferences.system
+  )
+  const [customNotifications, setCustomNotifications] = useState<CustomNotificationSound[]>(initialNotificationPreferences.custom)
   const lockedUsername = studentUsername || profile?.username || ''
   const lockedDisplayName = profile?.full_name || ''
+  const studentIdDisplay = getProfileStudentIdDisplay(profile || {}, email)
+  const hasStudentId = studentIdDisplay !== NON_STUDENT_LABEL
   const lockedInputClass = 'cursor-not-allowed border-white/20 bg-white/10 text-white/70'
   const editableInputClass = 'bg-neutral-950 border-neutral-800 focus:outline-none focus:border-orange-500 text-white'
+  const notificationSoundsBucket = 'notification-sounds'
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const toggleTab = (tab: 'profile' | 'avatar' | 'password') => {
+  const toggleTab = (tab: 'profile' | 'avatar' | 'password' | 'notifications') => {
     setErrorMessage(null)
     setSuccessMessage(null)
     setActiveTab((prev) => (prev === tab ? null : tab))
+  }
+
+  const setDesktopTab = (tab: 'profile' | 'avatar' | 'password' | 'notifications') => {
+    setActiveTab(tab)
+    setErrorMessage(null)
+    setSuccessMessage(null)
   }
 
   // ⚡ ฟังก์ชันสำหรับกดส่งอีเมลยืนยันอีกครั้ง
@@ -90,7 +121,7 @@ export default function EditProfileForm({
       if (!user) throw new Error('User session not found. Please log in again.')
 
       const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const fileName = `${user.id}-${crypto.randomUUID()}.${fileExt}`
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -130,7 +161,7 @@ export default function EditProfileForm({
     try {
       const res = await updateAction(formData)
       if (res.success) {
-        window.location.href = '/?message=Profile updated successfully!'
+        window.location.assign('/?message=Profile updated successfully!')
       } else {
         setErrorMessage(res.message || 'An error occurred while updating information.')
       }
@@ -190,11 +221,183 @@ export default function EditProfileForm({
 
       await supabase.auth.signOut()
       setNewPasswordValue('')
-      window.location.href = '/login?message=Password changed successfully! Please log in again using your new password.'
+      window.location.assign('/login?message=Password changed successfully! Please log in again using your new password.')
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'An error occurred while updating the password.'
       setErrorMessage(message)
+      setIsPending(false)
+    }
+  }
+
+  const toggleSystemNotification = (id: SystemNotificationId) => {
+    setSelectedSystemNotifications((current) => (
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    ))
+  }
+
+  const getAudioDuration = (file: File) => new Promise<number>((resolve, reject) => {
+    const audio = document.createElement('audio')
+    const objectUrl = URL.createObjectURL(file)
+
+    audio.preload = 'metadata'
+    audio.onloadedmetadata = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(audio.duration)
+    }
+    audio.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('ไม่สามารถอ่านความยาวไฟล์เสียงได้'))
+    }
+    audio.src = objectUrl
+  })
+
+  const sanitizeAudioFileName = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp3'
+    const baseName = fileName
+      .replace(/\.[^/.]+$/, '')
+      .trim()
+      .replace(/[^a-zA-Z0-9-_]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40) || 'notification'
+
+    return `${baseName}.${extension}`
+  }
+
+  const formatSoundDuration = (duration: number) => {
+    return `${duration.toFixed(1)}s`
+  }
+
+  const handleCustomNotificationAudioUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) return
+
+    setIsPending(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+
+    try {
+      if (!file.type.startsWith('audio/')) {
+        throw new Error('กรุณาเลือกไฟล์เสียงเท่านั้น')
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error('ไฟล์เสียงต้องมีขนาดไม่เกิน 2MB')
+      }
+
+      const duration = await getAudioDuration(file)
+
+      if (duration < 3 || duration > 5) {
+        throw new Error('ไฟล์เสียงแจ้งเตือนต้องมีความยาว 3-5 วินาที')
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่')
+
+      const filePath = `${user.id}/${crypto.randomUUID()}-${sanitizeAudioFileName(file.name)}`
+      const { error: uploadError } = await supabase.storage
+        .from(notificationSoundsBucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          contentType: file.type,
+          upsert: false,
+        })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(notificationSoundsBucket)
+        .getPublicUrl(filePath)
+
+      const { data: soundRecord, error: soundInsertError } = await supabase
+        .from('notification_sounds')
+        .insert({
+          owner_user_id: user.id,
+          notification_type: 'custom',
+          name: file.name.slice(0, 80),
+          sound_url: publicUrl,
+          storage_path: filePath,
+          duration_seconds: Number(duration.toFixed(2)),
+          is_system: false,
+        })
+        .select('id')
+        .single()
+
+      if (soundInsertError) throw soundInsertError
+
+      const nextSound: CustomNotificationSound = {
+        id: String(soundRecord.id),
+        sound_id: String(soundRecord.id),
+        name: file.name.slice(0, 80),
+        url: publicUrl,
+        duration: Number(duration.toFixed(2)),
+      }
+
+      setCustomNotifications((current) => [...current, nextSound].slice(0, 10))
+      setSuccessMessage('เพิ่มไฟล์เสียงแจ้งเตือนเรียบร้อยแล้ว')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'ไม่สามารถเพิ่มไฟล์เสียงแจ้งเตือนได้'
+      setErrorMessage(message)
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  const removeCustomNotification = (notification: CustomNotificationSound) => {
+    setCustomNotifications((current) => current.filter((item) => item.id !== notification.id))
+
+    try {
+      if (notification.sound_id) {
+        supabase
+          .from('notification_sounds')
+          .delete()
+          .eq('id', notification.sound_id)
+      }
+
+      const marker = `/${notificationSoundsBucket}/`
+      const objectPath = notification.url.split(marker)[1]
+      if (objectPath) {
+        supabase.storage.from(notificationSoundsBucket).remove([decodeURIComponent(objectPath)])
+      }
+    } catch {
+      return
+    }
+  }
+
+  const handleSubmitNotifications = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    if (!updateNotificationAction) {
+      setErrorMessage('ยังไม่ได้เชื่อมระบบบันทึกแจ้งเตือน')
+      return
+    }
+
+    setIsPending(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+
+    const notificationPreferences: NotificationPreferences = {
+      system: selectedSystemNotifications,
+      custom: customNotifications,
+    }
+    const formData = new FormData()
+    formData.set('notificationPreferences', JSON.stringify(notificationPreferences))
+
+    try {
+      const res = await updateNotificationAction(formData)
+
+      if (res.success) {
+        setSuccessMessage(res.message || 'บันทึกการตั้งค่าแจ้งเตือนเรียบร้อยแล้ว')
+      } else {
+        setErrorMessage(res.message || 'ไม่สามารถบันทึกการตั้งค่าแจ้งเตือนได้')
+      }
+    } catch {
+      setErrorMessage('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์')
+    } finally {
       setIsPending(false)
     }
   }
@@ -239,9 +442,18 @@ export default function EditProfileForm({
               <form onSubmit={handleSubmitProfile} className="p-4 flex flex-col gap-4">
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Username</label>
+                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">{isStudentAccount ? 'Student ID / รหัสนักศึกษา' : 'Username'}</label>
                     <input className={`w-full rounded-xl px-4 py-2.5 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="username" type="text" value={isStudentAccount ? lockedUsername : undefined} defaultValue={isStudentAccount ? undefined : profile?.username || ''} readOnly={isStudentAccount} required />
+                    {hasStudentId && (
+                      <p className="mt-1 text-[11px] font-medium text-white/60">ระบบใช้รหัสนักศึกษาจากอีเมลมหาลัย</p>
+                    )}
                   </div>
+                  {!isStudentAccount && (
+                    <div>
+                      <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Student ID / รหัสนักศึกษา</label>
+                      <input className={`${lockedInputClass} w-full rounded-xl px-4 py-2.5 border text-sm`} type="text" value={studentIdDisplay} readOnly />
+                    </div>
+                  )}
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Display Name</label>
                     <input className={`w-full rounded-xl px-4 py-2.5 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="displayName" type="text" value={isStudentAccount ? lockedDisplayName : undefined} defaultValue={isStudentAccount ? undefined : profile?.full_name || ''} readOnly={isStudentAccount} required />
@@ -251,7 +463,7 @@ export default function EditProfileForm({
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Phone Number</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" defaultValue={profile?.phone || ''} pattern="^0[0-9]{8,9}$" required />
+                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" inputMode="tel" defaultValue={formatThaiPhoneInput(profile?.phone || '')} onChange={(event) => { event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value) }} pattern={THAI_PHONE_INPUT_PATTERN} title={THAI_PHONE_REQUIREMENTS_TEXT} required />
                   </div>
                   <div>
                     <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block mb-1">Email Address</label>
@@ -364,6 +576,93 @@ export default function EditProfileForm({
           </div>
         </div>
 
+        {/* ACCORDION 4: NOTIFICATIONS */}
+        <div className="bg-neutral-900 border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
+          <button
+            type="button"
+            onClick={() => toggleTab('notifications')}
+            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm bg-neutral-900 hover:bg-neutral-800/60 transition-all cursor-pointer"
+          >
+            <span className="flex items-center gap-3">
+              <span className="text-base">🔔</span>
+              <span className={activeTab === 'notifications' ? 'text-orange-500' : 'text-neutral-300'}>Notifications</span>
+            </span>
+            <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'notifications' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
+          </button>
+
+          <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${activeTab === 'notifications' ? 'grid-rows-[1fr] opacity-100 border-t border-neutral-800/60' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden bg-neutral-950/50">
+              <form onSubmit={handleSubmitNotifications} className="p-4 flex flex-col gap-4">
+                <div className="space-y-2">
+                  {systemNotificationOptions.map((option) => (
+                    <label key={option.id} className="flex items-start gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedSystemNotifications.includes(option.id)}
+                        onChange={() => toggleSystemNotification(option.id)}
+                        className="mt-1 h-4 w-4 accent-orange-500"
+                      />
+                      <span>
+                        <span className="block text-sm font-black text-white">{option.label}</span>
+                        <span className="mt-0.5 block text-xs text-neutral-500">{option.description}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+                  <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Custom Sound</label>
+                  <div className="mt-2">
+                    <input
+                      id="custom-sound-mobile"
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      onChange={handleCustomNotificationAudioUpload}
+                      disabled={isPending}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('custom-sound-mobile')?.click()}
+                      disabled={isPending}
+                      className="w-full rounded-lg bg-orange-500 px-3 py-2 text-xs font-black text-black transition hover:bg-orange-400 disabled:bg-neutral-800 disabled:text-neutral-500"
+                    >
+                      {isPending ? 'กำลังอัปโหลด...' : 'Add Sound File'}
+                    </button>
+                    <p className="mt-2 text-xs text-neutral-500">รับไฟล์เสียงความยาว 3-5 วินาที ขนาดไม่เกิน 2MB</p>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    {customNotifications.length > 0 ? customNotifications.map((notification) => (
+                      <div key={notification.id} className="rounded-xl border border-neutral-800 bg-black p-3">
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-black text-white">{notification.name}</p>
+                            <p className="text-[11px] text-neutral-500">{formatSoundDuration(notification.duration)}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCustomNotification(notification)}
+                            className="rounded-lg border border-red-500/30 px-2 py-1 text-[11px] font-bold text-red-400 transition hover:bg-red-500/10"
+                          >
+                            ลบ
+                          </button>
+                        </div>
+                        <audio controls src={notification.url} className="h-9 w-full" />
+                      </div>
+                    )) : (
+                      <span className="text-xs text-neutral-500">ยังไม่มีไฟล์เสียงแจ้งเตือนที่เพิ่มเอง</span>
+                    )}
+                  </div>
+                </div>
+
+                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all cursor-pointer disabled:bg-neutral-800">
+                  {isPending ? 'Saving...' : 'Save Notifications'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* 💻 2. LAYOUT สำหรับจอคอมพิวเตอร์ DESKTOP */}
@@ -371,14 +670,17 @@ export default function EditProfileForm({
         
         {/* SIDEBAR MENU */}
         <div className="w-64 bg-neutral-900 border border-neutral-800/80 rounded-2xl p-4 flex flex-col gap-2 shrink-0 shadow-lg">
-          <button type="button" onClick={() => { setActiveTab('profile'); setErrorMessage(null); setSuccessMessage(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
-            <span>👤</span> Profile
+          <button type="button" onClick={() => setDesktopTab('profile')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+            <span>👤</span> User Information
           </button>
-          <button type="button" onClick={() => { setActiveTab('avatar'); setErrorMessage(null); setSuccessMessage(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'avatar' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
-            <span>🖼️</span> Avatar
+          <button type="button" onClick={() => setDesktopTab('avatar')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'avatar' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+            <span>🖼️</span> Avatar Settings
           </button>
-          <button type="button" onClick={() => { setActiveTab('password'); setErrorMessage(null); setSuccessMessage(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'password' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
-            <span>🔒</span> Password
+          <button type="button" onClick={() => setDesktopTab('password')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'password' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+            <span>🔒</span> Change Password
+          </button>
+          <button type="button" onClick={() => setDesktopTab('notifications')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'notifications' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+            <span>🔔</span> Notifications
           </button>
         </div>
 
@@ -394,9 +696,20 @@ export default function EditProfileForm({
               <form onSubmit={handleSubmitProfile} className="p-6 flex flex-col gap-5">
                 <div className="space-y-4 max-w-xl">
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Username</label>
-                    <input className={`col-span-2 rounded-xl px-4 py-2 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="username" type="text" value={isStudentAccount ? lockedUsername : undefined} defaultValue={isStudentAccount ? undefined : profile?.username || ''} readOnly={isStudentAccount} required />
+                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">{isStudentAccount ? 'Student ID' : 'Username'}</label>
+                    <div className="col-span-2">
+                      <input className={`w-full rounded-xl px-4 py-2 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="username" type="text" value={isStudentAccount ? lockedUsername : undefined} defaultValue={isStudentAccount ? undefined : profile?.username || ''} readOnly={isStudentAccount} required />
+                      {hasStudentId && (
+                        <p className="mt-1 text-xs font-medium text-white/60">รหัสนักศึกษาถูกตั้งจากอีเมลมหาลัยและไม่สามารถแก้เองได้</p>
+                      )}
+                    </div>
                   </div>
+                  {!isStudentAccount && (
+                    <div className="grid grid-cols-3 items-center gap-4">
+                      <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Student ID</label>
+                      <input className={`${lockedInputClass} col-span-2 rounded-xl px-4 py-2 border text-sm`} type="text" value={studentIdDisplay} readOnly />
+                    </div>
+                  )}
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Display Name</label>
                     <div className="col-span-2">
@@ -408,7 +721,7 @@ export default function EditProfileForm({
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Phone Number</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" defaultValue={profile?.phone || ''} pattern="^0[0-9]{8,9}$" required />
+                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" inputMode="tel" defaultValue={formatThaiPhoneInput(profile?.phone || '')} onChange={(event) => { event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value) }} pattern={THAI_PHONE_INPUT_PATTERN} title={THAI_PHONE_REQUIREMENTS_TEXT} required />
                   </div>
                   <div className="grid grid-cols-3 items-start gap-4">
                     <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider text-right mt-2">Email Address</label>
@@ -489,7 +802,7 @@ export default function EditProfileForm({
                   <div className="grid grid-cols-3 items-center gap-4">
                     <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">New Password</label>
                     <div className="col-span-2">
-                      <input className="w-full rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                      <input className="w-full rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="Your new password!" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                       <PasswordRequirements password={newPasswordValue} className="mt-2" />
                     </div>
                   </div>
@@ -501,6 +814,100 @@ export default function EditProfileForm({
                 <div className="flex items-center justify-end gap-3 max-w-xl border-t border-neutral-800/80 pt-4 mt-2">
                   <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all disabled:bg-neutral-800">
                     {isPending ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* DESKTOP TAB 4: NOTIFICATIONS */}
+          {activeTab === 'notifications' && (
+            <div className="animate-in fade-in duration-200">
+              <div className="px-6 py-4 border-b border-neutral-800/80 bg-neutral-950/40">
+                <h3 className="text-lg font-black tracking-wide text-neutral-200">Notification Settings</h3>
+              </div>
+              <form onSubmit={handleSubmitNotifications} className="p-6 flex flex-col gap-5">
+                <div className="max-w-2xl space-y-5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {systemNotificationOptions.map((option) => (
+                      <label
+                        key={option.id}
+                        className={`cursor-pointer rounded-xl border p-4 transition ${
+                          selectedSystemNotifications.includes(option.id)
+                            ? 'border-orange-500 bg-orange-500/10'
+                            : 'border-neutral-800 bg-neutral-950 hover:border-neutral-700'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedSystemNotifications.includes(option.id)}
+                            onChange={() => toggleSystemNotification(option.id)}
+                            className="mt-1 h-4 w-4 accent-orange-500"
+                          />
+                          <div>
+                            <p className="text-sm font-black text-white">{option.label}</p>
+                            <p className="mt-1 text-xs leading-5 text-neutral-500">{option.description}</p>
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                      <div className="min-w-0 flex-1">
+                        <label htmlFor="custom-sound-desktop" className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+                          Custom Sound
+                        </label>
+                        <input
+                          id="custom-sound-desktop"
+                          type="file"
+                          accept="audio/*"
+                          className="hidden"
+                          onChange={handleCustomNotificationAudioUpload}
+                          disabled={isPending}
+                        />
+                        <p className="mt-1 text-xs text-neutral-500">อัปโหลดไฟล์เสียงแจ้งเตือน ความยาว 3-5 วินาที ขนาดไม่เกิน 2MB</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('custom-sound-desktop')?.click()}
+                        disabled={isPending}
+                        className="rounded-xl bg-orange-500 px-5 py-2 text-sm font-black text-black transition hover:bg-orange-400 disabled:bg-neutral-800 disabled:text-neutral-500"
+                      >
+                        {isPending ? 'Uploading...' : 'Add Sound File'}
+                      </button>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3">
+                      {customNotifications.length > 0 ? customNotifications.map((notification) => (
+                        <div key={notification.id} className="rounded-xl border border-neutral-800 bg-black p-4">
+                          <div className="mb-3 flex items-center justify-between gap-4">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black text-white">{notification.name}</p>
+                              <p className="mt-0.5 text-xs text-neutral-500">{formatSoundDuration(notification.duration)}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeCustomNotification(notification)}
+                              className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-bold text-red-400 transition hover:bg-red-500/10"
+                            >
+                              ลบ
+                            </button>
+                          </div>
+                          <audio controls src={notification.url} className="h-10 w-full" />
+                        </div>
+                      )) : (
+                        <span className="text-sm text-neutral-500">ยังไม่มีไฟล์เสียงแจ้งเตือนที่เพิ่มเอง</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 max-w-2xl border-t border-neutral-800/80 pt-4 mt-2">
+                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all disabled:bg-neutral-800">
+                    {isPending ? 'Saving...' : 'Save Notifications'}
                   </button>
                 </div>
               </form>
