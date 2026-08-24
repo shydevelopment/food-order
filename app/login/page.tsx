@@ -1,6 +1,12 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/supabase/service'
+import { headers } from 'next/headers'
+import { createClient, setAuthRememberPreference } from '@/supabase/service'
 import { syncStudentRoleForUser } from '@/lib/student-role-sync'
+import {
+  getTurnstileSiteKey,
+  shouldEnforceTurnstile,
+  verifyTurnstileToken,
+} from '@/lib/turnstile'
 import LoginForm from '@/components/login-form'
 
 export default async function LoginPage({
@@ -20,13 +26,32 @@ export default async function LoginPage({
     'use server'
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const rememberSession = formData.get('remember') === 'on'
     
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     if (!emailRegex.test(email)) {
       redirect(`/login?message=${encodeURIComponent('รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง')}`)
     }
 
-    const supabase = await createClient()
+    if (shouldEnforceTurnstile()) {
+      const requestHeaders = await headers()
+      const remoteIp =
+        requestHeaders.get('cf-connecting-ip') ??
+        requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim()
+
+      const turnstile = await verifyTurnstileToken(formData.get('cf-turnstile-response'), {
+        action: 'login',
+        remoteIp,
+      })
+
+      if (!turnstile.success) {
+        redirect(`/login?message=${encodeURIComponent('กรุณายืนยัน Cloudflare ให้สำเร็จก่อนเข้าสู่ระบบ')}`)
+      }
+    }
+
+    await setAuthRememberPreference(rememberSession)
+
+    const supabase = await createClient({ rememberSession })
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -67,6 +92,7 @@ export default async function LoginPage({
       signInAction={signIn}
       message={resolvedSearchParams?.message}
       messageType={resolvedSearchParams?.type === 'success' ? 'success' : 'error'}
+      turnstileSiteKey={getTurnstileSiteKey()}
     />
   )
 }

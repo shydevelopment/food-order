@@ -173,6 +173,17 @@ export default function AdminSidebar() {
               </Link>
 
               <Link
+                href="/admin/menu-tags"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
+                  pathname === '/admin/menu-tags'
+                    ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <span className="shrink-0">🏷️</span> <span className="min-w-0 truncate">จัดการ Tag เมนู</span>
+              </Link>
+
+              <Link
                 href="/admin/change-password"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
                   pathname === '/admin/change-password'
@@ -226,17 +237,24 @@ export default function AdminSidebar() {
 
                     {restaurants.length > 0 ? (
                       restaurants.map((shop) => (
-                        <Link
-                          key={shop.id}
-                          href={`/admin/restaurants/${shop.id}`}
-                          className={`block px-4 py-2 rounded-md text-xs transition-all truncate active:scale-95 ${
-                            pathname === `/admin/restaurants/${shop.id}`
-                              ? 'text-orange-400 font-bold bg-neutral-800/60'
-                              : 'text-gray-500 hover:text-gray-300 hover:bg-neutral-800/45'
-                          }`}
-                        >
-                          📍 {shop.name}
-                        </Link>
+                        <div key={shop.id} className="rounded-lg border border-neutral-800/40 bg-neutral-950/35 p-1">
+                          <Link
+                            href={`/admin/restaurants/${shop.id}`}
+                            className={`block rounded-md px-3 py-2 text-xs transition-all truncate active:scale-95 ${
+                              pathname === `/admin/restaurants/${shop.id}`
+                                ? 'text-orange-400 font-bold bg-neutral-800/60'
+                                : 'text-gray-500 hover:text-gray-300 hover:bg-neutral-800/45'
+                            }`}
+                          >
+                            📍 {shop.name}
+                          </Link>
+                          <Link
+                            href={`/admin/restaurants/${shop.id}#daily-menu`}
+                            className="block rounded-md px-3 py-2 text-[11px] font-bold text-gray-600 transition hover:bg-neutral-800/45 hover:text-amber-400 active:scale-95"
+                          >
+                            📅 อาหารรายวัน
+                          </Link>
+                        </div>
                       ))
                     ) : (
                       <p className="text-[11px] text-gray-600 px-4 py-2 italic">ไม่มีข้อมูลร้านอาหาร</p>

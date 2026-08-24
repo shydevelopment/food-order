@@ -2,6 +2,8 @@ import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import LogoutConfirmButton from '@/components/logout-confirm-button'
+import { formatThaiPhoneInput } from '@/lib/phone'
+import { getProfileStudentIdDisplay } from '@/lib/roles'
 
 export default async function ViewProfilePage() {
   const supabase = await createClient()
@@ -16,20 +18,21 @@ export default async function ViewProfilePage() {
   // 2. ดึงข้อมูลโปรไฟล์จากตาราง profiles
   const { data: profile } = await supabase
     .from('profiles')
-    .select('username, full_name, phone, avatar_url, role')
+    .select('username, full_name, phone, avatar_url, role, student_id')
     .eq('id', user.id)
     .single()
 
   // กำหนดค่าตัวแปรผู้ใช้งาน
   const fullName = profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || 'ผู้ใช้งาน'
   const username = profile?.username || user.user_metadata?.username || 'username'
-  const phone = profile?.phone || 'ยังไม่ได้ระบุ'
+  const phone = profile?.phone ? formatThaiPhoneInput(profile.phone) : 'ยังไม่ได้ระบุ'
   const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url
   const email = user.email ?? 'ไม่พบอีเมล'
   const isEmailConfirmed = Boolean(user.email_confirmed_at)
   
   // ดึง Role จาก Database
   const userRole = (profile?.role || user.app_metadata?.role || 'customer').toLowerCase()
+  const studentIdDisplay = getProfileStudentIdDisplay(profile || {}, user.email)
 
   // ⚡ ฟังก์ชันกำหนด Class สีตามแบบฉบับ Navbar เป๊ะๆ
   const getRoleStyle = (role: string) => {
@@ -129,6 +132,13 @@ export default async function ViewProfilePage() {
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">เบอร์โทรศัพท์</span>
                   <span className="text-neutral-200 font-medium text-xs">
                     {phone}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">รหัสนักศึกษา</span>
+                  <span className="text-neutral-200 font-medium text-xs font-mono">
+                    {studentIdDisplay}
                   </span>
                 </div>
 

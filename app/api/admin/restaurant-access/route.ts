@@ -1,7 +1,7 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
-import { canHaveRestaurantAccess, RESTAURANT_ACCESS_LEVEL_VALUES } from '@/lib/roles'
+import { RESTAURANT_ACCESS_LEVEL_VALUES } from '@/lib/roles'
 
 const getAdminClient = () => createSupabaseAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -107,13 +107,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ไม่พบผู้ใช้งานนี้' }, { status: 404 })
     }
 
-    if (!canHaveRestaurantAccess(targetProfile.role)) {
-      return NextResponse.json(
-        { error: 'ต้องตั้ง role เป็น restaurant หรือ admin ก่อน จึงจะเพิ่มสิทธิ์ร้านอาหารได้' },
-        { status: 400 }
-      )
-    }
-
     const { data: restaurant, error: restaurantError } = await supabaseAdmin
       .from('restaurants')
       .select('id, name')
@@ -141,6 +134,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const nextAccountRole = targetProfile.role === 'admin' ? 'admin' : 'restaurant'
+    if (targetProfile.role !== nextAccountRole) {
+      const { error: roleUpdateError } = await supabaseAdmin
+        .from('profiles')
+        .update({ role: nextAccountRole })
+        .eq('id', userId)
+
+      if (roleUpdateError) {
+        return NextResponse.json({ error: roleUpdateError.message }, { status: 400 })
+      }
+    }
+
     const { error: upsertError } = await supabaseAdmin
       .from('restaurant_members')
       .upsert(
@@ -162,10 +167,10 @@ export async function POST(req: NextRequest) {
         user_id: adminUserId,
         action_type: 'restaurant_access_updated',
         title: 'จัดสิทธิ์ร้านอาหาร',
-        detail: `${targetProfile.full_name || targetProfile.username || userId} เป็น ${accessLevel} ของร้าน ${restaurant.name}`,
+        detail: `${targetProfile.full_name || targetProfile.username || userId} เป็น ${accessLevel} ของร้าน ${restaurant.name} และ role เป็น ${nextAccountRole}`,
       })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, role: nextAccountRole })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเพิ่มสิทธิ์ร้านอาหาร'
     return NextResponse.json({ error: message }, { status: 500 })

@@ -5,9 +5,11 @@ import { useActivityLogs } from '../components/useActivityLogs';
 import { ActivityLogItem } from '../components/ActivityLogItem';
 
 export default function AdminActivityLogsPage() {
-  const { activities, loading, refetch } = useActivityLogs();
+  const [restaurantFilter, setRestaurantFilter] = useState<string>('');
+  const { activities, restaurants, role, loading, refetch } = useActivityLogs(restaurantFilter);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filterType, setFilterType] = useState<'all' | 'order' | 'user' | 'restaurant' | 'menu'>('all');
+  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === restaurantFilter);
 
   // ฟังก์ชันกรองข้อมูล
   const filteredActivities = activities.filter((act) => {
@@ -24,10 +26,14 @@ export default function AdminActivityLogsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-3xl">
-            📜 ประวัติกิจกรรมทั้งหมด (Activity Logs)
+            📜 ประวัติกิจกรรม {role === 'restaurant' ? 'ของร้าน' : 'ทั้งหมด'} (Activity Logs)
           </h2>
           <p className="mt-1.5 text-sm text-gray-300 sm:text-base">
-            บันทึกการทำรายการ สมาชิก ร้านอาหาร เมนูอาหาร และกิจกรรมในระบบ
+            {selectedRestaurant
+              ? `กำลังดูประวัติของร้าน ${selectedRestaurant.name}`
+              : role === 'restaurant'
+                ? 'บันทึกออร์เดอร์ เมนู และกิจกรรมของร้านที่คุณได้รับสิทธิ์'
+                : 'บันทึกการทำรายการ สมาชิก ร้านอาหาร เมนูอาหาร และกิจกรรมในระบบ'}
           </p>
         </div>
 
@@ -51,6 +57,24 @@ export default function AdminActivityLogsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
           />
+        </div>
+
+        <div className="relative min-w-0 md:w-64">
+          <select
+            value={restaurantFilter}
+            onChange={(e) => setRestaurantFilter(e.target.value)}
+            className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2.5 pr-9 text-sm font-bold text-white focus:border-orange-500 focus:outline-none"
+          >
+            <option value="">
+              {role === 'restaurant' ? 'ร้านทั้งหมดของฉัน' : 'ร้านทั้งหมด'}
+            </option>
+            {restaurants.map((restaurant) => (
+              <option key={restaurant.id} value={restaurant.id}>
+                {restaurant.name}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-neutral-500">▼</span>
         </div>
 
         <div className="flex items-center gap-1.5 bg-neutral-950 p-1 rounded-lg border border-neutral-800 overflow-x-auto">

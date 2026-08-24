@@ -2,8 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { ACCOUNT_ROLES, getAccountRoleMeta, resolveAccountRoleForEmail } from '@/lib/roles';
+import { ACCOUNT_ROLES, getAccountRoleMeta, getProfileStudentId, getProfileStudentIdDisplay, resolveAccountRoleForEmail } from '@/lib/roles';
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
+import {
+  DUPLICATE_PHONE_MESSAGE,
+  formatThaiPhoneInput,
+  THAI_PHONE_INPUT_PATTERN,
+  THAI_PHONE_REQUIREMENTS_TEXT,
+  validateThaiPhone,
+} from '@/lib/phone';
 import PasswordRequirements from '@/components/password-requirements';
 
 interface Profile {
@@ -12,6 +19,7 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   phone: string | null;
+  student_id: string | null;
   role: string | null;
   email: string | null;
 }
@@ -56,7 +64,7 @@ export default function AdminUsersPage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, phone, role, email')
+        .select('id, username, full_name, avatar_url, phone, student_id, role, email')
         .order('username', { ascending: true });
 
       if (error) throw error;
@@ -80,7 +88,7 @@ export default function AdminUsersPage() {
     setUsernameInput(user.username || '');
     setEmailInput(user.email || '');
     setFullNameInput(user.full_name || '');
-    setPhoneInput(user.phone || '');
+    setPhoneInput(formatThaiPhoneInput(user.phone || ''));
     setRoleInput(user.role || 'customer');
     setIsModalOpen(true);
   };
@@ -114,8 +122,32 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!selectedUser) return;
 
+    const phoneValidation = validateThaiPhone(phoneInput);
+    if (!phoneValidation.success) {
+      alert(phoneValidation.message);
+      return;
+    }
+
     setSubmitLoading(true);
     try {
+      const resolvedRole = resolveAccountRoleForEmail(emailInput, roleInput);
+      const studentId = resolvedRole === 'student'
+        ? getProfileStudentId(
+          { student_id: selectedUser.student_id, username: usernameInput, role: resolvedRole },
+          emailInput,
+        )
+        : null;
+
+      const { data: existingPhoneProfile, error: phoneLookupError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', phoneValidation.phone)
+        .neq('id', selectedUser.id)
+        .maybeSingle();
+
+      if (phoneLookupError) throw phoneLookupError;
+      if (existingPhoneProfile) throw new Error(DUPLICATE_PHONE_MESSAGE);
+
       // 💾 บันทึกข้อมูลที่แก้ไขรวมถึง username และ email ลงฐานข้อมูล Supabase
       const { error } = await supabase
         .from('profiles')
@@ -123,7 +155,8 @@ export default function AdminUsersPage() {
           username: usernameInput,
           email: emailInput,
           full_name: fullNameInput,
-          phone: phoneInput,
+          phone: phoneValidation.phone,
+          student_id: studentId,
         })
         .eq('id', selectedUser.id);
 
@@ -135,7 +168,7 @@ export default function AdminUsersPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId: selectedUser.id,
-          role: resolveAccountRoleForEmail(emailInput, roleInput),
+            role: resolvedRole,
           }),
         });
 
@@ -171,6 +204,12 @@ export default function AdminUsersPage() {
       return;
     }
 
+    const phoneValidation = validateThaiPhone(newPhoneInput);
+    if (!phoneValidation.success) {
+      alert(phoneValidation.message);
+      return;
+    }
+
     setCreateLoading(true);
     try {
       const res = await fetch('/api/admin/create-account', {
@@ -181,7 +220,7 @@ export default function AdminUsersPage() {
           password: newPasswordInput,
           username: newUsernameInput.trim(),
           fullName: newFullNameInput.trim(),
-          phone: newPhoneInput.trim(),
+          phone: phoneValidation.phone,
           role: resolveAccountRoleForEmail(newEmailInput, newRoleInput),
         }),
       });
@@ -208,7 +247,8 @@ export default function AdminUsersPage() {
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone?.includes(searchTerm)
+      user.phone?.includes(searchTerm) ||
+      user.student_id?.includes(searchTerm)
     );
   });
 
@@ -263,6 +303,7 @@ export default function AdminUsersPage() {
                   <th className="p-4 font-medium text-center border-r border-neutral-800">ชื่อผู้ใช้ / Username</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">อีเมล / Email</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">เบอร์โทรศัพท์</th>
+                  <th className="p-4 font-medium text-center border-r border-neutral-800">รหัสนศ</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">บทบาท (Role)</th>
                   <th className="p-4 font-medium text-center">จัดการ</th>
                 </tr>
@@ -295,7 +336,10 @@ export default function AdminUsersPage() {
                       {user.email || <span className="text-neutral-600 font-normal italic">ไม่มีอีเมล</span>}
                     </td>
                     <td className="p-4 font-mono text-gray-400 border-r border-neutral-800 text-center">
-                      {user.phone || <span className="text-neutral-600 font-normal italic">ไม่มีข้อมูล</span>}
+                      {user.phone ? formatThaiPhoneInput(user.phone) : <span className="text-neutral-600 font-normal italic">ไม่มีข้อมูล</span>}
+                    </td>
+                    <td className="p-4 font-mono text-gray-400 border-r border-neutral-800 text-center">
+                      {getProfileStudentIdDisplay(user, user.email)}
                     </td>
                     <td className="p-4 text-center border-r border-neutral-800">
                       <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${getAccountRoleMeta(user.role)?.badgeClass || 'bg-gray-500/10 text-gray-400 border-gray-500/30'}`}>
@@ -317,7 +361,7 @@ export default function AdminUsersPage() {
                 ))}
                 {filteredProfiles.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-10 text-center text-gray-500">
+                    <td colSpan={8} className="p-10 text-center text-gray-500">
                       ไม่พบข้อมูลโปรไฟล์ผู้ใช้งานที่ตรงกับเงื่อนไข
                     </td>
                   </tr>
@@ -394,6 +438,23 @@ export default function AdminUsersPage() {
               </div>
 
               <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">รหัสนศ</label>
+                <input
+                  type="text"
+                  value={getProfileStudentIdDisplay(
+                    {
+                      student_id: null,
+                      username: newUsernameInput,
+                      role: resolveAccountRoleForEmail(newEmailInput, newRoleInput),
+                    },
+                    newEmailInput,
+                  )}
+                  readOnly
+                  className="w-full cursor-not-allowed rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-neutral-400"
+                />
+              </div>
+
+              <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">ชื่อจริง / Full Name *</label>
                 <input
                   type="text"
@@ -408,10 +469,14 @@ export default function AdminUsersPage() {
               <div>
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">เบอร์โทรศัพท์</label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="tel"
+                  required
                   value={newPhoneInput}
-                  onChange={(e) => setNewPhoneInput(e.target.value)}
+                  onChange={(e) => setNewPhoneInput(formatThaiPhoneInput(e.target.value))}
                   placeholder="เช่น 0891234567"
+                  pattern={THAI_PHONE_INPUT_PATTERN}
+                  title={THAI_PHONE_REQUIREMENTS_TEXT}
                   className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                 />
               </div>
@@ -540,6 +605,16 @@ export default function AdminUsersPage() {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รหัสนศ</label>
+                <input
+                  type="text"
+                  value={selectedUser ? getProfileStudentIdDisplay(selectedUser, emailInput) : ''}
+                  readOnly
+                  className="w-full cursor-not-allowed rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-neutral-400"
+                />
+              </div>
+
               {/* ชื่อจริง / Full Name */}
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ชื่อจริง / Full Name</label>
@@ -557,10 +632,14 @@ export default function AdminUsersPage() {
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เบอร์โทรศัพท์ / Phone</label>
                 <input 
-                  type="text" 
+                  type="tel"
+                  inputMode="tel"
+                  required
                   value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
+                  onChange={(e) => setPhoneInput(formatThaiPhoneInput(e.target.value))}
                   placeholder="เช่น 0891234567..."
+                  pattern={THAI_PHONE_INPUT_PATTERN}
+                  title={THAI_PHONE_REQUIREMENTS_TEXT}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
                 />
               </div>

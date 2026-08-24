@@ -1,13 +1,26 @@
-import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
+import { useCallback, useEffect, useState } from 'react';
 
-export function useActivityLogs() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+export interface ActivityLog {
+  id: string;
+  type: 'order' | 'user' | 'restaurant' | 'menu';
+  restaurantId: string | null;
+  restaurantName: string | null;
+  title: string;
+  detail: string;
+  icon: string;
+  colorClass: string;
+  timestamp: Date | null;
+}
 
-  const [activities, setActivities] = useState<any[]>([]);
+export interface ActivityRestaurant {
+  id: string;
+  name: string;
+}
+
+export function useActivityLogs(restaurantId = '') {
+  const [activities, setActivities] = useState<ActivityLog[]>([]);
+  const [restaurants, setRestaurants] = useState<ActivityRestaurant[]>([]);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const parseSafeDate = (dateString: string | null | undefined): Date | null => {
@@ -16,75 +29,37 @@ export function useActivityLogs() {
     return isNaN(parsed.getTime()) ? null : parsed;
   };
 
-  const fetchActivityLogs = async () => {
+  const fetchActivityLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const [
-        { data: latestOrders },
-        { data: latestUsers },
-        { data: latestRestaurants },
-        { data: latestMenus }
-      ] = await Promise.all([
-        supabase.from('orders').select('id, total_price, status, created_at').order('created_at', { ascending: false }).limit(25),
-        supabase.from('profiles').select('id, full_name, username, role, email, created_at').order('created_at', { ascending: false }).limit(25),
-        supabase.from('restaurants').select('id, name, created_at').order('created_at', { ascending: false }).limit(15),
-        supabase.from('menus').select('id, name, price, created_at, restaurants(name), menu_categories(name)').order('created_at', { ascending: false }).limit(25)
-      ]);
+      const search = new URLSearchParams();
+      if (restaurantId) search.set('restaurantId', restaurantId);
 
-      const formattedOrders = (latestOrders || []).map((o) => ({
-        id: `order-${o.id}`,
-        type: 'order',
-        title: `คำสั่งซื้อใหม่ #${String(o.id).substring(0, 8)}`,
-        detail: `ยอดชำระ: ฿${o.total_price ? o.total_price.toLocaleString() : '0'} • สถานะ: ${o.status || 'รอดำเนินการ'}`,
-        timestamp: parseSafeDate(o.created_at),
-        icon: '🛒',
-        colorClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-      }));
+      const res = await fetch(`/api/admin/activity-logs${search.toString() ? `?${search.toString()}` : ''}`);
+      const result = await res.json();
 
-      const formattedUsers = (latestUsers || []).map((u) => ({
-        id: `user-${u.id}`,
-        type: 'user',
-        title: `สมาชิกในระบบ`,
-        detail: `${u.full_name || u.username || 'สมาชิก'} (@${u.username || 'user'}) • บทบาท: ${u.role || 'customer'}`,
-        timestamp: parseSafeDate(u.created_at),
-        icon: '👤',
-        colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-      }));
+      if (!res.ok) {
+        throw new Error(result.error || 'ไม่สามารถโหลดประวัติกิจกรรมได้');
+      }
 
-      const formattedRestaurants = (latestRestaurants || []).map((r) => ({
-        id: `rest-${r.id}`,
-        type: 'restaurant',
-        title: `เพิ่มร้านอาหารใหม่เข้าระบบ`,
-        detail: `ร้าน "${r.name}" เปิดให้บริการในระบบแล้ว`,
-        timestamp: parseSafeDate(r.created_at),
-        icon: '🏪',
-        colorClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-      }));
-
-      const formattedMenus = (latestMenus || []).map((m: any) => ({
-        id: `menu-${m.id}`,
-        type: 'menu',
-        title: `เพิ่มเมนูอาหารใหม่`,
-        detail: `เมนู "${m.name}" (฿${m.price ? m.price.toLocaleString() : '0'})`,
-        timestamp: parseSafeDate(m.created_at),
-        icon: '🍽️',
-        colorClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-      }));
-
-      const combinedLogs = [...formattedOrders, ...formattedUsers, ...formattedRestaurants, ...formattedMenus]
-        .sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
-
-      setActivities(combinedLogs);
-    } catch (error: any) {
-      console.error('Error fetching activity logs:', error.message);
+      setRole(result.role || null);
+      setRestaurants(result.restaurants || []);
+      setActivities((result.activities || []).map((activity: Omit<ActivityLog, 'timestamp'> & { timestamp: string | null }) => ({
+        ...activity,
+        timestamp: parseSafeDate(activity.timestamp),
+      })));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'ไม่สามารถโหลดประวัติกิจกรรมได้';
+      console.error('Error fetching activity logs:', message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [restaurantId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchActivityLogs();
-  }, []);
+  }, [fetchActivityLogs]);
 
-  return { activities, loading, refetch: fetchActivityLogs };
+  return { activities, restaurants, role, loading, refetch: fetchActivityLogs };
 }
