@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { canHaveRestaurantAccess } from '@/lib/roles';
 
 interface Profile {
   id: string;
@@ -200,8 +199,10 @@ export default function RestaurantAccessPage() {
   );
 
   const selectedProfile = profilesById.get(userInput);
-  const selectedProfileCanAccessRestaurant = canHaveRestaurantAccess(selectedProfile?.role);
-  const canAssignAccess = Boolean(restaurantInput && userInput && selectedProfileCanAccessRestaurant);
+  const selectedProfileWillGetRestaurantRole = Boolean(
+    selectedProfile && !['restaurant', 'admin'].includes(selectedProfile.role || '')
+  );
+  const canAssignAccess = Boolean(restaurantInput && userInput);
   const restaurantOptions = useMemo(
     () => restaurants.map((restaurant) => ({
       value: restaurant.id,
@@ -238,11 +239,6 @@ export default function RestaurantAccessPage() {
 
     if (!restaurantInput || !userInput) {
       alert('กรุณาเลือกร้านอาหารและผู้ใช้งานก่อน');
-      return;
-    }
-
-    if (!selectedProfileCanAccessRestaurant) {
-      alert('ผู้ใช้นี้ต้องเป็น role RESTAURANT หรือ ADMIN ก่อน แล้วค่อยให้สิทธิ์ร้านอาหาร');
       return;
     }
 
@@ -314,7 +310,7 @@ export default function RestaurantAccessPage() {
           <p className="text-xs font-bold uppercase tracking-wide text-orange-500">Restaurant Access</p>
           <h1 className="mt-2 text-2xl font-black text-white">จัดสิทธิ์เข้าถึงร้านอาหาร</h1>
           <p className="mt-1 text-sm text-neutral-400">
-            เลือกผู้ใช้ role RESTAURANT หรือ ADMIN แล้วกำหนดเป็นเจ้าของร้านหรือพนักงานประจำร้าน
+            เลือกผู้ใช้แล้วกำหนดเป็นเจ้าของร้านหรือพนักงานประจำร้าน ระบบจะปรับ role เป็น RESTAURANT ให้อัตโนมัติ
           </p>
         </div>
 
@@ -358,11 +354,10 @@ export default function RestaurantAccessPage() {
               value={userInput}
               options={userOptions}
               onChange={setUserInput}
-              invalid={Boolean(selectedProfile && !selectedProfileCanAccessRestaurant)}
             />
-            {selectedProfile && !selectedProfileCanAccessRestaurant && (
-              <p className="mt-1 text-xs font-bold text-red-400">
-                ล็อก: ต้องตั้ง role เป็น RESTAURANT หรือ ADMIN ก่อน ถึงจะให้สิทธิ์ร้านได้
+            {selectedProfileWillGetRestaurantRole && (
+              <p className="mt-1 text-xs font-bold text-amber-400">
+                ระบบจะเปลี่ยน role ผู้ใช้นี้เป็น RESTAURANT หลังบันทึกสิทธิ์
               </p>
             )}
           </div>
@@ -373,7 +368,6 @@ export default function RestaurantAccessPage() {
               <select
                 value={accessLevelInput}
                 onChange={(e) => setAccessLevelInput(e.target.value as 'owner' | 'staff')}
-                disabled={Boolean(selectedProfile && !selectedProfileCanAccessRestaurant)}
                 className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 pr-8 text-sm text-white disabled:cursor-not-allowed disabled:text-neutral-600 focus:border-orange-500 focus:outline-none"
               >
                 <option value="staff">พนักงานร้าน</option>

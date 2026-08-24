@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/supabase/service'
 import AdminOrdersRealtime from '@/components/admin-orders-realtime'
 import OrderStatusActions from '@/components/order-status-actions'
+import OrderChatBox from '@/components/order-chat-box'
+import { formatThaiPhoneInput } from '@/lib/phone'
 
 interface Customer {
   id: string
@@ -10,6 +12,9 @@ interface Customer {
   username: string | null
   phone: string | null
   email: string | null
+  auth_full_name?: string | null
+  auth_username?: string | null
+  auth_email?: string | null
 }
 
 interface Order {
@@ -20,13 +25,20 @@ interface Order {
   total_price: number | string
   status: string | null
   delivery_address: string | null
+  pickup_time: string | null
+  pickup_note: string | null
+  needs_cutlery: boolean | null
+  cancellation_reason: string | null
   created_at: string
 }
 
 interface OrderItem {
   id: string
   order_id: string
-  menu_id: string
+  menu_id: string | null
+  custom_name: string | null
+  is_special: boolean | null
+  item_note: string | null
   quantity: number
   price: number | string
 }
@@ -48,10 +60,12 @@ interface Menu {
   image_url: string | null
 }
 
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 const statusTabs = [
   { value: 'pending', label: 'รอรับออเดอร์' },
   { value: 'preparing', label: 'กำลังเตรียม' },
-  { value: 'delivering', label: 'กำลังจัดส่ง' },
+  { value: 'delivering', label: 'พร้อมรับอาหาร' },
   { value: 'completed', label: 'เสร็จสิ้น' },
   { value: 'cancelled', label: 'ยกเลิก' },
 ]
@@ -80,10 +94,26 @@ const getStatusLabel = (status: string | null) => {
     case 'preparing':
       return 'กำลังเตรียมอาหาร'
     case 'delivering':
-      return 'กำลังจัดส่ง'
+      return 'พร้อมให้มารับอาหาร'
     default:
       return 'รอรับออเดอร์'
   }
+}
+
+const formatPickupTime = (pickupTime: string | null) => {
+  return pickupTime ? pickupTime.slice(0, 5) : '-'
+}
+
+const getCustomerDisplayName = (customer: Customer | undefined) => {
+  if (!customer) return 'ไม่พบชื่อผู้ใช้'
+
+  return customer.username
+    || customer.full_name
+    || customer.auth_username
+    || customer.auth_full_name
+    || customer.auth_email
+    || customer.email
+    || 'ไม่พบชื่อผู้ใช้'
 }
 
 const buildOrdersHref = (params: { status?: string; restaurantId?: string }) => {
@@ -171,7 +201,7 @@ export default async function AdminOrdersPage({
 
   let ordersQuery = supabaseAdmin
     .from('orders')
-    .select('id, order_no, user_id, restaurant_id, total_price, status, delivery_address, created_at')
+    .select('id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, needs_cutlery, cancellation_reason, created_at')
     .order('created_at', { ascending: false })
 
   if (selectedStatus && statusTabs.some((status) => status.value === selectedStatus)) {
@@ -200,16 +230,17 @@ export default async function AdminOrdersPage({
   const orderIds = orderRows.map((order) => order.id)
   const restaurantIds = Array.from(new Set(orderRows.map((order) => order.restaurant_id)))
   const userIds = Array.from(new Set(orderRows.map((order) => order.user_id)))
+  const profileUserIds = userIds.filter((userId) => uuidPattern.test(userId))
 
   const { data: orderItems } = orderIds.length > 0
-    ? await supabaseAdmin
-      .from('order_items')
-      .select('id, order_id, menu_id, quantity, price')
-      .in('order_id', orderIds)
-    : { data: [] }
+      ? await supabaseAdmin
+        .from('order_items')
+        .select('id, order_id, menu_id, custom_name, is_special, item_note, quantity, price')
+        .in('order_id', orderIds)
+      : { data: [] }
 
   const itemRows = (orderItems || []) as OrderItem[]
-  const menuIds = Array.from(new Set(itemRows.map((item) => item.menu_id)))
+  const menuIds = Array.from(new Set(itemRows.map((item) => item.menu_id).filter(Boolean)))
 
   const { data: menus } = menuIds.length > 0
     ? await supabaseAdmin
@@ -225,12 +256,42 @@ export default async function AdminOrdersPage({
       .in('id', restaurantIds)
     : { data: ownerRestaurants || [] }
 
-  const { data: customers } = userIds.length > 0
+  const { data: customers } = profileUserIds.length > 0
     ? await supabaseAdmin
       .from('profiles')
       .select('id, full_name, username, phone, email')
-      .in('id', userIds)
+      .in('id', profileUserIds)
     : { data: [] }
+
+  const customerRows = (customers || []) as Customer[]
+  const missingCustomerIds = profileUserIds.filter((userId) => {
+    const customer = customerRows.find((row) => row.id === userId)
+    return !customer || (!customer.full_name && !customer.username)
+  })
+
+  const authCustomerRows = await Promise.all(
+    missingCustomerIds.map(async (userId) => {
+      if (!uuidPattern.test(userId)) return null
+
+      const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId)
+      const authUser = data.user
+
+      if (error || !authUser) return null
+
+      return {
+        id: userId,
+        fullName: typeof authUser.user_metadata?.full_name === 'string' ? authUser.user_metadata.full_name : null,
+        username: typeof authUser.user_metadata?.username === 'string' ? authUser.user_metadata.username : null,
+        email: authUser.email || null,
+      }
+    })
+  )
+
+  const authCustomersById = new Map(
+    authCustomerRows
+      .filter((row): row is NonNullable<typeof row> => Boolean(row))
+      .map((row) => [row.id, row])
+  )
 
   const itemsByOrder = new Map<string, OrderItem[]>()
   itemRows.forEach((item) => {
@@ -241,7 +302,21 @@ export default async function AdminOrdersPage({
 
   const menusById = new Map((menus || []).map((menu: Menu) => [menu.id, menu]))
   const restaurantsById = new Map((restaurants || []).map((restaurant: Restaurant) => [restaurant.id, restaurant]))
-  const customersById = new Map((customers || []).map((customer: Customer) => [customer.id, customer]))
+  const customersById = new Map(userIds.map((userId) => {
+    const customer = customerRows.find((row) => row.id === userId)
+    const authCustomer = authCustomersById.get(userId)
+
+    return [userId, {
+      id: userId,
+      full_name: customer?.full_name || null,
+      username: customer?.username || null,
+      phone: customer?.phone || null,
+      email: customer?.email || null,
+      auth_full_name: authCustomer?.fullName || null,
+      auth_username: authCustomer?.username || null,
+      auth_email: authCustomer?.email || null,
+    } satisfies Customer]
+  }))
   const pendingCount = orderRows.filter((order) => !order.status || order.status === 'pending').length
   const selectedRestaurant = selectedRestaurantId
     ? selectableRestaurantRows.find((restaurant) => restaurant.id === selectedRestaurantId)
@@ -369,7 +444,7 @@ export default async function AdminOrdersPage({
             const orderItemsForOrder = itemsByOrder.get(order.id) || []
 
             return (
-              <article key={order.id} className="rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+              <article key={order.id} className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl sm:p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -399,38 +474,69 @@ export default async function AdminOrdersPage({
                   <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">ลูกค้า</p>
                     <p className="mt-1 text-sm font-bold text-white">
-                      {customer?.full_name || customer?.username || 'ไม่พบชื่อผู้ใช้'}
+                      {getCustomerDisplayName(customer)}
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-400">{customer?.email || '-'}</p>
-                    <p className="mt-0.5 text-xs text-neutral-400">{customer?.phone || '-'}</p>
+                    <p className="mt-0.5 text-xs text-neutral-400">{customer?.email || customer?.auth_email || '-'}</p>
+                    <p className="mt-0.5 text-xs text-neutral-400">{customer?.phone ? formatThaiPhoneInput(customer.phone) : '-'}</p>
                   </div>
 
                   <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">ที่อยู่จัดส่ง</p>
-                    <p className="mt-1 text-sm text-neutral-300">{order.delivery_address || '-'}</p>
+                    <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">เวลารับอาหาร</p>
+                    <p className="mt-1 text-lg font-black text-orange-400">{formatPickupTime(order.pickup_time)}</p>
+                    <p className="mt-1 text-xs font-bold text-neutral-400">
+                      {order.needs_cutlery ? 'รับช้อนส้อม' : 'ไม่รับช้อนส้อม'}
+                    </p>
                   </div>
+
+                  <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">ช่องเพิ่มเติม</p>
+                    <p className="mt-1 text-sm text-neutral-300">{order.pickup_note || 'ไม่มีข้อมูลเพิ่มเติม'}</p>
+                  </div>
+
+                  {order.status === 'cancelled' && (
+                    <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-4 md:col-span-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-red-300">เหตุผลการยกเลิก</p>
+                      <p className="mt-1 text-sm font-bold text-red-100">
+                        {order.cancellation_reason || 'ไม่ได้ระบุเหตุผล'}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4 space-y-3">
                   {orderItemsForOrder.map((item) => {
-                    const menu = menusById.get(item.menu_id)
+                    const menu = item.menu_id ? menusById.get(item.menu_id) : null
+                    const itemName = item.custom_name || menu?.name || 'เมนูที่ถูกลบแล้ว'
 
                     return (
-                      <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3 sm:flex-row sm:items-center">
-                        <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg bg-neutral-800 sm:h-14 sm:w-14">
+                      <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3 md:flex-row md:items-center">
+                        <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg bg-neutral-800 md:h-14 md:w-14">
                           <img
                             src={menu?.image_url || '/placeholder.jpg'}
-                            alt={menu?.name || 'menu'}
+                            alt={itemName}
                             className="absolute inset-0 h-full w-full object-cover"
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-white">{menu?.name || 'เมนูที่ถูกลบแล้ว'}</p>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="truncate text-sm font-bold text-white">{itemName}</p>
+                            {item.custom_name && (
+                              <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-2 py-0.5 text-[10px] font-black text-amber-300">
+                                เมนูเขียนเอง
+                              </span>
+                            )}
+                            {item.is_special && (
+                              <span className="rounded-full border border-orange-500/25 bg-orange-500/10 px-2 py-0.5 text-[10px] font-black text-orange-300">
+                                พิเศษ
+                              </span>
+                            )}
+                          </div>
                           <p className="mt-0.5 text-xs text-neutral-500">
                             {item.quantity} x ฿{Number(item.price).toLocaleString('th-TH')}
                           </p>
+                          {item.item_note && <p className="mt-0.5 text-xs text-neutral-500">{item.item_note}</p>}
                         </div>
-                        <p className="text-sm font-black text-neutral-300 sm:text-right">
+                        <p className="text-sm font-black text-neutral-300 md:text-right">
                           ฿{(Number(item.price) * item.quantity).toLocaleString('th-TH')}
                         </p>
                       </div>
@@ -439,7 +545,13 @@ export default async function AdminOrdersPage({
                 </div>
 
                 <div className="mt-5 border-t border-neutral-800 pt-4">
-                  <OrderStatusActions orderId={order.id} status={order.status} />
+                  <div className="space-y-3">
+                    <OrderStatusActions orderId={order.id} status={order.status} />
+                    <OrderChatBox
+                      orderId={order.id}
+                      title={`แชทกับ ${getCustomerDisplayName(customer)}`}
+                    />
+                  </div>
                 </div>
               </article>
             )

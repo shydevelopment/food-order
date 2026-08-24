@@ -1,10 +1,15 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
+import { validateThaiPhone } from '@/lib/phone'
+import { getBangkokDayIndex, isMenuAvailableOnDay } from '@/lib/menu-days'
 
 interface OrderItemInput {
-  menuId: string
+  menuId?: string
   quantity: number
+  customName?: string
+  isSpecial?: boolean
+  itemNote?: string
 }
 
 export async function POST(req: NextRequest) {
@@ -19,22 +24,38 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const restaurantId = String(body.restaurantId || '')
     const deliveryAddress = String(body.deliveryAddress || '').trim()
+    const pickupTime = String(body.pickupTime || '').trim()
+    const pickupNote = String(body.pickupNote || '').trim().slice(0, 200)
+    const needsCutlery = Boolean(body.needsCutlery)
     const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : []
 
     if (!restaurantId || items.length === 0) {
       return NextResponse.json({ error: 'กรุณาเลือกรายการอาหารก่อนสั่งซื้อ' }, { status: 400 })
     }
 
-    if (!deliveryAddress) {
-      return NextResponse.json({ error: 'กรุณากรอกที่อยู่สำหรับจัดส่ง' }, { status: 400 })
+    const [pickupHour, pickupMinute] = pickupTime.split(':').map((value) => Number(value))
+
+    if (
+      !/^\d{2}:\d{2}$/.test(pickupTime)
+      || !Number.isInteger(pickupHour)
+      || !Number.isInteger(pickupMinute)
+      || pickupHour < 0
+      || pickupHour > 23
+      || pickupMinute < 0
+      || pickupMinute > 59
+    ) {
+      return NextResponse.json({ error: 'กรุณาเลือกเวลาไปรับอาหาร' }, { status: 400 })
     }
 
     const normalizedItems = items
       .map((item) => ({
         menuId: String(item.menuId || ''),
         quantity: Number(item.quantity || 0),
+        customName: String(item.customName || '').trim().slice(0, 120),
+        isSpecial: Boolean(item.isSpecial),
+        itemNote: String(item.itemNote || '').trim().slice(0, 160),
       }))
-      .filter((item) => item.menuId && Number.isInteger(item.quantity) && item.quantity > 0)
+      .filter((item) => (item.menuId || item.customName) && Number.isInteger(item.quantity) && item.quantity > 0)
 
     if (normalizedItems.length === 0) {
       return NextResponse.json({ error: 'จำนวนอาหารไม่ถูกต้อง' }, { status: 400 })
@@ -45,9 +66,24 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    const { data: customerProfile, error: customerProfileError } = await supabaseAdmin
+      .from('profiles')
+      .select('phone')
+      .eq('id', user.id)
+      .single()
+
+    const phoneValidation = validateThaiPhone(customerProfile?.phone || '')
+
+    if (customerProfileError || !phoneValidation.success) {
+      return NextResponse.json({
+        code: 'PROFILE_PHONE_REQUIRED',
+        error: 'บัญชีนี้ยังไม่มีเบอร์โทรศัพท์ กรุณาไปแก้ไขโปรไฟล์และเพิ่มเบอร์โทรก่อนสั่งอาหาร',
+      }, { status: 400 })
+    }
+
     const { data: restaurant, error: restaurantError } = await supabaseAdmin
       .from('restaurants')
-      .select('id, status')
+      .select('id, status, restaurant_type, unavailable_ingredients')
       .eq('id', restaurantId)
       .single()
 
@@ -59,13 +95,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ร้านอาหารนี้ยังไม่เปิดรับออร์เดอร์' }, { status: 400 })
     }
 
-    const menuIds = Array.from(new Set(normalizedItems.map((item) => item.menuId)))
-    const { data: menus, error: menusError } = await supabaseAdmin
-      .from('menus')
-      .select('id, restaurant_id, price, is_available')
-      .in('id', menuIds)
+    const customItems = normalizedItems.filter((item) => item.customName && !item.menuId)
+    if (customItems.length > 0 && restaurant.restaurant_type !== 'made_to_order') {
+      return NextResponse.json({ error: 'ร้านนี้ไม่รองรับการเขียนเมนูเอง' }, { status: 400 })
+    }
+
+    const unavailableIngredients = Array.isArray(restaurant.unavailable_ingredients)
+      ? restaurant.unavailable_ingredients.map((item) => String(item).trim()).filter(Boolean)
+      : []
+
+    for (const item of customItems) {
+      const text = `${item.customName} ${item.itemNote}`.toLowerCase()
+      const unavailableIngredient = unavailableIngredients.find((ingredient) => text.includes(ingredient.toLowerCase()))
+
+      if (unavailableIngredient) {
+        return NextResponse.json({ error: `วัตถุดิบ "${unavailableIngredient}" หมด กรุณาเลือกเมนูอื่น` }, { status: 400 })
+      }
+    }
+
+    const menuIds = Array.from(new Set(normalizedItems.map((item) => item.menuId).filter(Boolean)))
+    const { data: menus, error: menusError } = menuIds.length > 0
+      ? await supabaseAdmin
+        .from('menus')
+        .select('id, restaurant_id, price, is_available, available_days')
+        .in('id', menuIds)
+      : { data: [], error: null }
 
     if (menusError) {
+      if (menusError.message?.includes('schema cache') || menusError.message?.includes('available_days')) {
+        return NextResponse.json({
+          error: 'ฐานข้อมูลยังไม่มีคอลัมน์จัดการอาหารรายวัน กรุณารันไฟล์ supabase/sql/menu_daily_availability.sql ใน Supabase SQL Editor ก่อน',
+        }, { status: 400 })
+      }
+
       return NextResponse.json({ error: menusError.message }, { status: 400 })
     }
 
@@ -74,9 +136,14 @@ export async function POST(req: NextRequest) {
     }
 
     const menusById = new Map(menus.map((menu) => [menu.id, menu]))
+    const todayIndex = getBangkokDayIndex()
     let totalPrice = 0
 
     for (const item of normalizedItems) {
+      if (!item.menuId && item.customName) {
+        continue
+      }
+
       const menu = menusById.get(item.menuId)
 
       if (!menu || menu.restaurant_id !== restaurantId) {
@@ -85,6 +152,10 @@ export async function POST(req: NextRequest) {
 
       if (!menu.is_available) {
         return NextResponse.json({ error: 'มีเมนูบางรายการหมดหรือไม่พร้อมขาย' }, { status: 400 })
+      }
+
+      if (!isMenuAvailableOnDay(menu.available_days, todayIndex)) {
+        return NextResponse.json({ error: 'มีเมนูบางรายการไม่ได้ขายในวันนี้ กรุณาเลือกเมนูใหม่' }, { status: 400 })
       }
 
       totalPrice += Number(menu.price) * item.quantity
@@ -97,23 +168,35 @@ export async function POST(req: NextRequest) {
         restaurant_id: restaurantId,
         total_price: totalPrice,
         status: 'pending',
-        delivery_address: deliveryAddress,
+        delivery_address: deliveryAddress || 'รับอาหารที่ร้าน',
+        pickup_time: pickupTime,
+        pickup_note: pickupNote || null,
+        needs_cutlery: needsCutlery,
       })
       .select('id, order_no')
       .single()
+
+    if (orderError?.message?.includes('schema cache')) {
+      return NextResponse.json({
+        error: 'ฐานข้อมูลยังไม่มีคอลัมน์รับช้อนส้อม/เวลารับอาหาร กรุณารันไฟล์ supabase/sql/order_pickup_options.sql ใน Supabase SQL Editor ก่อน',
+      }, { status: 400 })
+    }
 
     if (orderError || !order) {
       return NextResponse.json({ error: orderError?.message || 'ไม่สามารถสร้างออร์เดอร์ได้' }, { status: 400 })
     }
 
     const orderItems = normalizedItems.map((item) => {
-      const menu = menusById.get(item.menuId)!
+      const menu = item.menuId ? menusById.get(item.menuId) : null
 
       return {
         order_id: order.id,
-        menu_id: item.menuId,
+        menu_id: item.menuId || null,
+        custom_name: item.customName || null,
+        is_special: item.isSpecial,
+        item_note: item.itemNote || null,
         quantity: item.quantity,
-        price: Number(menu.price),
+        price: menu ? Number(menu.price) : 0,
       }
     })
 
@@ -122,6 +205,12 @@ export async function POST(req: NextRequest) {
       .insert(orderItems)
 
     if (orderItemsError) {
+      if (orderItemsError.message?.includes('schema cache') || orderItemsError.message?.includes('custom_name')) {
+        return NextResponse.json({
+          error: 'ฐานข้อมูลยังไม่มีคอลัมน์สำหรับรูปแบบร้าน/เมนูเขียนเอง กรุณารันไฟล์ supabase/sql/restaurant_order_types.sql ใน Supabase SQL Editor ก่อน',
+        }, { status: 400 })
+      }
+
       return NextResponse.json({ error: orderItemsError.message }, { status: 400 })
     }
 
@@ -131,7 +220,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         action_type: 'order_created',
         title: 'สร้างคำสั่งซื้อใหม่',
-        detail: `Order #${order.order_no || String(order.id).slice(0, 8)} ยอดรวม ฿${totalPrice.toLocaleString('th-TH')}`,
+        detail: `Order #${order.order_no || String(order.id).slice(0, 8)} ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} รับเวลา ${pickupTime} ${needsCutlery ? 'รับช้อนส้อม' : 'ไม่รับช้อนส้อม'}`,
       })
 
     return NextResponse.json({

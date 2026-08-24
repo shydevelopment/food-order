@@ -1,6 +1,8 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
+import { DEFAULT_RESTAURANT_TYPE, RESTAURANT_TYPE_VALUES } from '@/lib/restaurant-types'
+import { ALL_WEEKDAY_VALUES, normalizeMenuAvailableDays } from '@/lib/menu-days'
 
 const getAdminClient = () => createSupabaseAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -97,7 +99,7 @@ export async function GET(
 
     const { supabaseAdmin, user, canManage, accessLevel } = auth
 
-    const [restaurantResult, menusResult, membersResult] = await Promise.all([
+    const [restaurantResult, menusResult, categoriesResult, membersResult] = await Promise.all([
       supabaseAdmin
         .from('restaurants')
         .select('*')
@@ -108,6 +110,11 @@ export async function GET(
         .select('*')
         .eq('restaurant_id', restaurantId)
         .order('created_at', { ascending: false }),
+      supabaseAdmin
+        .from('menu_categories')
+        .select('id, restaurant_id, name, created_at')
+        .eq('restaurant_id', restaurantId)
+        .order('name', { ascending: true }),
       supabaseAdmin
         .from('restaurant_members')
         .select('id, restaurant_id, user_id, access_level, created_at')
@@ -147,6 +154,7 @@ export async function GET(
     return NextResponse.json({
       restaurant: restaurantResult.data,
       menus: menusResult.data || [],
+      categories: categoriesResult.error ? [] : categoriesResult.data || [],
       members,
       canManage,
       accessLevel,
@@ -171,6 +179,13 @@ export async function PATCH(
     }
 
     const body = await req.json()
+    const restaurantType = RESTAURANT_TYPE_VALUES.includes(body.restaurant_type)
+      ? body.restaurant_type
+      : DEFAULT_RESTAURANT_TYPE
+    const unavailableIngredients = Array.isArray(body.unavailable_ingredients)
+      ? body.unavailable_ingredients.map((item: unknown) => String(item).trim()).filter(Boolean).slice(0, 50)
+      : []
+
     const { error, data } = await auth.supabaseAdmin
       .from('restaurants')
       .update({
@@ -182,6 +197,8 @@ export async function PATCH(
         open_time: body.open_time,
         close_time: body.close_time,
         image_url: body.image_url || null,
+        restaurant_type: restaurantType,
+        unavailable_ingredients: unavailableIngredients,
       })
       .eq('id', restaurantId)
       .select()
@@ -212,7 +229,105 @@ export async function POST(
 
     const body = await req.json()
 
+    if (body.action === 'menu_availability') {
+      const { data, error } = await auth.supabaseAdmin
+        .from('menus')
+        .update({ is_available: Boolean(body.is_available) })
+        .eq('id', body.menuId)
+        .eq('restaurant_id', restaurantId)
+        .select()
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+
+      return NextResponse.json({ menu: data?.[0] })
+    }
+
+    if (body.action === 'menu_daily_availability') {
+      const availableDays = normalizeMenuAvailableDays(body.available_days, [])
+
+      const { data, error } = await auth.supabaseAdmin
+        .from('menus')
+        .update({ available_days: availableDays })
+        .eq('id', body.menuId)
+        .eq('restaurant_id', restaurantId)
+        .select()
+
+      if (error) {
+        if (error.message?.includes('schema cache') || error.message?.includes('available_days')) {
+          return NextResponse.json({
+            error: 'ฐานข้อมูลยังไม่มีคอลัมน์จัดการอาหารรายวัน กรุณารันไฟล์ supabase/sql/menu_daily_availability.sql ใน Supabase SQL Editor ก่อน',
+          }, { status: 400 })
+        }
+
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+
+      return NextResponse.json({ menu: data?.[0] })
+    }
+
+    if (body.action === 'menu_category') {
+      const name = String(body.name || '').trim().slice(0, 40)
+
+      if (!name) {
+        return NextResponse.json({ error: 'กรุณากรอกชื่อหมวดเมนู' }, { status: 400 })
+      }
+
+      const { data, error } = await auth.supabaseAdmin
+        .from('menu_categories')
+        .upsert(
+          {
+            restaurant_id: restaurantId,
+            name,
+          },
+          { onConflict: 'restaurant_id,name' }
+        )
+        .select()
+        .single()
+
+      if (error) {
+        if (error.message?.includes('schema cache') || error.message?.includes('menu_categories')) {
+          return NextResponse.json({
+            error: 'ฐานข้อมูลยังไม่มีตารางหมวดเมนู กรุณารันไฟล์ supabase/sql/menu_categories_tags.sql ใน Supabase SQL Editor ก่อน',
+          }, { status: 400 })
+        }
+
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+
+      return NextResponse.json({ category: data })
+    }
+
     if (body.action === 'menu') {
+      const availableDays = normalizeMenuAvailableDays(body.available_days, ALL_WEEKDAY_VALUES)
+      const categoryId = typeof body.category_id === 'string' && body.category_id.trim()
+        ? body.category_id.trim()
+        : null
+
+      if (categoryId) {
+        const { data: category, error: categoryError } = await auth.supabaseAdmin
+          .from('menu_categories')
+          .select('id')
+          .eq('id', categoryId)
+          .eq('restaurant_id', restaurantId)
+          .maybeSingle()
+
+        if (categoryError) {
+          if (categoryError.message?.includes('schema cache') || categoryError.message?.includes('menu_categories')) {
+            return NextResponse.json({
+              error: 'ฐานข้อมูลยังไม่มีตารางหมวดเมนู กรุณารันไฟล์ supabase/sql/menu_categories_tags.sql ใน Supabase SQL Editor ก่อน',
+            }, { status: 400 })
+          }
+
+          return NextResponse.json({ error: categoryError.message }, { status: 400 })
+        }
+
+        if (!category) {
+          return NextResponse.json({ error: 'หมวดเมนูนี้ไม่ได้อยู่ในร้านนี้' }, { status: 400 })
+        }
+      }
+
       const { data, error } = await auth.supabaseAdmin
         .from('menus')
         .insert({
@@ -222,10 +337,24 @@ export async function POST(
           description: body.description || null,
           image_url: body.image_url || null,
           is_available: Boolean(body.is_available),
+          available_days: availableDays,
+          category_id: categoryId,
         })
         .select()
 
       if (error) {
+        if (error.message?.includes('schema cache') || error.message?.includes('category_id')) {
+          return NextResponse.json({
+            error: 'ฐานข้อมูลยังไม่มีคอลัมน์หมวดเมนู กรุณารันไฟล์ supabase/sql/menu_categories_tags.sql ใน Supabase SQL Editor ก่อน',
+          }, { status: 400 })
+        }
+
+        if (error.message?.includes('schema cache') || error.message?.includes('available_days')) {
+          return NextResponse.json({
+            error: 'ฐานข้อมูลยังไม่มีคอลัมน์จัดการอาหารรายวัน กรุณารันไฟล์ supabase/sql/menu_daily_availability.sql ใน Supabase SQL Editor ก่อน',
+          }, { status: 400 })
+        }
+
         return NextResponse.json({ error: error.message }, { status: 400 })
       }
 

@@ -46,6 +46,8 @@ export const RESTAURANT_ACCESS_LEVELS = [
   },
 ] as const
 
+export const NON_STUDENT_LABEL = 'คุณไม่ได้เป็นบุคลากรในมหาวิทยาลัย'
+
 export type AccountRole = typeof ACCOUNT_ROLES[number]['value']
 export type RestaurantAccessLevel = typeof RESTAURANT_ACCESS_LEVELS[number]['value']
 
@@ -68,6 +70,29 @@ export const getKmutnbStudentUsernameFromEmail = (email: string | null | undefin
 
   return username.replace(/^s(?=\d)/, '')
 }
+
+export const getProfileStudentId = (profile: {
+  student_id?: string | null
+  username?: string | null
+  role?: string | null
+}, email: string | null | undefined) => {
+  const explicitStudentId = profile.student_id?.trim()
+  if (explicitStudentId) return explicitStudentId
+
+  if (profile.role === 'student' || isKmutnbStudentEmail(email)) {
+    return getKmutnbStudentUsernameFromEmail(email) || profile.username?.trim() || null
+  }
+
+  return null
+}
+
+export const getProfileStudentIdDisplay = (profile: {
+  student_id?: string | null
+  username?: string | null
+  role?: string | null
+}, email: string | null | undefined) => (
+  getProfileStudentId(profile, email) || NON_STUDENT_LABEL
+)
 
 export const resolveAccountRoleForEmail = (
   email: string | null | undefined,

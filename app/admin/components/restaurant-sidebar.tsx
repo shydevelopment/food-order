@@ -92,6 +92,22 @@ export default function RestaurantSidebar() {
       });
 
       if (profileRow) setProfile(profileRow);
+
+      if (profileRow?.role === 'admin') {
+        const response = await fetch('/api/admin/restaurants');
+        const result = await response.json();
+
+        if (response.ok) {
+          const adminRestaurants = (result.restaurants || []).map((restaurant: RestaurantSummary) => ({
+            id: restaurant.id,
+            name: restaurant.name,
+            access_level: 'owner',
+          }));
+          setRestaurants(adminRestaurants.sort((a: RestaurantSummary, b: RestaurantSummary) => a.name.localeCompare(b.name, 'th')));
+          return;
+        }
+      }
+
       setRestaurants(Array.from(restaurantMap.values()).sort((a, b) => a.name.localeCompare(b.name, 'th')));
     };
 
@@ -164,18 +180,26 @@ export default function RestaurantSidebar() {
             {restaurants
                 .filter((restaurant) => restaurant.access_level === 'owner')
                 .map((restaurant) => (
-                  <Link
-                    key={restaurant.id}
-                    href={`/admin/restaurants/${restaurant.id}`}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black transition-all active:scale-95 ${
-                      pathname === `/admin/restaurants/${restaurant.id}`
-                        ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
-                        : 'text-gray-400 hover:text-white hover:bg-neutral-800'
-                    }`}
-                  >
-                    <span>🏪</span>
-                    <span className="min-w-0 truncate">จัดการข้อมูลร้าน</span>
-                  </Link>
+                  <div key={restaurant.id} className="space-y-2">
+                    <Link
+                      href={`/admin/restaurants/${restaurant.id}`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black transition-all active:scale-95 ${
+                        pathname === `/admin/restaurants/${restaurant.id}`
+                          ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                          : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                      }`}
+                    >
+                      <span>🏪</span>
+                      <span className="min-w-0 truncate">จัดการข้อมูลร้าน</span>
+                    </Link>
+                    <Link
+                      href={`/admin/restaurants/${restaurant.id}#daily-menu`}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black text-gray-400 transition-all hover:bg-neutral-800 hover:text-white active:scale-95"
+                    >
+                      <span>📅</span>
+                      <span className="min-w-0 truncate">จัดการอาหารรายวัน</span>
+                    </Link>
+                  </div>
                 ))}
 
             <nav className="space-y-2">
@@ -190,7 +214,16 @@ export default function RestaurantSidebar() {
                 <span>🧾</span> รับออเดอร์
               </Link>
 
-            
+              <Link
+                href="/admin/activity-logs"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black transition-all active:scale-95 ${
+                  pathname === '/admin/activity-logs'
+                    ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <span>📜</span> ประวัติกิจกรรมร้าน
+              </Link>
             </nav>
 
             <div className="mt-8 pt-4 border-t border-neutral-800">

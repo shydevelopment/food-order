@@ -8,6 +8,7 @@ interface ActivityLogItemProps {
     icon: string;
     colorClass: string;
     timestamp: Date | null;
+    restaurantName?: string | null;
   };
 }
 
@@ -82,7 +83,14 @@ export function ActivityLogItem({ act }: ActivityLogItemProps) {
           {act.icon}
         </div>
         <div className="min-w-0">
-          <p className="text-base font-bold text-white truncate">{act.title}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="min-w-0 truncate text-base font-bold text-white">{act.title}</p>
+            {act.restaurantName && (
+              <span className="shrink-0 rounded-full border border-orange-500/25 bg-orange-500/10 px-2 py-0.5 text-[10px] font-black text-orange-300">
+                {act.restaurantName}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-gray-400 truncate mt-0.5">{act.detail}</p>
         </div>
       </div>

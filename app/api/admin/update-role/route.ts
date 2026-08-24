@@ -1,7 +1,7 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
-import { ACCOUNT_ROLE_VALUES, canHaveRestaurantAccess, resolveAccountRoleForEmail } from '@/lib/roles'
+import { ACCOUNT_ROLE_VALUES, canHaveRestaurantAccess, getProfileStudentId, resolveAccountRoleForEmail } from '@/lib/roles'
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest) {
 
     const { data: targetProfile, error: targetProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, username, full_name, email, role')
+      .select('id, username, full_name, email, role, student_id')
       .eq('id', userId)
       .single()
 
@@ -51,10 +51,13 @@ export async function PATCH(req: NextRequest) {
     }
 
     const resolvedRole = resolveAccountRoleForEmail(targetProfile.email, role)
+    const studentId = resolvedRole === 'student'
+      ? getProfileStudentId({ ...targetProfile, role: resolvedRole }, targetProfile.email)
+      : null
 
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
-      .update({ role: resolvedRole })
+      .update({ role: resolvedRole, student_id: studentId })
       .eq('id', userId)
 
     if (updateError) {

@@ -48,6 +48,7 @@ export default function AdminLayout({
 
       const isRestaurantAllowedPage =
         pathname === '/admin/orders' ||
+        pathname === '/admin/activity-logs' ||
         pathname.startsWith('/admin/restaurants/');
 
       if (profile.role === 'restaurant' && !isRestaurantAllowedPage) {
@@ -82,7 +83,7 @@ export default function AdminLayout({
         และทำให้เส้นเหลืองหายไปทันที โดยไม่เสียโครงสร้าง UI เดิมครับ
       */
       <div 
-        className="relative w-full bg-black flex flex-col lg:flex-row items-stretch overflow-x-hidden m-0 p-0 -mt-4 -mb-4"
+        className="relative w-auto bg-black flex flex-col lg:flex-row items-stretch overflow-x-hidden m-0 p-0 -mx-3 -mt-4 -mb-4 sm:-mx-6 lg:-mx-8"
         style={{
           minHeight: 'calc(100vh - 44px)'
         }}
@@ -91,7 +92,7 @@ export default function AdminLayout({
         {role === 'admin' ? <AdminSidebar /> : <RestaurantSidebar />}
 
         {/* 📄 ส่วนแสดงเนื้อหาฝั่งขวา */}
-        <main className="min-w-0 flex-1 bg-neutral-950 p-4 sm:p-6 lg:p-10 overflow-x-hidden lg:overflow-y-auto">
+        <main className="min-w-0 flex-1 bg-neutral-950 p-3 sm:p-5 lg:p-8 overflow-x-hidden lg:overflow-y-auto">
           {children}
         </main>
 
