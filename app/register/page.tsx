@@ -82,6 +82,7 @@ export default async function RegisterPage({
         emailRedirectTo: `${siteUrl}/register-success`,
         data: {
           username: username,
+          full_name: displayName,
           display_name: displayName,
           phone: phone,
           student_id: accountRole === 'student' ? studentId : null,

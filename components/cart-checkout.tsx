@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import type { UIEvent } from 'react'
 
 interface CartItem {
   menuId: string
@@ -17,6 +19,7 @@ interface CartItem {
 }
 
 const cartStorageKey = 'food-order-cart'
+const checkoutDraftStorageKey = 'food-order-checkout-draft'
 
 const readCart = (): CartItem[] => {
   try {
@@ -32,25 +35,24 @@ const writeCart = (items: CartItem[]) => {
 }
 
 const suggestedPickupTimes = [
-  '08:00',
-  '08:30',
-  '09:00',
-  '09:30',
-  '10:00',
-  '10:30',
-  '11:00',
-  '11:30',
-  '12:00',
-  '12:30',
-  '13:00',
-  '13:30',
-  '16:00',
-  '16:30',
-  '17:00',
-  '17:30',
-  '18:00',
-  '18:30',
+  '06',
+  '07',
+  '08',
+  '09',
+  '10',
+  '11',
+  '12',
+  '13',
+  '14',
+  '15',
+  '16',
+  '17',
+  '18',
+  '19',
+  '20',
 ]
+const suggestedPickupMinutes = Array.from({ length: 60 }, (_, minute) => String(minute).padStart(2, '0'))
+const wheelItemStep = 56
 
 const formatTypedPickupTime = (value: string) => {
   const cleanedValue = value.replace(/[^\d:]/g, '').slice(0, 5)
@@ -84,10 +86,11 @@ const normalizePickupTime = (value: string) => {
 
 export default function CartCheckout() {
   const [items, setItems] = useState<CartItem[]>([])
+  const hourWheelRef = useRef<HTMLDivElement | null>(null)
+  const minuteWheelRef = useRef<HTMLDivElement | null>(null)
   const [pickupTime, setPickupTime] = useState('')
   const [showPickupTimePicker, setShowPickupTimePicker] = useState(false)
   const [pickupNote, setPickupNote] = useState('')
-  const [needsCutlery, setNeedsCutlery] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [profileRequiredMessage, setProfileRequiredMessage] = useState<string | null>(null)
   const [profileRequiredClosing, setProfileRequiredClosing] = useState(false)
@@ -102,6 +105,58 @@ export default function CartCheckout() {
   }, [items])
 
   const restaurantName = items[0]?.restaurantName
+  const normalizedWheelTime = /^\d{2}:\d{2}$/.test(normalizePickupTime(pickupTime))
+    ? normalizePickupTime(pickupTime)
+    : '08:00'
+  const [selectedHour, selectedMinute] = normalizedWheelTime.split(':')
+
+  const selectPickupHour = (hour: string) => {
+    setPickupTime(`${hour}:${selectedMinute || '00'}`)
+    const index = suggestedPickupTimes.indexOf(hour)
+    if (index >= 0) {
+      hourWheelRef.current?.scrollTo({ top: index * wheelItemStep, behavior: 'smooth' })
+    }
+  }
+
+  const selectPickupMinute = (minute: string) => {
+    setPickupTime(`${selectedHour || '08'}:${minute}`)
+    const index = suggestedPickupMinutes.indexOf(minute)
+    if (index >= 0) {
+      minuteWheelRef.current?.scrollTo({ top: index * wheelItemStep, behavior: 'smooth' })
+    }
+  }
+
+  const handleWheelScroll = (type: 'hour' | 'minute', event: UIEvent<HTMLDivElement>) => {
+    const values = type === 'hour' ? suggestedPickupTimes : suggestedPickupMinutes
+    const index = Math.min(
+      values.length - 1,
+      Math.max(0, Math.round(event.currentTarget.scrollTop / wheelItemStep)),
+    )
+    const value = values[index]
+
+    if (type === 'hour') {
+      setPickupTime(`${value}:${selectedMinute || '00'}`)
+      return
+    }
+
+    setPickupTime(`${selectedHour || '08'}:${value}`)
+  }
+
+  useEffect(() => {
+    if (!showPickupTimePicker) return
+
+    const hourIndex = suggestedPickupTimes.indexOf(selectedHour || '08')
+    const minuteIndex = suggestedPickupMinutes.indexOf(selectedMinute || '00')
+
+    window.requestAnimationFrame(() => {
+      if (hourIndex >= 0) {
+        hourWheelRef.current?.scrollTo({ top: hourIndex * wheelItemStep })
+      }
+      if (minuteIndex >= 0) {
+        minuteWheelRef.current?.scrollTo({ top: minuteIndex * wheelItemStep })
+      }
+    })
+  }, [selectedHour, selectedMinute, showPickupTimePicker])
 
   const updateQuantity = (menuId: string, quantity: number) => {
     const nextItems = items
@@ -131,47 +186,24 @@ export default function CartCheckout() {
       return
     }
 
-    setSubmitting(true)
+    const normalizedPickupTime = normalizePickupTime(pickupTime)
 
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          restaurantId: items[0].restaurantId,
-          pickupTime,
-          pickupNote,
-          needsCutlery,
-          items: items.map((item) => ({
-            menuId: item.menuId,
-            quantity: item.quantity,
-            customName: item.customName,
-            isSpecial: Boolean(item.isSpecial),
-            itemNote: item.itemNote,
-          })),
-        }),
-      })
-
-      const result = await res.json()
-
-      if (!res.ok) {
-        if (result.code === 'PROFILE_PHONE_REQUIRED') {
-          setProfileRequiredClosing(false)
-          setProfileRequiredMessage(result.error || 'กรุณาเพิ่มเบอร์โทรศัพท์ก่อนสั่งอาหาร')
-          return
-        }
-
-        throw new Error(result.error || 'ไม่สามารถสร้างคำสั่งซื้อได้')
-      }
-
-      clearCart()
-      window.location.href = `/trackorderPage?order=${result.orderId}`
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสั่งอาหาร'
-      alert(message)
-    } finally {
-      setSubmitting(false)
+    if (!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(normalizedPickupTime)) {
+      alert('กรุณาเลือกเวลาไปรับอาหาร')
+      return
     }
+
+    setSubmitting(true)
+    window.localStorage.setItem(checkoutDraftStorageKey, JSON.stringify({
+      restaurantId: items[0].restaurantId,
+      restaurantName: items[0].restaurantName,
+      pickupTime: normalizedPickupTime,
+      pickupNote,
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      totalPrice,
+      updatedAt: new Date().toISOString(),
+    }))
+    window.location.href = '/payment'
   }
 
   const closeProfileRequired = () => {
@@ -187,12 +219,12 @@ export default function CartCheckout() {
       <div className="mx-auto max-w-3xl rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center sm:p-10">
         <h1 className="text-2xl font-black text-white">ตะกร้าว่าง</h1>
         <p className="mt-2 text-sm text-neutral-400">เลือกเมนูจากหน้าร้านอาหารก่อน แล้วกลับมายืนยันคำสั่งซื้อที่นี่</p>
-        <a
+        <Link
           href="/storePage"
           className="mt-6 inline-flex rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-neutral-950 transition hover:bg-amber-400"
         >
           ไปเลือกเมนู
-        </a>
+        </Link>
       </div>
     )
   }
@@ -356,11 +388,11 @@ export default function CartCheckout() {
           </div>
 
           {showPickupTimePicker && (
-            <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-amber-500/30 bg-neutral-950 p-3 shadow-2xl shadow-black/60">
-              <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-amber-500/30 bg-neutral-950 shadow-2xl shadow-black/60">
+              <div className="flex items-center justify-between gap-3 border-b border-neutral-800 bg-neutral-900 px-4 py-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-amber-400">เวลายอดนิยม</p>
-                  <p className="mt-0.5 text-[11px] text-neutral-500">หรือพิมพ์เวลาเองด้านบนได้อิสระ</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-amber-400">เลือกเวลาไปรับ</p>
+                  <p className="mt-0.5 text-[11px] text-neutral-500">เลื่อนเลือกชั่วโมงและนาทีแบบนาฬิกา</p>
                 </div>
                 <button
                   type="button"
@@ -370,24 +402,68 @@ export default function CartCheckout() {
                   ปิด
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {suggestedPickupTimes.map((time) => (
-                  <button
-                    key={time}
-                    type="button"
-                    onClick={() => {
-                      setPickupTime(time)
-                      setShowPickupTimePicker(false)
-                    }}
-                    className={`rounded-xl border px-3 py-2 text-sm font-black transition ${
-                      pickupTime === time
-                        ? 'border-amber-500 bg-amber-500 text-neutral-950'
-                        : 'border-neutral-800 bg-black text-neutral-200 hover:border-amber-500/70 hover:text-amber-300'
-                    }`}
-                  >
-                    {time}
-                  </button>
-                ))}
+              <div className="relative grid grid-cols-[1fr_auto_1fr] gap-2 p-4">
+                <div className="pointer-events-none absolute left-4 right-4 top-1/2 h-12 -translate-y-1/2 rounded-xl border border-amber-500/40 bg-amber-500/10" />
+
+                <div
+                  ref={hourWheelRef}
+                  onScroll={(event) => handleWheelScroll('hour', event)}
+                  className="scrollbar-hide relative h-48 snap-y snap-mandatory overflow-y-auto rounded-2xl border border-neutral-800 bg-black py-[72px]"
+                >
+                  <div className="space-y-2 px-2">
+                    {suggestedPickupTimes.map((hour) => (
+                      <button
+                        key={hour}
+                        type="button"
+                        onClick={() => selectPickupHour(hour)}
+                        className={`flex h-12 w-full snap-center items-center justify-center rounded-xl text-2xl font-black transition ${
+                          selectedHour === hour
+                            ? 'text-amber-300'
+                            : 'text-neutral-500 hover:bg-neutral-900 hover:text-neutral-200'
+                        }`}
+                      >
+                        {hour}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative z-10 flex h-48 items-center justify-center text-2xl font-black text-amber-400">
+                  :
+                </div>
+
+                <div
+                  ref={minuteWheelRef}
+                  onScroll={(event) => handleWheelScroll('minute', event)}
+                  className="scrollbar-hide relative h-48 snap-y snap-mandatory overflow-y-auto rounded-2xl border border-neutral-800 bg-black py-[72px]"
+                >
+                  <div className="space-y-2 px-2">
+                    {suggestedPickupMinutes.map((minute) => (
+                      <button
+                        key={minute}
+                        type="button"
+                        onClick={() => selectPickupMinute(minute)}
+                        className={`flex h-12 w-full snap-center items-center justify-center rounded-xl text-2xl font-black transition ${
+                          selectedMinute === minute
+                            ? 'text-amber-300'
+                            : 'text-neutral-500 hover:bg-neutral-900 hover:text-neutral-200'
+                        }`}
+                      >
+                        {minute}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-neutral-800 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPickupTimePicker(false)}
+                  className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-black text-neutral-950 transition hover:bg-amber-400"
+                >
+                  ใช้เวลา {pickupTime || '08:00'}
+                </button>
               </div>
             </div>
           )}
@@ -410,22 +486,12 @@ export default function CartCheckout() {
           <span>{pickupNote.length}/200</span>
         </div>
 
-        <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3 transition hover:border-neutral-700">
-          <input
-            type="checkbox"
-            checked={needsCutlery}
-            onChange={(event) => setNeedsCutlery(event.target.checked)}
-            className="h-4 w-4 accent-amber-500"
-          />
-          <span className="text-sm font-bold text-neutral-200">รับช้อนส้อมด้วย</span>
-        </label>
-
         <button
           type="submit"
           disabled={submitting}
           className="mt-5 w-full rounded-xl bg-amber-500 px-5 py-3 text-sm font-black text-neutral-950 transition hover:bg-amber-400 disabled:bg-neutral-800 disabled:text-neutral-500"
         >
-          {submitting ? 'กำลังส่งออร์เดอร์...' : 'ยืนยันสั่งอาหาร'}
+          {submitting ? 'กำลังไปหน้าชำระเงิน...' : 'ยืนยันสั่งอาหาร'}
         </button>
 
         <button

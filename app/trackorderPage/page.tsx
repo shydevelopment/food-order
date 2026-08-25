@@ -2,6 +2,7 @@ import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js
 import { createClient } from '@/supabase/service'
 import OrderChatBox from '@/components/order-chat-box'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
 interface Order {
   id: string
@@ -12,7 +13,6 @@ interface Order {
   delivery_address: string | null
   pickup_time: string | null
   pickup_note: string | null
-  needs_cutlery: boolean | null
   cancellation_reason: string | null
   created_at: string
 }
@@ -103,7 +103,7 @@ export default async function TrackOrderPage({
 
   const { data: orders, error: ordersError } = await supabaseAdmin
     .from('orders')
-    .select('id, order_no, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, needs_cutlery, cancellation_reason, created_at')
+    .select('id, order_no, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -163,12 +163,12 @@ export default async function TrackOrderPage({
             <h1 className="mt-2 text-3xl font-black">ติดตามคำสั่งซื้อ</h1>
             <p className="mt-2 text-sm text-neutral-400">ดูรายการอาหารที่สั่งและสถานะล่าสุดของออร์เดอร์</p>
           </div>
-          <a
+          <Link
             href="/storePage"
             className="inline-flex items-center justify-center rounded-lg border border-neutral-800 px-4 py-2 text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
           >
             สั่งอาหารเพิ่ม
-          </a>
+          </Link>
         </div>
 
         {orderRows.length === 0 ? (
@@ -324,12 +324,6 @@ export default async function TrackOrderPage({
                       <div>
                         <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">เวลารับอาหาร</p>
                         <p className="mt-1 text-lg font-black text-amber-400">{formatPickupTime(order.pickup_time)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">ช้อนส้อม</p>
-                        <p className="mt-1 font-bold text-neutral-300">
-                          {order.needs_cutlery ? 'รับช้อนส้อม' : 'ไม่รับช้อนส้อม'}
-                        </p>
                       </div>
                       <div className="border-t border-neutral-800 pt-3 sm:col-span-2">
                         <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">ช่องเพิ่มเติม</p>

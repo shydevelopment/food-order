@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       email_confirm: true,
       user_metadata: {
         username,
+        full_name: fullName,
         display_name: fullName,
         phone: phoneValidation.phone,
         student_id: studentId,

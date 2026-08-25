@@ -37,6 +37,7 @@ interface NotificationSoundRow {
 }
 
 type RealtimeStatus = 'connecting' | 'connected' | 'error'
+type PushPermission = NotificationPermission | 'unsupported'
 
 export default function AdminOrdersRealtime() {
   const router = useRouter()
@@ -54,6 +55,9 @@ export default function AdminOrdersRealtime() {
   const [isOrderAlertClosing, setIsOrderAlertClosing] = useState(false)
   const [soundBlocked, setSoundBlocked] = useState(false)
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('connecting')
+  const [pushPermission, setPushPermission] = useState<PushPermission>(() => (
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported'
+  ))
   const supabase = useMemo(
     () => createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -213,6 +217,37 @@ export default function AdminOrdersRealtime() {
         orderNo: order.order_no,
         totalPrice: Number(order.total_price || 0),
       })
+
+      showBrowserPushNotification({
+        type: 'new-order',
+        orderId: order.id,
+        orderNo: order.order_no,
+        totalPrice: Number(order.total_price || 0),
+      })
+    }
+
+    const showBrowserPushNotification = (alert: OrderAlert) => {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return
+
+      const title = alert.type === 'pickup-reminder'
+        ? 'ใกล้ถึงเวลารับอาหาร'
+        : 'มีออเดอร์ใหม่เข้า'
+      const body = alert.type === 'pickup-reminder'
+        ? `Order #${alert.orderNo || alert.orderId.slice(0, 8)} ถึงเวลารับอาหาร ${alert.pickupTime || ''}`
+        : `Order #${alert.orderNo || alert.orderId.slice(0, 8)} ยอดรวม ฿${alert.totalPrice.toLocaleString('th-TH')}`
+
+      const notification = new Notification(title, {
+        body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: `food-order-admin-${alert.type}-${alert.orderId}`,
+      })
+
+      notification.onclick = () => {
+        window.focus()
+        router.push('/admin/orders')
+        notification.close()
+      }
     }
 
     const handleOrderInsert = (order: OrderRealtimeRow) => {
@@ -285,6 +320,14 @@ export default function AdminOrdersRealtime() {
         markPickupReminderShown(reminder.id, reminder.pickup_time)
         setIsOrderAlertClosing(false)
         setOrderAlert({
+          type: 'pickup-reminder',
+          orderId: reminder.id,
+          orderNo: reminder.order_no,
+          totalPrice: Number(reminder.total_price || 0),
+          pickupTime: reminder.pickup_time,
+          minutesUntilPickup: Number(reminder.minutes_until_pickup),
+        })
+        showBrowserPushNotification({
           type: 'pickup-reminder',
           orderId: reminder.id,
           orderNo: reminder.order_no,
@@ -402,13 +445,48 @@ export default function AdminOrdersRealtime() {
     }, 180)
   }
 
+  const requestPushPermission = async () => {
+    if (!('Notification' in window)) {
+      setPushPermission('unsupported')
+      return
+    }
+
+    const permission = await Notification.requestPermission()
+    setPushPermission(permission)
+  }
+
   return (
     <>
       <div className={`rounded-xl border px-4 py-3 text-sm ${realtimeClassName}`}>
-        <span className="font-bold">Realtime</span>
-        <span className="ml-1 text-neutral-300">
-          {realtimeCopy[realtimeStatus]}
-        </span>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            <span className="font-bold">Realtime</span>
+            <span className="ml-1 text-neutral-300">
+              {realtimeCopy[realtimeStatus]}
+            </span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {pushPermission === 'default' && (
+              <button
+                type="button"
+                onClick={requestPushPermission}
+                className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-black text-orange-300 transition hover:bg-orange-500/20"
+              >
+                เปิด Push Notification
+              </button>
+            )}
+            {pushPermission === 'granted' && (
+              <span className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-black text-emerald-300">
+                Push เปิดแล้ว
+              </span>
+            )}
+            {pushPermission === 'denied' && (
+              <span className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-black text-red-300">
+                Push ถูกบล็อกในเบราว์เซอร์
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {orderAlert && (

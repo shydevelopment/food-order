@@ -1,4 +1,4 @@
-import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseAdminClient, type SupabaseClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
 import { validateThaiPhone } from '@/lib/phone'
@@ -10,6 +10,106 @@ interface OrderItemInput {
   customName?: string
   isSpecial?: boolean
   itemNote?: string
+}
+
+interface RestaurantMemberRow {
+  user_id: string
+}
+
+interface ProfileRow {
+  id: string
+}
+
+interface CustomerProfileRow {
+  phone: string | null
+  full_name: string | null
+  username: string | null
+  email: string | null
+}
+
+const createOrderNotifications = async (params: {
+  supabaseAdmin: SupabaseClient
+  customerId: string
+  restaurantId: string
+  restaurantName: string
+  restaurantOwnerId: string | null
+  restaurantEmail: string | null
+  orderId: string
+  orderNo: number | null
+  totalPrice: number
+  pickupTime: string
+  customerName: string
+}) => {
+  const {
+    supabaseAdmin,
+    customerId,
+    restaurantId,
+    restaurantName,
+    restaurantOwnerId,
+    restaurantEmail,
+    orderId,
+    orderNo,
+    totalPrice,
+    pickupTime,
+    customerName,
+  } = params
+
+  const [{ data: restaurantMembers }, { data: emailOwners }] = await Promise.all([
+    supabaseAdmin
+      .from('restaurant_members')
+      .select('user_id')
+      .eq('restaurant_id', restaurantId),
+    restaurantEmail
+      ? supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', restaurantEmail)
+        .in('role', ['restaurant', 'admin'])
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const restaurantUserIds = Array.from(new Set([
+    restaurantOwnerId,
+    ...((restaurantMembers || []) as RestaurantMemberRow[]).map((member) => member.user_id),
+    ...((emailOwners || []) as ProfileRow[]).map((profile) => profile.id),
+  ].filter((id): id is string => Boolean(id))))
+
+  const orderLabel = `Order #${orderNo || orderId.slice(0, 8)}`
+  const now = new Date().toISOString()
+  const notifications = [
+    {
+      user_id: customerId,
+      item_key: `order-${orderId}`,
+      type: 'order',
+      title: orderLabel,
+      detail: `สั่งอาหารจาก ${restaurantName} แล้ว · รับเวลา ${pickupTime}`,
+      href: `/trackorderPage?order=${orderId}`,
+      tone: 'orange',
+      source_created_at: now,
+      updated_at: now,
+    },
+    ...restaurantUserIds
+      .filter((ownerId) => ownerId !== customerId)
+      .map((ownerId) => ({
+        user_id: ownerId,
+        item_key: `order-${orderId}`,
+        type: 'order',
+        title: `${orderLabel} เข้าใหม่`,
+        detail: `ลูกค้า ${customerName} · ${restaurantName} · ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} · รับเวลา ${pickupTime}`,
+        href: `/admin/orders?restaurantId=${restaurantId}`,
+        tone: 'orange',
+        source_created_at: now,
+        updated_at: now,
+      })),
+  ]
+
+  const { error } = await supabaseAdmin
+    .from('notifications')
+    .upsert(notifications, { onConflict: 'user_id,item_key' })
+
+  if (error) {
+    console.error('Error creating order notifications:', error.message)
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -26,7 +126,6 @@ export async function POST(req: NextRequest) {
     const deliveryAddress = String(body.deliveryAddress || '').trim()
     const pickupTime = String(body.pickupTime || '').trim()
     const pickupNote = String(body.pickupNote || '').trim().slice(0, 200)
-    const needsCutlery = Boolean(body.needsCutlery)
     const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : []
 
     if (!restaurantId || items.length === 0) {
@@ -68,11 +167,12 @@ export async function POST(req: NextRequest) {
 
     const { data: customerProfile, error: customerProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('phone')
+      .select('phone, full_name, username, email')
       .eq('id', user.id)
-      .single()
+      .single<CustomerProfileRow>()
 
     const phoneValidation = validateThaiPhone(customerProfile?.phone || '')
+    const customerDisplayName = customerProfile?.full_name || customerProfile?.username || customerProfile?.email || user.email || 'ลูกค้า'
 
     if (customerProfileError || !phoneValidation.success) {
       return NextResponse.json({
@@ -83,7 +183,7 @@ export async function POST(req: NextRequest) {
 
     const { data: restaurant, error: restaurantError } = await supabaseAdmin
       .from('restaurants')
-      .select('id, status, restaurant_type, unavailable_ingredients')
+      .select('id, name, email, owner_id, status, restaurant_type, unavailable_ingredients')
       .eq('id', restaurantId)
       .single()
 
@@ -171,14 +271,14 @@ export async function POST(req: NextRequest) {
         delivery_address: deliveryAddress || 'รับอาหารที่ร้าน',
         pickup_time: pickupTime,
         pickup_note: pickupNote || null,
-        needs_cutlery: needsCutlery,
+        needs_cutlery: false,
       })
       .select('id, order_no')
       .single()
 
     if (orderError?.message?.includes('schema cache')) {
       return NextResponse.json({
-        error: 'ฐานข้อมูลยังไม่มีคอลัมน์รับช้อนส้อม/เวลารับอาหาร กรุณารันไฟล์ supabase/sql/order_pickup_options.sql ใน Supabase SQL Editor ก่อน',
+        error: 'ฐานข้อมูลยังไม่มีคอลัมน์เวลารับอาหาร กรุณารันไฟล์ supabase/sql/order_pickup_options.sql ใน Supabase SQL Editor ก่อน',
       }, { status: 400 })
     }
 
@@ -220,8 +320,22 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         action_type: 'order_created',
         title: 'สร้างคำสั่งซื้อใหม่',
-        detail: `Order #${order.order_no || String(order.id).slice(0, 8)} ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} รับเวลา ${pickupTime} ${needsCutlery ? 'รับช้อนส้อม' : 'ไม่รับช้อนส้อม'}`,
+        detail: `Order #${order.order_no || String(order.id).slice(0, 8)} ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} รับเวลา ${pickupTime}`,
       })
+
+    await createOrderNotifications({
+      supabaseAdmin,
+      customerId: user.id,
+      restaurantId,
+      restaurantName: restaurant.name || 'ร้านอาหาร',
+      restaurantOwnerId: restaurant.owner_id || null,
+      restaurantEmail: restaurant.email || null,
+      orderId: order.id,
+      orderNo: order.order_no,
+      totalPrice,
+      pickupTime,
+      customerName: customerDisplayName,
+    })
 
     return NextResponse.json({
       success: true,

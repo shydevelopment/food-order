@@ -2,10 +2,9 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { ACCOUNT_ROLES, getAccountRoleMeta, getProfileStudentId, getProfileStudentIdDisplay, resolveAccountRoleForEmail } from '@/lib/roles';
+import { ACCOUNT_ROLES, getAccountRoleMeta, getProfileStudentIdDisplay, resolveAccountRoleForEmail } from '@/lib/roles';
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
 import {
-  DUPLICATE_PHONE_MESSAGE,
   formatThaiPhoneInput,
   THAI_PHONE_INPUT_PATTERN,
   THAI_PHONE_REQUIREMENTS_TEXT,
@@ -131,52 +130,24 @@ export default function AdminUsersPage() {
     setSubmitLoading(true);
     try {
       const resolvedRole = resolveAccountRoleForEmail(emailInput, roleInput);
-      const studentId = resolvedRole === 'student'
-        ? getProfileStudentId(
-          { student_id: selectedUser.student_id, username: usernameInput, role: resolvedRole },
-          emailInput,
-        )
-        : null;
 
-      const { data: existingPhoneProfile, error: phoneLookupError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('phone', phoneValidation.phone)
-        .neq('id', selectedUser.id)
-        .maybeSingle();
-
-      if (phoneLookupError) throw phoneLookupError;
-      if (existingPhoneProfile) throw new Error(DUPLICATE_PHONE_MESSAGE);
-
-      // 💾 บันทึกข้อมูลที่แก้ไขรวมถึง username และ email ลงฐานข้อมูล Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      const profileRes = await fetch('/api/admin/update-profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUser.id,
           username: usernameInput,
           email: emailInput,
-          full_name: fullNameInput,
+          fullName: fullNameInput,
           phone: phoneValidation.phone,
-          student_id: studentId,
-        })
-        .eq('id', selectedUser.id);
+          role: resolvedRole,
+        }),
+      });
 
-      if (error) throw error;
+      const profileResult = await profileRes.json();
 
-      if (roleInput !== (selectedUser.role || 'customer')) {
-        const roleRes = await fetch('/api/admin/update-role', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: selectedUser.id,
-            role: resolvedRole,
-          }),
-        });
-
-        const roleResult = await roleRes.json();
-
-        if (!roleRes.ok) {
-          throw new Error(roleResult.error || 'ไม่สามารถเปลี่ยน role ได้');
-        }
+      if (!profileRes.ok) {
+        throw new Error(profileResult.error || 'ไม่สามารถบันทึกข้อมูลผู้ใช้ได้');
       }
 
       alert('💾 บันทึกการแก้ไขข้อมูลสำเร็จ!');

@@ -27,7 +27,6 @@ interface Order {
   delivery_address: string | null
   pickup_time: string | null
   pickup_note: string | null
-  needs_cutlery: boolean | null
   cancellation_reason: string | null
   created_at: string
 }
@@ -201,7 +200,7 @@ export default async function AdminOrdersPage({
 
   let ordersQuery = supabaseAdmin
     .from('orders')
-    .select('id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, needs_cutlery, cancellation_reason, created_at')
+    .select('id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, created_at')
     .order('created_at', { ascending: false })
 
   if (selectedStatus && statusTabs.some((status) => status.value === selectedStatus)) {
@@ -483,9 +482,6 @@ export default async function AdminOrdersPage({
                   <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">เวลารับอาหาร</p>
                     <p className="mt-1 text-lg font-black text-orange-400">{formatPickupTime(order.pickup_time)}</p>
-                    <p className="mt-1 text-xs font-bold text-neutral-400">
-                      {order.needs_cutlery ? 'รับช้อนส้อม' : 'ไม่รับช้อนส้อม'}
-                    </p>
                   </div>
 
                   <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">

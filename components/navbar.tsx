@@ -17,6 +17,16 @@ interface Profile {
   email: string | null;
 }
 
+interface NotificationItem {
+  id: string;
+  type: 'order' | 'chat';
+  title: string;
+  detail: string;
+  href: string;
+  tone: 'orange' | 'emerald' | 'sky';
+  is_read?: boolean;
+}
+
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -24,6 +34,10 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationItems, setNotificationItems] = useState<NotificationItem[]>([]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationError, setNotificationError] = useState<string | null>(null);
 
   const pathname = usePathname(); 
 
@@ -118,8 +132,70 @@ export default function Navbar() {
     };
   }, [pathname]);
 
+  useEffect(() => {
+    let isMounted = true;
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const fetchNotificationCount = async () => {
+      if (!user) {
+        if (isMounted) setNotificationCount(0);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/notifications');
+        const result = await res.json();
+
+        if (!isMounted) return;
+        if (!res.ok) {
+          setNotificationError(result.error || 'โหลดแจ้งเตือนไม่สำเร็จ');
+          setNotificationCount(0);
+          setNotificationItems([]);
+          return;
+        }
+
+        const items = (result.items || []) as NotificationItem[];
+        const unreadItems = items.filter((item) => !item.is_read);
+
+        setNotificationError(null);
+        setNotificationCount(Number(result.count || unreadItems.length));
+        setNotificationItems(unreadItems.slice(0, 5));
+      } catch {
+        if (isMounted) {
+          setNotificationError('โหลดแจ้งเตือนไม่สำเร็จ');
+          setNotificationCount(0);
+          setNotificationItems([]);
+        }
+      }
+    };
+
+    void fetchNotificationCount();
+    timer = setInterval(() => {
+      void fetchNotificationCount();
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [pathname, user]);
+
   const isAdmin = profile?.role === 'admin';
   const isRestaurantOwner = profile?.role === 'restaurant';
+  const notificationHref = '/notifications';
+  const notificationHasItems = notificationCount > 0 || notificationItems.length > 0;
+
+  const markNotificationRead = (itemId: string) => {
+    setNotificationItems((current) => current.filter((item) => item.id !== itemId));
+    setNotificationCount((current) => Math.max(0, current - 1));
+
+    void fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: itemId }),
+      keepalive: true,
+    }).catch(() => undefined);
+  };
 
   return (
     <header className="bg-black text-white shadow-md w-full relative z-50 border-b border-neutral-900">
@@ -139,9 +215,9 @@ export default function Navbar() {
             Home
           </Link>
 
-          <a href="/storePage" className={`transition-all active:scale-90 ${pathname === '/storePage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
+          <Link href="/storePage" className={`transition-all active:scale-90 ${pathname === '/storePage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
             Restaurant
-          </a>
+          </Link>
 
           {user && (
             <a href="/trackorderPage" className={`transition-all active:scale-90 ${pathname === '/trackorderPage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}>
@@ -159,6 +235,100 @@ export default function Navbar() {
         {/* RIGHT SECTION */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-4 lg:gap-6">
           <ThemeToggle />
+
+          {user && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsNotificationOpen((current) => !current)}
+                className={`relative rounded-full p-1 text-gray-300 transition-all hover:bg-neutral-900 hover:text-orange-500 active:scale-75 ${notificationHasItems ? 'notification-bell-button-active text-orange-400' : ''}`}
+                aria-label="แจ้งเตือน"
+                aria-expanded={isNotificationOpen}
+                title="แจ้งเตือน"
+              >
+                {notificationHasItems && (
+                  <span className="absolute inset-0 rounded-full bg-orange-500/20 notification-bell-pulse" />
+                )}
+                <svg className={`h-5 w-5 sm:h-6 sm:w-6 ${notificationHasItems ? 'notification-bell-active' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0m6 0H9" />
+                </svg>
+                <span className={`absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full border border-black ${
+                  notificationHasItems ? 'bg-orange-500' : 'bg-neutral-600'
+                }`} />
+                {notificationHasItems && (
+                  <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full border border-black bg-orange-500 px-1 text-[10px] font-black text-black">
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotificationOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsNotificationOpen(false)} />
+                  <div className="absolute right-0 z-20 mt-3 w-[min(340px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 text-white shadow-2xl shadow-black/40">
+                    <div className="border-b border-neutral-800 bg-neutral-950 px-4 py-3">
+                      <p className="text-xs font-black uppercase tracking-wide text-orange-400">แจ้งเตือน</p>
+                      <p className="mt-1 text-sm font-bold text-neutral-300">
+                        {notificationHasItems ? `มี ${notificationCount} รายการที่ต้องดู` : 'ยังไม่มีรายการใหม่ตอนนี้'}
+                      </p>
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto p-2">
+                      {notificationError ? (
+                        <div className="px-4 py-8 text-center">
+                          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-500/30 bg-orange-500/10 text-lg font-black text-orange-300">
+                            !
+                          </div>
+                          <p className="mt-3 text-sm font-bold text-neutral-300">ยังโหลดแจ้งเตือนไม่ได้</p>
+                          <p className="mt-1 text-xs leading-5 text-neutral-500">{notificationError}</p>
+                        </div>
+                      ) : notificationItems.length > 0 ? notificationItems.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          onClick={() => {
+                            markNotificationRead(item.id);
+                            setIsNotificationOpen(false);
+                          }}
+                          className="grid grid-cols-[40px_minmax(0,1fr)] gap-3 rounded-xl px-3 py-3 transition hover:bg-neutral-800"
+                        >
+                          <span className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-black ${
+                            item.tone === 'emerald'
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                              : item.tone === 'sky'
+                                ? 'border-sky-500/30 bg-sky-500/10 text-sky-300'
+                                : 'border-orange-500/30 bg-orange-500/10 text-orange-300'
+                          }`}>
+                            {item.type === 'chat' ? 'แชท' : '!'}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-black text-white">{item.title}</span>
+                            <span className="mt-1 block line-clamp-2 text-xs leading-5 text-neutral-400">{item.detail}</span>
+                          </span>
+                        </Link>
+                      )) : (
+                        <div className="px-4 py-8 text-center">
+                          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-950 text-lg text-neutral-500">
+                            ✓
+                          </div>
+                          <p className="mt-3 text-sm font-bold text-neutral-300">ไม่มีแจ้งเตือนค้างอยู่</p>
+                          <p className="mt-1 text-xs text-neutral-500">ถ้ามีออเดอร์หรือสถานะใหม่ จะแสดงตรงนี้</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <Link
+                      href={notificationHref}
+                      onClick={() => setIsNotificationOpen(false)}
+                      className="block border-t border-neutral-800 px-4 py-3 text-center text-sm font-black text-orange-400 transition hover:bg-neutral-800 hover:text-orange-300"
+                    >
+                      ดูทั้งหมด
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           
           {/* CART ICON */}
           {user && (
@@ -323,9 +493,9 @@ export default function Navbar() {
                   <Link href="/" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                     🏠 Home
                   </Link>
-                  <a href="/storePage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/storePage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                     🍔 Restaurant
-                  </a>
+                  </Link>
                   <a href="/trackorderPage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/trackorderPage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                     📍 Track Order
                   </a>
@@ -360,9 +530,9 @@ export default function Navbar() {
                 <Link href="/" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                   🏠 Home
                 </Link>
-                <a href="/storePage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href="/storePage" className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`} onClick={() => setIsMobileMenuOpen(false)}>
                   🍔 Restaurant
-                </a>
+                </Link>
                 <hr className="border-neutral-900 my-1" />
                 <a 
                   href="/login" 

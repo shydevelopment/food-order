@@ -64,6 +64,21 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 400 })
     }
 
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId)
+    const currentMetadata = authUser.user?.user_metadata || {}
+
+    const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        ...currentMetadata,
+        role: resolvedRole,
+        student_id: studentId,
+      },
+    })
+
+    if (authUpdateError) {
+      return NextResponse.json({ error: authUpdateError.message }, { status: 400 })
+    }
+
     if (!canHaveRestaurantAccess(resolvedRole)) {
       await supabaseAdmin
         .from('restaurants')
