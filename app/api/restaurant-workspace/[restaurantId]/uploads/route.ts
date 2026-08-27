@@ -74,7 +74,7 @@ const verifyRestaurantManager = async (restaurantId: string) => {
   )
 
   if (!canManage) {
-    return { error: NextResponse.json({ error: 'เฉพาะเจ้าของร้านเท่านั้นที่อัปโหลดรูปภาพได้' }, { status: 403 }) }
+    return { error: NextResponse.json({ error: 'เฉพาะ Owner เท่านั้นที่อัปโหลดรูปภาพได้' }, { status: 403 }) }
   }
 
   return { supabaseAdmin }

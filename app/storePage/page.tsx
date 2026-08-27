@@ -3,6 +3,7 @@ import { createClient } from '@/supabase/service'
 import { getRestaurantTypeMeta, RESTAURANT_TYPES, RESTAURANT_TYPE_VALUES } from '@/lib/restaurant-types'
 import { formatThaiPhoneInput } from '@/lib/phone'
 import { getBangkokDayIndex, isMenuAvailableOnDay, WEEKDAY_OPTIONS } from '@/lib/menu-days'
+import { formatRestaurantTimeRange, isRestaurantOpenNow } from '@/lib/restaurant-hours'
 
 interface Restaurant {
   id: string
@@ -23,11 +24,6 @@ interface Menu {
   restaurant_id: string
   is_available: boolean | null
   available_days: number[] | null
-}
-
-const formatTimeRange = (openTime: string | null, closeTime: string | null) => {
-  if (!openTime && !closeTime) return 'ยังไม่ระบุเวลา'
-  return `${openTime?.slice(0, 5) || '--:--'} - ${closeTime?.slice(0, 5) || '--:--'} น.`
 }
 
 export default async function StoreIndexPage({
@@ -85,12 +81,12 @@ export default async function StoreIndexPage({
   })
 
   return (
-    <div className="min-h-screen bg-neutral-950 pb-12 text-white">
+    <div className="min-h-screen  pb-12 text-white">
       <main className="w-full px-0 pt-5 sm:px-2 sm:pt-8">
-        <section className="mb-6 overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900">
+        <section className="mb-6 overflow-hidden rounded-3xl border border-neutral-800 ">
           <div className="grid min-h-[240px] grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
             <div className="flex flex-col justify-center p-5 sm:p-8 lg:p-10">
-              <p className="text-xs font-black uppercase tracking-wide text-amber-400">Food Order KMUTNB</p>
+              <p className="text-xs font-black uppercase tracking-wide text-amber-400">ฟู้ดออเดอร์ KMUTNB</p>
               <h1 className="mt-3 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
                 เลือกร้านก่อนสั่งอาหาร
               </h1>
@@ -102,7 +98,7 @@ export default async function StoreIndexPage({
                   {restaurantRowsAll.length} ร้าน
                 </span>
                 <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-black text-emerald-300">
-                  เปิดอยู่ {restaurantRowsAll.filter((store) => store.status === 'open').length} ร้าน
+                  เปิดอยู่ {restaurantRowsAll.filter((store) => isRestaurantOpenNow(store.status, store.open_time, store.close_time)).length} ร้าน
                 </span>
                 <span className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3 py-1 text-xs font-black text-amber-300">
                   เมนูวันนี้ {(menus || []).filter((menu) => isMenuAvailableOnDay((menu as Menu).available_days, todayIndex)).length} รายการ
@@ -141,7 +137,7 @@ export default async function StoreIndexPage({
               <h2 className="text-xl font-black text-white">ร้านอาหารทั้งหมด</h2>
               <p className="mt-1 text-sm text-neutral-500">กดเข้าร้านเพื่อดูเมนูและสั่งอาหาร</p>
             </div>
-            <span className="w-fit rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs font-bold text-neutral-400">
+            <span className="w-fit rounded-full border border-neutral-800  px-3 py-1 text-xs font-bold text-neutral-400">
               {todayLabel}
             </span>
           </div>
@@ -153,7 +149,7 @@ export default async function StoreIndexPage({
                 className={`rounded-2xl border px-4 py-3 text-xs font-black transition ${
                   selectedType === 'all'
                     ? 'border-orange-500 bg-orange-500 text-black'
-                    : 'border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-orange-500/40 hover:text-orange-300'
+                    : 'border-neutral-800  text-neutral-300 hover:border-orange-500/40 hover:text-orange-300'
                 }`}
               >
                 ทั้งหมด
@@ -166,7 +162,7 @@ export default async function StoreIndexPage({
                   className={`rounded-2xl border px-4 py-3 text-xs font-black transition ${
                     selectedType === type.value
                       ? 'border-orange-500 bg-orange-500 text-black'
-                      : 'border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-orange-500/40 hover:text-orange-300'
+                      : 'border-neutral-800  text-neutral-300 hover:border-orange-500/40 hover:text-orange-300'
                   }`}
                 >
                   <span className="mr-1 text-sm">{type.icon}</span>
@@ -178,14 +174,14 @@ export default async function StoreIndexPage({
           </div>
 
           {restaurantRows.length === 0 ? (
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-10 text-center">
+            <div className="rounded-2xl border border-neutral-800  p-10 text-center">
               <h3 className="text-lg font-black text-white">ยังไม่มีร้านประเภทนี้</h3>
-              <p className="mt-2 text-sm text-neutral-500">ลองเลือกประเภทอื่น หรือเพิ่มร้านในหน้าแอดมิน</p>
+              <p className="mt-2 text-sm text-neutral-500">ลองเลือกประเภทอื่น หรือเพิ่มร้านในหน้า Admin</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {restaurantRows.map((store) => {
-                const isOpen = store.status === 'open'
+                const isOpen = isRestaurantOpenNow(store.status, store.open_time, store.close_time)
                 const typeMeta = getRestaurantTypeMeta(store.restaurant_type)
                 const todayMenus = menusByRestaurant.get(store.id) || []
                 const availableMenus = todayMenus.filter((menu) => menu.is_available)
@@ -193,10 +189,10 @@ export default async function StoreIndexPage({
                 return (
                   <article
                     key={store.id}
-                    className="group overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl shadow-black/30 transition hover:-translate-y-0.5 hover:border-orange-500/40"
+                    className="group overflow-hidden rounded-3xl border border-neutral-800  shadow-2xl shadow-black/30 transition hover:-translate-y-0.5 hover:border-orange-500/40"
                   >
                     <Link href={`/storePage/${store.id}`} className="block">
-                      <div className="relative h-48 overflow-hidden bg-neutral-800">
+                      <div className="relative h-48 overflow-hidden ">
                         <img
                           src={store.image_url || '/placeholder.jpg'}
                           alt={store.name}
@@ -230,14 +226,14 @@ export default async function StoreIndexPage({
                         {store.description || typeMeta.description}
                       </p>
 
-                      <div className="space-y-2 rounded-2xl border border-neutral-800 bg-neutral-950 p-3 text-xs text-neutral-400">
+                      <div className="space-y-2 rounded-2xl border border-neutral-800  p-3 text-xs text-neutral-400">
                         <p className="flex gap-2">
                           <span className="shrink-0 text-pink-400">●</span>
                           <span className="line-clamp-1">{store.address || 'ยังไม่ระบุที่อยู่ร้าน'}</span>
                         </p>
                         <p className="flex gap-2">
                           <span className="shrink-0 text-amber-400">●</span>
-                          <span>{formatTimeRange(store.open_time, store.close_time)}</span>
+                          <span>{formatRestaurantTimeRange(store.open_time, store.close_time)}</span>
                         </p>
                         <p className="flex gap-2">
                           <span className="shrink-0 text-emerald-400">●</span>
@@ -246,11 +242,11 @@ export default async function StoreIndexPage({
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-center">
-                        <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-3">
+                        <div className="rounded-2xl border border-neutral-800  p-3">
                           <p className="text-xl font-black text-amber-400">{todayMenus.length}</p>
                           <p className="text-[10px] font-bold text-neutral-500">เมนูของวันนี้</p>
                         </div>
-                        <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-3">
+                        <div className="rounded-2xl border border-neutral-800  p-3">
                           <p className="text-xl font-black text-emerald-400">{availableMenus.length}</p>
                           <p className="text-[10px] font-bold text-neutral-500">พร้อมขาย</p>
                         </div>

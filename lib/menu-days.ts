@@ -59,7 +59,7 @@ export const getWeekdayToneClasses = (
   state: 'selected' | 'muted' | 'today' = 'selected',
 ) => {
   if (state === 'muted') {
-    return 'border-neutral-800 bg-neutral-950 text-neutral-500 hover:border-neutral-700 hover:text-white'
+    return 'border-neutral-800  text-neutral-500 hover:border-neutral-700 hover:text-white'
   }
 
   if (state === 'today') {

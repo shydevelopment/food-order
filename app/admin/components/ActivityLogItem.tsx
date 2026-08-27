@@ -77,7 +77,7 @@ export function ActivityLogItem({ act }: ActivityLogItemProps) {
   };
 
   return (
-    <div className="p-3 bg-neutral-950/70 border border-neutral-800/80 rounded-xl flex flex-col gap-3 hover:bg-neutral-800/40 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
+    <div className="p-3  border border-neutral-800/80 rounded-xl flex flex-col gap-3  transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
       <div className="flex items-center gap-3 min-w-0 sm:gap-4">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border shrink-0 ${act.colorClass}`}>
           {act.icon}

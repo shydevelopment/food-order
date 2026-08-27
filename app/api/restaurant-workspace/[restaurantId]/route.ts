@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
 import { DEFAULT_RESTAURANT_TYPE, RESTAURANT_TYPE_VALUES } from '@/lib/restaurant-types'
 import { ALL_WEEKDAY_VALUES, normalizeMenuAvailableDays } from '@/lib/menu-days'
+import { getAccountRoleMeta } from '@/lib/roles'
 
 const getAdminClient = () => createSupabaseAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -175,7 +176,7 @@ export async function PATCH(
     if (auth.error) return auth.error
 
     if (!auth.canManage) {
-      return NextResponse.json({ error: 'เฉพาะเจ้าของร้านเท่านั้นที่แก้ไขข้อมูลร้านได้' }, { status: 403 })
+      return NextResponse.json({ error: 'เฉพาะ Owner เท่านั้นที่แก้ไขข้อมูลร้านได้' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -224,7 +225,7 @@ export async function POST(
     if (auth.error) return auth.error
 
     if (!auth.canManage) {
-      return NextResponse.json({ error: 'เฉพาะเจ้าของร้านเท่านั้นที่จัดการร้านได้' }, { status: 403 })
+      return NextResponse.json({ error: 'เฉพาะ Owner เท่านั้นที่จัดการร้านได้' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -383,7 +384,7 @@ export async function POST(
 
       if (!['restaurant', 'admin'].includes(targetProfile.role || '')) {
         return NextResponse.json(
-          { error: `พบ username นี้แล้ว แต่ role ตอนนี้คือ ${targetProfile.role || 'ไม่มี role'} ต้องเป็น restaurant หรือ admin ก่อน` },
+          { error: `พบชื่อผู้ใช้นี้แล้ว แต่ Role ตอนนี้คือ ${getAccountRoleMeta(targetProfile.role)?.thaiLabel || 'No Role'} ต้องเป็น Restaurant หรือ Admin ก่อน` },
           { status: 400 }
         )
       }
@@ -427,7 +428,7 @@ export async function DELETE(
     if (auth.error) return auth.error
 
     if (!auth.canManage) {
-      return NextResponse.json({ error: 'เฉพาะเจ้าของร้านเท่านั้นที่ลบข้อมูลนี้ได้' }, { status: 403 })
+      return NextResponse.json({ error: 'เฉพาะ Owner เท่านั้นที่ลบข้อมูลนี้ได้' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -459,7 +460,7 @@ export async function DELETE(
       }
 
       if (member.access_level === 'owner') {
-        return NextResponse.json({ error: 'ไม่สามารถลบเจ้าของร้านจากหน้านี้ได้' }, { status: 400 })
+        return NextResponse.json({ error: 'ไม่สามารถลบ Owner จากหน้านี้ได้' }, { status: 400 })
       }
 
       const { error } = await auth.supabaseAdmin

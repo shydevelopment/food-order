@@ -308,7 +308,7 @@ export default function AdminRestaurantsPage() {
               placeholder="ค้นหาชื่อร้าน, อีเมล หรือเบอร์โทร..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-gray-550 focus:outline-none focus:border-orange-550 transition-colors"
+              className="w-full  border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-gray-550 focus:outline-none focus:border-orange-550 transition-colors"
             />
           </div>
         </div>
@@ -319,11 +319,11 @@ export default function AdminRestaurantsPage() {
           กำลังดึงข้อมูลร้านอาหาร...
         </div>
       ) : (
-        <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
+        <div className=" rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
           <div className="responsive-scroll">
             <table className="responsive-table w-full border-collapse border border-neutral-800 text-center">
               <thead>
-                <tr className="bg-neutral-950 text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
+                <tr className=" text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
                   <th className="p-4 font-medium text-center border-r border-neutral-800 w-24">รูปภาพ</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">ชื่อร้านอาหาร</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">เวลาทำการ</th>
@@ -338,17 +338,17 @@ export default function AdminRestaurantsPage() {
                   const statusInfo = getRestaurantStatus(rest.open_time, rest.close_time, rest.status);
 
                   return (
-                    <tr key={rest.id} className="hover:bg-neutral-800/40 transition-colors">
+                    <tr key={rest.id} className=" transition-colors">
                       <td className="p-4 border-r border-neutral-800">
                         <div className="flex justify-center">
                           {rest.image_url ? (
-                            <img 
-                              src={rest.image_url} 
-                              alt="restaurant" 
-                              className="w-12 h-12 rounded-lg border border-neutral-700 object-cover bg-neutral-950" 
+                            <img
+                              src={rest.image_url}
+                              alt="ร้านอาหาร"
+                              className="w-12 h-12 rounded-lg border border-neutral-700 object-cover"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-orange-500 font-black text-lg">
+                            <div className="w-12 h-12 rounded-lg  border border-neutral-700 flex items-center justify-center text-orange-500 font-black text-lg">
                               🏪
                             </div>
                           )}
@@ -421,7 +421,7 @@ export default function AdminRestaurantsPage() {
             .animate-content-out { animation: smoothSlideDown 0.2s ease-in forwards; }
           `}</style>
 
-          <div className={`w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh] ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
+          <div className={`w-full max-w-md  border border-neutral-800 rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh] ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
               <h3 className="text-lg font-black text-white">
                 {modalMode === 'add' ? '✨ เพิ่มร้านอาหารใหม่' : '✏️ แก้ไขข้อมูลร้านอาหาร'}
@@ -446,9 +446,9 @@ export default function AdminRestaurantsPage() {
                   disabled={modalMode === 'edit'} 
                   value={modalMode === 'edit' ? selectedRest?.email : emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="example@food.com"
-                  className={`w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors ${
-                    modalMode === 'edit' ? 'text-neutral-500 cursor-not-allowed bg-neutral-950/50' : ''
+                  placeholder="อีเมลร้านอาหาร"
+                  className={`w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors ${
+                    modalMode === 'edit' ? 'text-neutral-500 cursor-not-allowed ' : ''
                   }`}
                 />
               </div>
@@ -461,7 +461,7 @@ export default function AdminRestaurantsPage() {
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder="กรอกชื่อร้านอาหาร..."
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
                 />
               </div>
 
@@ -474,7 +474,7 @@ export default function AdminRestaurantsPage() {
                       className={`cursor-pointer rounded-xl border p-3 transition ${
                         restaurantTypeInput === type.value
                           ? 'border-orange-500 bg-orange-500/10'
-                          : 'border-neutral-800 bg-neutral-950 hover:border-neutral-700'
+                          : 'border-neutral-800  hover:border-neutral-700'
                       }`}
                     >
                       <input
@@ -502,7 +502,7 @@ export default function AdminRestaurantsPage() {
                   value={descriptionInput}
                   onChange={(e) => setDescriptionInput(e.target.value)}
                   placeholder="เช่น ร้านกะเพราพริกแห้งรสเด็ด เผ็ดพ่นไฟ..."
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors resize-none"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors resize-none"
                 />
               </div>
 
@@ -513,7 +513,7 @@ export default function AdminRestaurantsPage() {
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(formatThaiPhoneInput(e.target.value))}
                   placeholder="กรอกเบอร์โทรติดต่อร้าน..."
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
                 />
               </div>
 
@@ -526,7 +526,7 @@ export default function AdminRestaurantsPage() {
                     required
                     value={openTimeInput}
                     onChange={(e) => setOpenTimeInput(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors"
+                    className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors"
                   />
                 </div>
                 <div>
@@ -537,7 +537,7 @@ export default function AdminRestaurantsPage() {
                     required
                     value={closeTimeInput}
                     onChange={(e) => setCloseTimeInput(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors"
+                    className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors"
                   />
                 </div>
               </div>
@@ -548,7 +548,7 @@ export default function AdminRestaurantsPage() {
                   type="file" 
                   accept="image/*"
                   onChange={(e) => e.target.files && setImageFile(e.target.files[0])}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-neutral-800 file:text-white hover:file:bg-neutral-700 cursor-pointer"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold  file:text-white  cursor-pointer"
                 />
               </div>
 
@@ -559,17 +559,17 @@ export default function AdminRestaurantsPage() {
                   value={addressInput}
                   onChange={(e) => setAddressInput(e.target.value)}
                   placeholder="ระบุที่ตั้งร้านโดยละเอียด..."
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors resize-none"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">สถานะร้านค้า (Manual Override)</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">สถานะร้านค้า (กำหนดเอง)</label>
                 <div className="relative">
                   <select
                     value={statusInput}
                     onChange={(e) => setStatusInput(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors appearance-none cursor-pointer"
+                    className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-550 transition-colors appearance-none cursor-pointer"
                   >
                     <option value="open">เปิดระบบปกติ (เปิดตามเวลาทำการ)</option>
                     <option value="closed">ปิดบริการ (บังคับปิดร้าน)</option>
@@ -596,7 +596,7 @@ export default function AdminRestaurantsPage() {
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="bg-neutral-800 hover:bg-neutral-700 text-gray-300 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
+                    className="  text-gray-300 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
                   >
                     ยกเลิก
                   </button>

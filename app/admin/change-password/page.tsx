@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
 import PasswordRequirements from '@/components/password-requirements';
+import { getAccountRoleMeta } from '@/lib/roles';
 
 interface PasswordTargetUser {
   id: string;
@@ -149,7 +150,7 @@ export default function AdminChangePasswordPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
         {/* คอลัมน์ซ้าย: ค้นหาและเลือกรายชื่อผู้ใช้งาน */}
-        <div className="lg:col-span-5 bg-neutral-900 border border-neutral-800 rounded-xl p-3 flex flex-col shadow-2xl sm:p-5">
+        <div className="lg:col-span-5  border border-neutral-800 rounded-xl p-3 flex flex-col shadow-2xl sm:p-5">
           <div className="mb-4">
             <label className="block text-sm font-bold text-gray-300 uppercase tracking-wide mb-2">
               1. ค้นหาผู้ใช้งานที่ต้องการเปลี่ยนรหัสผ่าน
@@ -158,10 +159,10 @@ export default function AdminChangePasswordPage() {
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">🔍</span>
               <input
                 type="text"
-                placeholder="ค้นหาชื่อ, Username หรือ อีเมล..."
+                placeholder="ค้นหาชื่อ ชื่อผู้ใช้ หรืออีเมล..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-orange-550 transition-colors"
+                className="w-full  border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-orange-550 transition-colors"
               />
             </div>
           </div>
@@ -181,17 +182,17 @@ export default function AdminChangePasswordPage() {
                   className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
                       isSelected
                         ? 'bg-orange-500/10 border-orange-500/60 shadow-md ring-1 ring-orange-500/30'
-                        : 'bg-neutral-950/70 border-neutral-800/80 hover:bg-neutral-800/60'
+                        : ' border-neutral-800/80 '
                     }`}
                   >
                     {u.avatar_url ? (
                       <img
                         src={u.avatar_url}
-                        alt="avatar"
+                        alt="รูปโปรไฟล์"
                         className="w-11 h-11 rounded-full border border-neutral-700 object-cover shrink-0"
                       />
                     ) : (
-                      <div className="w-11 h-11 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-orange-500 font-black text-sm shrink-0">
+                      <div className="w-11 h-11 rounded-full  border border-neutral-700 flex items-center justify-center text-orange-500 font-black text-sm shrink-0">
                         {(u.full_name || u.username || 'U')[0].toUpperCase()}
                       </div>
                     )}
@@ -215,7 +216,7 @@ export default function AdminChangePasswordPage() {
         </div>
 
         {/* คอลัมน์ขวา: ฟอร์มตั้งรหัสผ่านใหม่ */}
-        <div className="lg:col-span-7 bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl flex flex-col justify-between sm:p-6">
+        <div className="lg:col-span-7  border border-neutral-800 rounded-xl p-4 shadow-2xl flex flex-col justify-between sm:p-6">
           <div>
             <h3 className="text-base font-bold text-gray-200 uppercase tracking-wide mb-5 border-b border-neutral-800 pb-3">
               2. กรอกรหัสผ่านใหม่
@@ -224,11 +225,11 @@ export default function AdminChangePasswordPage() {
             {selectedUser ? (
               <div>
                 {/* ข้อมูลสรุปของบัญชีที่เลือก */}
-                <div className="mb-6 p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex flex-col gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+                <div className="mb-6 p-4  rounded-xl border border-neutral-800 flex flex-col gap-4 text-center sm:flex-row sm:items-center sm:text-left">
                   {selectedUser.avatar_url ? (
                     <img
                       src={selectedUser.avatar_url}
-                      alt="avatar"
+                      alt="รูปโปรไฟล์"
                       className="w-14 h-14 rounded-full border-2 border-orange-500 object-cover shrink-0"
                     />
                   ) : (
@@ -241,8 +242,8 @@ export default function AdminChangePasswordPage() {
                       <p className="text-lg font-bold text-white truncate">
                         {selectedUser.full_name || 'ไม่ได้ระบุชื่อจริง'}
                       </p>
-                      <span className="text-xs font-black px-2.5 py-0.5 bg-neutral-800 text-orange-400 rounded border border-neutral-700 uppercase">
-                        {selectedUser.role || 'user'}
+                      <span className="text-xs font-black px-2.5 py-0.5  text-orange-400 rounded border border-neutral-700 uppercase">
+                        {getAccountRoleMeta(selectedUser.role)?.thaiLabel || 'User'}
                       </span>
                     </div>
                     <p className="text-sm text-gray-300 mt-1 break-all">Username: @{selectedUser.username || '-'}</p>
@@ -265,7 +266,7 @@ export default function AdminChangePasswordPage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-orange-550 transition-colors"
+                      className="w-full  border border-neutral-800 rounded-lg px-4 py-3 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-orange-550 transition-colors"
                     />
                     <PasswordRequirements password={newPassword} className="mt-2" />
                   </div>
@@ -283,7 +284,7 @@ export default function AdminChangePasswordPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="กรอกรหัสผ่านใหม่อีกครั้ง..."
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-orange-550 transition-colors"
+                      className="w-full  border border-neutral-800 rounded-lg px-4 py-3 text-base text-white placeholder-neutral-600 focus:outline-none focus:border-orange-550 transition-colors"
                     />
                   </div>
 
@@ -299,7 +300,7 @@ export default function AdminChangePasswordPage() {
                 </form>
               </div>
             ) : (
-              <div className="py-14 text-center border-2 border-dashed border-neutral-800 rounded-xl bg-neutral-950/30 sm:py-28">
+              <div className="py-14 text-center border-2 border-dashed border-neutral-800 rounded-xl  sm:py-28">
                 <p className="text-4xl mb-3">👈</p>
                 <p className="text-base font-bold text-gray-300">กรุณาเลือกผู้ใช้งานจากรายการทางด้านซ้าย</p>
                 <p className="text-sm text-neutral-500 mt-1">เพื่อเริ่มต้นกำหนดรหัสผ่านใหม่ให้กับผู้ใช้งานนั้น</p>
@@ -338,7 +339,7 @@ export default function AdminChangePasswordPage() {
             .animate-modal-out { animation: smoothSlideDown 0.2s ease-in forwards; }
           `}</style>
 
-          <div className={`w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-2xl p-4 shadow-2xl text-center relative overflow-hidden sm:p-6 md:p-8 ${isWarningClosing ? 'animate-modal-out' : 'animate-modal-in'}`}>
+          <div className={`w-full max-w-lg  border border-neutral-800 rounded-2xl p-4 shadow-2xl text-center relative overflow-hidden sm:p-6 md:p-8 ${isWarningClosing ? 'animate-modal-out' : 'animate-modal-in'}`}>
             {/* แถบสีไฮไลท์ด้านบน */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-amber-500" />
 
@@ -347,14 +348,14 @@ export default function AdminChangePasswordPage() {
             </div>
 
             <h3 className="text-xl font-black text-white mb-2 sm:text-2xl">
-              คำเตือนความปลอดภัยแอดมิน
+              คำเตือนความปลอดภัย Admin
             </h3>
             
             <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-              คุณกำลังเข้าสู่ระบบเปลี่ยนรหัสผ่านผู้ใช้งานสิทธิ์ผู้ดูแลระบบ (Admin Access) โปรดอ่านและทำความเข้าใจข้อควรระวังก่อนดำเนินการ
+              คุณกำลังเข้าสู่ระบบเปลี่ยนรหัสผ่านผู้ใช้งานสิทธิ์ Admin (Admin Access) โปรดอ่านและทำความเข้าใจข้อควรระวังก่อนดำเนินการ
             </p>
 
-            <div className="bg-neutral-950/80 border border-neutral-800 rounded-xl p-4 mb-6 text-left space-y-2.5 text-xs text-gray-300">
+            <div className=" border border-neutral-800 rounded-xl p-4 mb-6 text-left space-y-2.5 text-xs text-gray-300">
               <div className="flex items-start gap-2.5">
                 <span className="text-amber-400 font-bold shrink-0">•</span>
                 <span><strong>มีผลทันที:</strong> การเปลี่ยนรหัสผ่านจะมีผลกับบัญชีนั้นๆ ทันที ผู้ใช้เดิมจะถูกตัดการเชื่อมต่อ</span>

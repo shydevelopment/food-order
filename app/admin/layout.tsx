@@ -92,7 +92,7 @@ export default function AdminLayout({
         {role === 'admin' ? <AdminSidebar /> : <RestaurantSidebar />}
 
         {/* 📄 ส่วนแสดงเนื้อหาฝั่งขวา */}
-        <main className="min-w-0 flex-1 bg-neutral-950 p-3 sm:p-5 lg:p-8 overflow-x-hidden lg:overflow-y-auto">
+        <main className="min-w-0 flex-1  p-3 sm:p-5 lg:p-8 overflow-x-hidden lg:overflow-y-auto">
           {children}
         </main>
 

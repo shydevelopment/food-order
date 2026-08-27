@@ -12,6 +12,7 @@ interface CartItem {
   imageUrl: string | null
   quantity: number
   isSpecial?: boolean
+  customName?: string
 }
 
 interface AddToCartButtonProps {
@@ -47,17 +48,15 @@ export default function AddToCartButton({ menu, allowSpecial = false, disabled =
 
   const handleAddToCart = () => {
     const currentCart = readCart()
-    const hasOtherRestaurant = currentCart.some((item) => item.restaurantId !== menu.restaurantId)
-
-    if (hasOtherRestaurant) {
-      const shouldReplace = window.confirm('ตะกร้าสั่งได้ทีละร้าน ต้องการล้างตะกร้าเดิมแล้วเลือกร้านนี้แทนไหม?')
-      if (!shouldReplace) return
-      writeCart([])
-    }
-
-    const nextCart = hasOtherRestaurant ? [] : [...currentCart]
-    const cartItemId = `${menu.id}:${isSpecial ? 'special' : 'normal'}`
-    const existingItem = nextCart.find((item) => (item.cartItemId || item.menuId) === cartItemId)
+    const nextCart = [...currentCart]
+    const cartItemId = `${menu.restaurantId}:${menu.id}:${isSpecial ? 'special' : 'normal'}`
+    const existingItem = nextCart.find(
+      (item) =>
+        item.restaurantId === menu.restaurantId
+        && item.menuId === menu.id
+        && Boolean(item.isSpecial) === isSpecial
+        && !item.customName,
+    )
 
     if (existingItem) {
       existingItem.quantity += 1
@@ -98,7 +97,7 @@ export default function AddToCartButton({ menu, allowSpecial = false, disabled =
         onClick={handleAddToCart}
         className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
           disabled
-            ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+            ? ' text-neutral-500 cursor-not-allowed'
             : 'bg-amber-500 text-neutral-950 hover:bg-amber-400'
         }`}
       >

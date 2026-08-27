@@ -5,7 +5,7 @@ export default function RegisterSuccessPage() {
     <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
       <main className="w-full flex flex-col items-center justify-center p-4">
         
-        <div className="max-w-md w-full bg-neutral-900 border border-neutral-800/80 p-8 rounded-2xl shadow-2xl text-center animate-in fade-in zoom-in-95 duration-300">
+        <div className="max-w-md w-full  border border-neutral-800/80 p-8 rounded-2xl shadow-2xl text-center animate-in fade-in zoom-in-95 duration-300">
           
           <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-[0_0_30px_rgba(16,185,129,0.2)]">
             ✓

@@ -69,20 +69,20 @@ export default function AdminSidebar() {
   }, [supabase]);
 
   return (
-    <aside className="w-full lg:w-72 bg-neutral-900 border-b lg:border-b-0 lg:border-r border-neutral-800 p-4 lg:p-6 flex flex-col justify-between shrink-0 h-auto lg:min-h-[calc(100vh-68px)] relative">
+    <aside className="app-chrome w-full lg:w-72 bg-neutral-900 border-b lg:border-b-0 lg:border-r border-neutral-800 p-4 lg:p-6 flex flex-col justify-between shrink-0 h-auto lg:min-h-[calc(100vh-68px)] relative">
       <div>
         <div className="flex items-center justify-between gap-3 pb-3 lg:pb-4 border-b border-neutral-800">
           <div className="min-w-0">
             <h1 className="text-lg lg:text-xl font-black text-orange-500 tracking-wide uppercase">
               Admin Workspace
             </h1>
-            <p className="text-[10px] lg:text-xs text-gray-500">FOOD ORDER KMUTNB</p>
+            <p className="text-[10px] lg:text-xs text-gray-500">ฟู้ดออเดอร์ KMUTNB</p>
           </div>
 
           <button
             onClick={() => setIsMobileOpen(!isMobileOpen)}
             className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
-            aria-label="Toggle Admin Menu"
+            aria-label="เปิดปิดเมนู Admin"
           >
             <span>{isMobileOpen ? 'ปิด' : 'เมนู'}</span>
           </button>
@@ -98,7 +98,7 @@ export default function AdminSidebar() {
               {adminProfile?.avatar_url ? (
                 <img
                   src={adminProfile.avatar_url}
-                  alt="Admin Avatar"
+                  alt="รูปโปรไฟล์ Admin"
                   className="w-9 h-9 rounded-full border border-orange-500 object-cover shrink-0"
                 />
               ) : (
@@ -111,7 +111,7 @@ export default function AdminSidebar() {
                   {adminProfile?.full_name || adminProfile?.username || 'Admin'}
                 </p>
                 <span className="inline-block text-[9px] font-black px-1.5 py-0.2 bg-red-500/20 text-red-500 border border-red-500/40 rounded uppercase tracking-wide mt-0.5">
-                  ADMIN
+                  Admin
                 </span>
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                    <span className="shrink-0">📊</span> <span className="min-w-0 truncate">หน้าแรกแอดมิน</span>
+                    <span className="shrink-0">📊</span> <span className="min-w-0 truncate">หน้าแรก Admin</span>
               </Link>
 
               <Link
@@ -158,7 +158,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🔑</span> <span className="min-w-0 truncate">จัดการ Role & สิทธิ์</span>
+                <span className="shrink-0">🔑</span> <span className="min-w-0 truncate">จัดการ Role และสิทธิ์</span>
               </Link>
 
               <Link
@@ -180,7 +180,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🏷️</span> <span className="min-w-0 truncate">จัดการ Tag เมนู</span>
+                <span className="shrink-0">🏷️</span> <span className="min-w-0 truncate">จัดการหมวดเมนู</span>
               </Link>
 
               <Link
@@ -269,7 +269,7 @@ export default function AdminSidebar() {
                 href="/"
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-black text-red-400 bg-red-950/20 border border-red-900/30 hover:bg-red-950/45 hover:text-red-300 active:scale-95 transition-all shadow-md uppercase tracking-wider"
               >
-                <span>🚪</span> ออกจากหน้า ADMIN
+                <span>🚪</span> ออกจากหน้า Admin
               </Link>
             </div>
           </div>

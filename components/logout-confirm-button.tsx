@@ -72,7 +72,7 @@ export default function LogoutConfirmButton({
 
       {isOpen && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-y-auto bg-black/80 px-3 py-4 backdrop-blur-sm sm:px-4">
-          <div className="w-full max-w-xl rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-center shadow-2xl sm:p-8">
+          <div className="w-full max-w-xl rounded-2xl border border-neutral-800  p-4 text-center shadow-2xl sm:p-8">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/10 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
               ⚠️
             </div>
@@ -83,7 +83,7 @@ export default function LogoutConfirmButton({
               {copy.description}
             </p>
 
-            <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-left text-xs font-bold leading-6 text-neutral-300 sm:mt-6 sm:p-4">
+            <div className="mt-5 rounded-xl border border-neutral-800  p-3 text-left text-xs font-bold leading-6 text-neutral-300 sm:mt-6 sm:p-4">
               <p><span className="mr-2 text-amber-400">•</span>ระบบจะออกจากบัญชีนี้ทันทีหลังยืนยัน</p>
               <p><span className="mr-2 text-amber-400">•</span>หากต้องการใช้งานต่อ ต้องเข้าสู่ระบบใหม่อีกครั้ง</p>
             </div>
@@ -101,7 +101,7 @@ export default function LogoutConfirmButton({
                 type="button"
                 onClick={() => setIsOpen(false)}
                 disabled={isLoggingOut}
-                className="rounded-xl border border-neutral-700 bg-neutral-950 px-5 py-3 text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl border border-neutral-700  px-5 py-3 text-sm font-bold text-neutral-300 transition  hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 ยกเลิก
               </button>

@@ -66,7 +66,7 @@ export default function EditProfileForm({
   const studentIdDisplay = getProfileStudentIdDisplay(profile || {}, email)
   const hasStudentId = studentIdDisplay !== NON_STUDENT_LABEL
   const lockedInputClass = 'cursor-not-allowed border-white/20 bg-white/10 text-white/70'
-  const editableInputClass = 'bg-neutral-950 border-neutral-800 focus:outline-none focus:border-orange-500 text-white'
+  const editableInputClass = ' border-neutral-800 focus:outline-none focus:border-orange-500 text-white'
   const notificationSoundsBucket = 'notification-sounds'
 
   const supabase = createBrowserClient(
@@ -406,9 +406,9 @@ export default function EditProfileForm({
     <div className="w-full max-w-5xl mx-auto text-white p-2">
       
       {/* Header Profile */}
-      <div className="mb-6 p-4 bg-neutral-900 border border-neutral-800/80 rounded-2xl flex items-center gap-4 shadow-lg">
+      <div className="mb-6 p-4  border border-neutral-800/80 rounded-2xl flex items-center gap-4 shadow-lg">
         {avatarUrl ? (
-          <img src={avatarUrl} alt="Avatar" className="w-12 h-12 sm:w-14 sm:h-12 rounded-xl object-cover border border-orange-500/40 shrink-0" />
+          <img src={avatarUrl} alt="รูปโปรไฟล์" className="w-12 h-12 sm:w-14 sm:h-12 rounded-xl object-cover border border-orange-500/40 shrink-0" />
         ) : (
           <div className="w-12 h-12 sm:w-14 sm:h-12 rounded-xl bg-orange-500 flex items-center justify-center font-black text-black text-lg shrink-0">
             {(profile?.full_name || profile?.username || email)?.charAt(0).toUpperCase()}
@@ -424,21 +424,21 @@ export default function EditProfileForm({
       <div className="flex flex-col gap-3 md:hidden">
         
         {/* ACCORDION 1: PROFILE */}
-        <div className="bg-neutral-900 border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
+        <div className=" border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
           <button
             type="button"
             onClick={() => toggleTab('profile')}
-            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm bg-neutral-900 hover:bg-neutral-800/60 transition-all cursor-pointer"
+            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
               <span className="text-base">👤</span>
-              <span className={activeTab === 'profile' ? 'text-orange-500' : 'text-neutral-300'}>Edit Profile</span>
+              <span className={activeTab === 'profile' ? 'text-orange-500' : 'text-neutral-300'}>แก้ไขโปรไฟล์</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'profile' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
           </button>
 
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${activeTab === 'profile' ? 'grid-rows-[1fr] opacity-100 border-t border-neutral-800/60' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden bg-neutral-950/50">
+            <div className="overflow-hidden ">
               <form onSubmit={handleSubmitProfile} className="p-4 flex flex-col gap-4">
                 <div className="space-y-3">
                   <div>
@@ -450,24 +450,24 @@ export default function EditProfileForm({
                   </div>
                   {!isStudentAccount && (
                     <div>
-                      <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Student ID / รหัสนักศึกษา</label>
+                      <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">รหัสนักศึกษา</label>
                       <input className={`${lockedInputClass} w-full rounded-xl px-4 py-2.5 border text-sm`} type="text" value={studentIdDisplay} readOnly />
                     </div>
                   )}
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Display Name</label>
+                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">ชื่อที่แสดง</label>
                     <input className={`w-full rounded-xl px-4 py-2.5 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="displayName" type="text" value={isStudentAccount ? lockedDisplayName : undefined} defaultValue={isStudentAccount ? undefined : profile?.full_name || ''} readOnly={isStudentAccount} required />
                     {isStudentAccount && (
-                      <p className="mt-1 text-[11px] font-medium text-white/60">บัญชี Student ไม่สามารถแก้ Username และ Display Name ได้</p>
+                      <p className="mt-1 text-[11px] font-medium text-white/60">บัญชีนักศึกษาไม่สามารถแก้ชื่อผู้ใช้และชื่อที่แสดงได้</p>
                     )}
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Phone Number</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" inputMode="tel" defaultValue={formatThaiPhoneInput(profile?.phone || '')} onChange={(event) => { event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value) }} pattern={THAI_PHONE_INPUT_PATTERN} title={THAI_PHONE_REQUIREMENTS_TEXT} required />
+                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">เบอร์โทรศัพท์</label>
+                    <input className="w-full rounded-xl px-4 py-2.5  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" inputMode="tel" defaultValue={formatThaiPhoneInput(profile?.phone || '')} onChange={(event) => { event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value) }} pattern={THAI_PHONE_INPUT_PATTERN} title={THAI_PHONE_REQUIREMENTS_TEXT} required />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block mb-1">Email Address</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-900/40 text-neutral-500 cursor-not-allowed select-none text-sm" type="email" value={email || ''} disabled />
+                    <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block mb-1">อีเมล</label>
+                    <input className="w-full rounded-xl px-4 py-2.5  border border-neutral-900/40 text-neutral-500 cursor-not-allowed select-none text-sm" type="email" value={email || ''} disabled />
 
                     {/* ⚡ แสดงสถานะและปุ่มยืนยันอีเมลบนมือถือ */}
                     <div className="mt-2">
@@ -477,7 +477,7 @@ export default function EditProfileForm({
                         </span>
                       ) : (
                         <div className="flex items-center justify-between p-2.5 bg-amber-950/30 border border-amber-900/50 rounded-xl">
-                          <span className="text-[11px] text-amber-400 font-medium">⚠️ Unverified Email</span>
+                          <span className="text-[11px] text-amber-400 font-medium">⚠️ ยังไม่ได้ยืนยันอีเมล</span>
                           <button
                             type="button"
                             onClick={handleResendEmail}
@@ -491,7 +491,7 @@ export default function EditProfileForm({
                     </div>
                   </div>
                 </div>
-                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all mt-2 cursor-pointer disabled:bg-neutral-800">
+                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all mt-2 cursor-pointer ">
                   {isPending ? 'Saving...' : 'Save Profile'}
                 </button>
               </form>
@@ -500,35 +500,35 @@ export default function EditProfileForm({
         </div>
 
         {/* ACCORDION 2: AVATAR */}
-        <div className="bg-neutral-900 border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
+        <div className=" border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
           <button
             type="button"
             onClick={() => toggleTab('avatar')}
-            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm bg-neutral-900 hover:bg-neutral-800/60 transition-all cursor-pointer"
+            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
               <span className="text-base">🖼️</span>
-              <span className={activeTab === 'avatar' ? 'text-orange-500' : 'text-neutral-300'}>Change Avatar</span>
+              <span className={activeTab === 'avatar' ? 'text-orange-500' : 'text-neutral-300'}>เปลี่ยนรูปโปรไฟล์</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'avatar' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
           </button>
 
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${activeTab === 'avatar' ? 'grid-rows-[1fr] opacity-100 border-t border-neutral-800/60' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden bg-neutral-950/50">
+            <div className="overflow-hidden ">
               <div className="p-6 flex flex-col items-center gap-4 text-center">
                 <div className="relative cursor-pointer group active:scale-95 transition-transform" onClick={() => document.getElementById('avatar-file-mobile')?.click()}>
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="w-28 h-28 rounded-2xl object-cover border-2 border-orange-500 shadow-xl" />
+                    <img src={avatarUrl} alt="รูปโปรไฟล์" className="w-28 h-28 rounded-2xl object-cover border-2 border-orange-500 shadow-xl" />
                   ) : (
-                    <div className="w-28 h-28 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-center font-black text-orange-500 text-3xl">
+                    <div className="w-28 h-28 rounded-2xl  border border-neutral-800 flex items-center justify-center font-black text-orange-500 text-3xl">
                       {(profile?.full_name || profile?.username || email)?.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="absolute -bottom-2 -right-2 bg-orange-500 text-black p-1.5 rounded-lg shadow-lg text-xs font-bold">📷</div>
                 </div>
-                <p className="text-xs text-neutral-400">Tap image or click button below to upload avatar</p>
+                <p className="text-xs text-neutral-400">แตะรูปหรือกดปุ่มด้านล่างเพื่ออัปโหลดรูปโปรไฟล์</p>
                 <input type="file" id="avatar-file-mobile" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isPending} />
-                <button type="button" disabled={isPending} onClick={() => document.getElementById('avatar-file-mobile')?.click()} className="w-full bg-orange-500 hover:bg-orange-400 text-black active:scale-95 text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer shadow-lg disabled:bg-neutral-800">
+                <button type="button" disabled={isPending} onClick={() => document.getElementById('avatar-file-mobile')?.click()} className="w-full bg-orange-500 hover:bg-orange-400 text-black active:scale-95 text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer shadow-lg ">
                   {isPending ? 'Uploading...' : '📁 Choose Image File'}
                 </button>
               </div>
@@ -537,38 +537,38 @@ export default function EditProfileForm({
         </div>
 
         {/* ACCORDION 3: PASSWORD */}
-        <div className="bg-neutral-900 border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
+        <div className=" border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
           <button
             type="button"
             onClick={() => toggleTab('password')}
-            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm bg-neutral-900 hover:bg-neutral-800/60 transition-all cursor-pointer"
+            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
               <span className="text-base">🔒</span>
-              <span className={activeTab === 'password' ? 'text-orange-500' : 'text-neutral-300'}>Change Password</span>
+              <span className={activeTab === 'password' ? 'text-orange-500' : 'text-neutral-300'}>เปลี่ยนรหัสผ่าน</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'password' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
           </button>
 
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${activeTab === 'password' ? 'grid-rows-[1fr] opacity-100 border-t border-neutral-800/60' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden bg-neutral-950/50">
+            <div className="overflow-hidden ">
               <form onSubmit={handleSubmitPassword} className="p-4 flex flex-col gap-4">
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Current Password</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="oldPassword" type="password" required />
+                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">รหัสผ่านปัจจุบัน</label>
+                    <input className="w-full rounded-xl px-4 py-2.5  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="oldPassword" type="password" required />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">New Password</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">รหัสผ่านใหม่</label>
+                    <input className="w-full rounded-xl px-4 py-2.5  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                     <PasswordRequirements password={newPasswordValue} className="mt-2" />
                   </div>
                   <div>
-                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">Confirm Password</label>
-                    <input className="w-full rounded-xl px-4 py-2.5 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                    <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-1">ยืนยันรหัสผ่าน</label>
+                    <input className="w-full rounded-xl px-4 py-2.5  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                   </div>
                 </div>
-                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all mt-2 cursor-pointer disabled:bg-neutral-800">
+                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all mt-2 cursor-pointer ">
                   {isPending ? 'Updating...' : 'Update Password'}
                 </button>
               </form>
@@ -577,25 +577,25 @@ export default function EditProfileForm({
         </div>
 
         {/* ACCORDION 4: NOTIFICATIONS */}
-        <div className="bg-neutral-900 border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
+        <div className=" border border-neutral-800/80 rounded-2xl overflow-hidden shadow-lg">
           <button
             type="button"
             onClick={() => toggleTab('notifications')}
-            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm bg-neutral-900 hover:bg-neutral-800/60 transition-all cursor-pointer"
+            className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
               <span className="text-base">🔔</span>
-              <span className={activeTab === 'notifications' ? 'text-orange-500' : 'text-neutral-300'}>Notifications</span>
+              <span className={activeTab === 'notifications' ? 'text-orange-500' : 'text-neutral-300'}>การแจ้งเตือน</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'notifications' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
           </button>
 
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${activeTab === 'notifications' ? 'grid-rows-[1fr] opacity-100 border-t border-neutral-800/60' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden bg-neutral-950/50">
+            <div className="overflow-hidden ">
               <form onSubmit={handleSubmitNotifications} className="p-4 flex flex-col gap-4">
                 <div className="space-y-2">
                   {systemNotificationOptions.map((option) => (
-                    <label key={option.id} className="flex items-start gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+                    <label key={option.id} className="flex items-start gap-3 rounded-xl border border-neutral-800  p-3">
                       <input
                         type="checkbox"
                         checked={selectedSystemNotifications.includes(option.id)}
@@ -610,8 +610,8 @@ export default function EditProfileForm({
                   ))}
                 </div>
 
-                <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-                  <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Custom Sound</label>
+                <div className="rounded-xl border border-neutral-800  p-3">
+                  <label className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">เสียงแจ้งเตือนที่กำหนดเอง</label>
                   <div className="mt-2">
                     <input
                       id="custom-sound-mobile"
@@ -625,7 +625,7 @@ export default function EditProfileForm({
                       type="button"
                       onClick={() => document.getElementById('custom-sound-mobile')?.click()}
                       disabled={isPending}
-                      className="w-full rounded-lg bg-orange-500 px-3 py-2 text-xs font-black text-black transition hover:bg-orange-400 disabled:bg-neutral-800 disabled:text-neutral-500"
+                      className="w-full rounded-lg bg-orange-500 px-3 py-2 text-xs font-black text-black transition hover:bg-orange-400  disabled:text-neutral-500"
                     >
                       {isPending ? 'กำลังอัปโหลด...' : 'Add Sound File'}
                     </button>
@@ -655,7 +655,7 @@ export default function EditProfileForm({
                   </div>
                 </div>
 
-                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all cursor-pointer disabled:bg-neutral-800">
+                <button type="submit" disabled={isPending} className="w-full bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl py-2.5 text-black font-bold shadow-lg text-sm transition-all cursor-pointer ">
                   {isPending ? 'Saving...' : 'Save Notifications'}
                 </button>
               </form>
@@ -669,29 +669,29 @@ export default function EditProfileForm({
       <div className="hidden md:flex gap-6 items-start">
         
         {/* SIDEBAR MENU */}
-        <div className="w-64 bg-neutral-900 border border-neutral-800/80 rounded-2xl p-4 flex flex-col gap-2 shrink-0 shadow-lg">
-          <button type="button" onClick={() => setDesktopTab('profile')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+        <div className="w-64  border border-neutral-800/80 rounded-2xl p-4 flex flex-col gap-2 shrink-0 shadow-lg">
+          <button type="button" onClick={() => setDesktopTab('profile')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
             <span>👤</span> User Information
           </button>
-          <button type="button" onClick={() => setDesktopTab('avatar')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'avatar' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+          <button type="button" onClick={() => setDesktopTab('avatar')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'avatar' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
             <span>🖼️</span> Avatar Settings
           </button>
-          <button type="button" onClick={() => setDesktopTab('password')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'password' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+          <button type="button" onClick={() => setDesktopTab('password')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'password' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
             <span>🔒</span> Change Password
           </button>
-          <button type="button" onClick={() => setDesktopTab('notifications')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'notifications' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 hover:bg-neutral-800/60'}`}>
+          <button type="button" onClick={() => setDesktopTab('notifications')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'notifications' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
             <span>🔔</span> Notifications
           </button>
         </div>
 
         {/* CONTENT CARD */}
-        <div className="flex-1 bg-neutral-900 border border-neutral-800/80 rounded-2xl shadow-xl overflow-hidden">
+        <div className="flex-1  border border-neutral-800/80 rounded-2xl shadow-xl overflow-hidden">
           
           {/* DESKTOP TAB 1: PROFILE */}
           {activeTab === 'profile' && (
             <div className="animate-in fade-in duration-200">
-              <div className="px-6 py-4 border-b border-neutral-800/80 bg-neutral-950/40">
-                <h3 className="text-lg font-black tracking-wide text-neutral-200">User Information</h3>
+              <div className="px-6 py-4 border-b border-neutral-800/80 ">
+                <h3 className="text-lg font-black tracking-wide text-neutral-200">ข้อมูลผู้ใช้</h3>
               </div>
               <form onSubmit={handleSubmitProfile} className="p-6 flex flex-col gap-5">
                 <div className="space-y-4 max-w-xl">
@@ -706,27 +706,27 @@ export default function EditProfileForm({
                   </div>
                   {!isStudentAccount && (
                     <div className="grid grid-cols-3 items-center gap-4">
-                      <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Student ID</label>
+                      <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">รหัสนักศึกษา</label>
                       <input className={`${lockedInputClass} col-span-2 rounded-xl px-4 py-2 border text-sm`} type="text" value={studentIdDisplay} readOnly />
                     </div>
                   )}
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Display Name</label>
+                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">ชื่อที่แสดง</label>
                     <div className="col-span-2">
                       <input className={`w-full rounded-xl px-4 py-2 border text-sm ${isStudentAccount ? lockedInputClass : editableInputClass}`} name="displayName" type="text" value={isStudentAccount ? lockedDisplayName : undefined} defaultValue={isStudentAccount ? undefined : profile?.full_name || ''} readOnly={isStudentAccount} required />
                       {isStudentAccount && (
-                        <p className="mt-1 text-xs font-medium text-white/60">บัญชี Student ไม่สามารถแก้ Username และ Display Name ได้</p>
+                        <p className="mt-1 text-xs font-medium text-white/60">บัญชีนักศึกษาไม่สามารถแก้ชื่อผู้ใช้และชื่อที่แสดงได้</p>
                       )}
                     </div>
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Phone Number</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" inputMode="tel" defaultValue={formatThaiPhoneInput(profile?.phone || '')} onChange={(event) => { event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value) }} pattern={THAI_PHONE_INPUT_PATTERN} title={THAI_PHONE_REQUIREMENTS_TEXT} required />
+                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">เบอร์โทรศัพท์</label>
+                    <input className="col-span-2 rounded-xl px-4 py-2  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="phone" type="tel" inputMode="tel" defaultValue={formatThaiPhoneInput(profile?.phone || '')} onChange={(event) => { event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value) }} pattern={THAI_PHONE_INPUT_PATTERN} title={THAI_PHONE_REQUIREMENTS_TEXT} required />
                   </div>
                   <div className="grid grid-cols-3 items-start gap-4">
-                    <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider text-right mt-2">Email Address</label>
+                    <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider text-right mt-2">อีเมล</label>
                     <div className="col-span-2 space-y-2">
-                      <input className="w-full rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-900/40 text-neutral-500 cursor-not-allowed select-none text-sm" type="email" value={email || ''} disabled />
+                      <input className="w-full rounded-xl px-4 py-2  border border-neutral-900/40 text-neutral-500 cursor-not-allowed select-none text-sm" type="email" value={email || ''} disabled />
                       
                       {/* ⚡ แสดงสถานะและปุ่มยืนยันอีเมลบน Desktop */}
                       <div>
@@ -736,7 +736,7 @@ export default function EditProfileForm({
                           </span>
                         ) : (
                           <div className="flex items-center justify-between p-2.5 bg-amber-950/30 border border-amber-900/50 rounded-xl">
-                            <span className="text-xs text-amber-400 font-medium">⚠️ Unverified Email</span>
+                            <span className="text-xs text-amber-400 font-medium">⚠️ ยังไม่ได้ยืนยันอีเมล</span>
                             <button
                               type="button"
                               onClick={handleResendEmail}
@@ -752,8 +752,8 @@ export default function EditProfileForm({
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-3 max-w-xl border-t border-neutral-800/80 pt-4 mt-2">
-                  <Link href="/" className="border border-neutral-800 rounded-xl px-5 py-2 text-neutral-400 hover:bg-neutral-950 hover:text-orange-500 transition-all text-sm">Cancel</Link>
-                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all disabled:bg-neutral-800">
+                  <Link href="/" className="border border-neutral-800 rounded-xl px-5 py-2 text-neutral-400  hover:text-orange-500 transition-all text-sm">ยกเลิก</Link>
+                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all ">
                     {isPending ? 'Saving...' : 'Save Profile'}
                   </button>
                 </div>
@@ -764,23 +764,23 @@ export default function EditProfileForm({
           {/* DESKTOP TAB 2: AVATAR */}
           {activeTab === 'avatar' && (
             <div className="animate-in fade-in duration-200">
-              <div className="px-6 py-4 border-b border-neutral-800/80 bg-neutral-950/40">
-                <h3 className="text-lg font-black tracking-wide text-neutral-200">Avatar Settings</h3>
+              <div className="px-6 py-4 border-b border-neutral-800/80 ">
+                <h3 className="text-lg font-black tracking-wide text-neutral-200">ตั้งค่ารูปโปรไฟล์</h3>
               </div>
               <div className="p-8 flex flex-col items-center gap-6 max-w-xl mx-auto py-12 text-center">
                 <div className="relative cursor-pointer group active:scale-95 transition-transform" onClick={() => document.getElementById('avatar-file-desktop')?.click()}>
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="w-32 h-32 rounded-2xl object-cover border-2 border-orange-500 shadow-xl" />
+                    <img src={avatarUrl} alt="รูปโปรไฟล์" className="w-32 h-32 rounded-2xl object-cover border-2 border-orange-500 shadow-xl" />
                   ) : (
-                    <div className="w-32 h-32 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-center font-black text-orange-500 text-4xl">
+                    <div className="w-32 h-32 rounded-2xl  border border-neutral-800 flex items-center justify-center font-black text-orange-500 text-4xl">
                       {(profile?.full_name || profile?.username || email)?.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="absolute -bottom-2 -right-2 bg-orange-500 text-black p-2 rounded-xl shadow-lg border-2 border-black text-xs font-bold">📷</div>
                 </div>
-                <p className="text-sm text-neutral-400">Upload a new image to change your profile picture</p>
+                <p className="text-sm text-neutral-400">อัปโหลดรูปใหม่เพื่อเปลี่ยนรูปโปรไฟล์ของคุณ</p>
                 <input type="file" id="avatar-file-desktop" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isPending} />
-                <button type="button" disabled={isPending} onClick={() => document.getElementById('avatar-file-desktop')?.click()} className="bg-orange-500 hover:bg-orange-400 text-black active:scale-95 text-sm font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer shadow-lg disabled:bg-neutral-800">
+                <button type="button" disabled={isPending} onClick={() => document.getElementById('avatar-file-desktop')?.click()} className="bg-orange-500 hover:bg-orange-400 text-black active:scale-95 text-sm font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer shadow-lg ">
                   {isPending ? 'Uploading...' : '📁 Choose Image File'}
                 </button>
               </div>
@@ -790,29 +790,29 @@ export default function EditProfileForm({
           {/* DESKTOP TAB 3: PASSWORD */}
           {activeTab === 'password' && (
             <div className="animate-in fade-in duration-200">
-              <div className="px-6 py-4 border-b border-neutral-800/80 bg-neutral-950/40">
-                <h3 className="text-lg font-black tracking-wide text-neutral-200">Security Settings</h3>
+              <div className="px-6 py-4 border-b border-neutral-800/80 ">
+                <h3 className="text-lg font-black tracking-wide text-neutral-200">ตั้งค่าความปลอดภัย</h3>
               </div>
               <form onSubmit={handleSubmitPassword} className="p-6 flex flex-col gap-5">
                 <div className="space-y-4 max-w-xl">
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Current Password</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="oldPassword" type="password" required />
+                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">รหัสผ่านปัจจุบัน</label>
+                    <input className="col-span-2 rounded-xl px-4 py-2  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="oldPassword" type="password" required />
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">New Password</label>
+                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">รหัสผ่านใหม่</label>
                     <div className="col-span-2">
-                      <input className="w-full rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="Your new password!" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                      <input className="w-full rounded-xl px-4 py-2  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="newPassword" type="password" value={newPasswordValue} onChange={(event) => setNewPasswordValue(event.target.value)} placeholder="รหัสผ่านใหม่ของคุณ" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                       <PasswordRequirements password={newPasswordValue} className="mt-2" />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">Confirm Password</label>
-                    <input className="col-span-2 rounded-xl px-4 py-2 bg-neutral-950 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
+                    <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider text-right">ยืนยันรหัสผ่าน</label>
+                    <input className="col-span-2 rounded-xl px-4 py-2  border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm" name="confirmPassword" type="password" minLength={8} pattern={PASSWORD_PATTERN} title={PASSWORD_REQUIREMENTS_TEXT} required />
                   </div>
                 </div>
                 <div className="flex items-center justify-end gap-3 max-w-xl border-t border-neutral-800/80 pt-4 mt-2">
-                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all disabled:bg-neutral-800">
+                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all ">
                     {isPending ? 'Updating...' : 'Update Password'}
                   </button>
                 </div>
@@ -823,8 +823,8 @@ export default function EditProfileForm({
           {/* DESKTOP TAB 4: NOTIFICATIONS */}
           {activeTab === 'notifications' && (
             <div className="animate-in fade-in duration-200">
-              <div className="px-6 py-4 border-b border-neutral-800/80 bg-neutral-950/40">
-                <h3 className="text-lg font-black tracking-wide text-neutral-200">Notification Settings</h3>
+              <div className="px-6 py-4 border-b border-neutral-800/80 ">
+                <h3 className="text-lg font-black tracking-wide text-neutral-200">ตั้งค่าการแจ้งเตือน</h3>
               </div>
               <form onSubmit={handleSubmitNotifications} className="p-6 flex flex-col gap-5">
                 <div className="max-w-2xl space-y-5">
@@ -835,7 +835,7 @@ export default function EditProfileForm({
                         className={`cursor-pointer rounded-xl border p-4 transition ${
                           selectedSystemNotifications.includes(option.id)
                             ? 'border-orange-500 bg-orange-500/10'
-                            : 'border-neutral-800 bg-neutral-950 hover:border-neutral-700'
+                            : 'border-neutral-800  hover:border-neutral-700'
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -854,7 +854,7 @@ export default function EditProfileForm({
                     ))}
                   </div>
 
-                  <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+                  <div className="rounded-xl border border-neutral-800  p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                       <div className="min-w-0 flex-1">
                         <label htmlFor="custom-sound-desktop" className="text-xs font-bold uppercase tracking-wide text-neutral-500">
@@ -874,7 +874,7 @@ export default function EditProfileForm({
                         type="button"
                         onClick={() => document.getElementById('custom-sound-desktop')?.click()}
                         disabled={isPending}
-                        className="rounded-xl bg-orange-500 px-5 py-2 text-sm font-black text-black transition hover:bg-orange-400 disabled:bg-neutral-800 disabled:text-neutral-500"
+                        className="rounded-xl bg-orange-500 px-5 py-2 text-sm font-black text-black transition hover:bg-orange-400  disabled:text-neutral-500"
                       >
                         {isPending ? 'Uploading...' : 'Add Sound File'}
                       </button>
@@ -906,7 +906,7 @@ export default function EditProfileForm({
                 </div>
 
                 <div className="flex items-center justify-end gap-3 max-w-2xl border-t border-neutral-800/80 pt-4 mt-2">
-                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all disabled:bg-neutral-800">
+                  <button type="submit" disabled={isPending} className="bg-orange-500 hover:bg-orange-400 active:scale-95 rounded-xl px-6 py-2 text-black font-bold shadow-lg text-sm cursor-pointer transition-all ">
                     {isPending ? 'Saving...' : 'Save Notifications'}
                   </button>
                 </div>

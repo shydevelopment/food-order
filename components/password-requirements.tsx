@@ -9,7 +9,7 @@ export default function PasswordRequirements({ password, className = '' }: Passw
   const requirements = getPasswordRequirementStates(password)
 
   return (
-    <div className={`grid gap-1.5 rounded-lg border border-neutral-800/80 bg-neutral-950/60 p-3 ${className}`}>
+    <div className={`grid gap-1.5 rounded-lg border border-neutral-800/80  p-3 ${className}`}>
       {requirements.map((requirement) => (
         <div
           key={requirement.id}
