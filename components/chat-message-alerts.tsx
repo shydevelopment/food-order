@@ -124,7 +124,7 @@ export default function ChatMessageAlerts() {
   }
 
   return (
-    <div className={`fixed right-4 top-20 z-[997] w-[min(380px,calc(100vw-2rem))] rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-white shadow-2xl shadow-black/50 ${isClosing ? 'food-alert-card--exit' : 'food-alert-card'}`}>
+    <div className={`fixed right-4 top-20 z-[997] w-[min(380px,calc(100vw-2rem))] rounded-2xl border border-neutral-800  p-4 text-white shadow-2xl shadow-black/50 ${isClosing ? 'food-alert-card--exit' : 'food-alert-card'}`}>
       <div className="flex items-start gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-orange-500/40 bg-orange-500/10 text-lg font-black text-orange-400">
           !
@@ -149,7 +149,7 @@ export default function ChatMessageAlerts() {
             <button
               type="button"
               onClick={closeAlert}
-              className="rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-2.5 text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
+              className="rounded-xl border border-neutral-700  px-4 py-2.5 text-sm font-bold text-neutral-300 transition  hover:text-white"
             >
               ปิด
             </button>

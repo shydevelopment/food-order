@@ -1,8 +1,8 @@
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
-import CartCheckout from '@/components/cart-checkout'
+import PaymentCheckout from '@/components/payment-checkout'
 
-export default async function CartPage() {
+export default async function PaymentPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -12,7 +12,7 @@ export default async function CartPage() {
 
   return (
     <div className="min-h-[80vh] w-full  px-0 py-4 text-white sm:px-2 sm:py-8">
-      <CartCheckout />
+      <PaymentCheckout />
     </div>
   )
 }

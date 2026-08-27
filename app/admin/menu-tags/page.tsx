@@ -138,11 +138,11 @@ export default function AdminMenuTagsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white">
+    <div className="min-h-screen  text-white">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-wide text-orange-500">Menu Tags</p>
-          <h1 className="mt-1 text-3xl font-black text-white sm:text-4xl">จัดการ Tag เมนู</h1>
+          <p className="text-xs font-black uppercase tracking-wide text-orange-500">หมวดเมนู</p>
+          <h1 className="mt-1 text-3xl font-black text-white sm:text-4xl">จัดการหมวดเมนู</h1>
           <p className="mt-2 text-sm text-neutral-400">
             เพิ่มหมวดเมนูให้แต่ละร้าน เช่น น้ำอัดลม น้ำปั่น ชา กาแฟ หรือหมวดอาหารของร้าน
           </p>
@@ -151,7 +151,7 @@ export default function AdminMenuTagsPage() {
           type="button"
           onClick={fetchTags}
           disabled={loading}
-          className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500"
+          className="rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-black transition hover:bg-orange-400 disabled:cursor-not-allowed  disabled:text-neutral-500"
         >
           รีเฟรชข้อมูล
         </button>
@@ -165,7 +165,7 @@ export default function AdminMenuTagsPage() {
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="space-y-4">
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+          <div className="rounded-2xl border border-neutral-800  p-4">
             <h2 className="text-sm font-black text-white">เลือกร้าน</h2>
             <select
               value={selectedRestaurantId}
@@ -173,7 +173,7 @@ export default function AdminMenuTagsPage() {
                 setSelectedRestaurantId(event.target.value)
                 setSearchTerm('')
               }}
-              className="mt-3 w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-3 text-sm font-bold text-white outline-none transition focus:border-orange-500"
+              className="mt-3 w-full rounded-xl border border-neutral-800  px-3 py-3 text-sm font-bold text-white outline-none transition focus:border-orange-500"
             >
               <option value="">เลือกร้านอาหาร</option>
               {restaurants.map((restaurant) => (
@@ -198,60 +198,60 @@ export default function AdminMenuTagsPage() {
               event.preventDefault()
               addTag()
             }}
-            className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4"
+            className="rounded-2xl border border-neutral-800  p-4"
           >
-            <h2 className="text-sm font-black text-white">เพิ่ม Tag ใหม่</h2>
+            <h2 className="text-sm font-black text-white">เพิ่มหมวดใหม่</h2>
             <input
               type="text"
               value={tagName}
               onChange={(event) => setTagName(event.target.value.slice(0, 40))}
               placeholder="เช่น น้ำอัดลม, น้ำปั่น"
-              className="mt-3 w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-3 text-sm font-bold text-white placeholder-neutral-600 outline-none transition focus:border-orange-500"
+              className="mt-3 w-full rounded-xl border border-neutral-800  px-3 py-3 text-sm font-bold text-white placeholder-neutral-600 outline-none transition focus:border-orange-500"
             />
             <button
               type="submit"
               disabled={submitting || !selectedRestaurantId || !tagName.trim()}
-              className="mt-3 w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-black text-black transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500"
+              className="mt-3 w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-black text-black transition hover:bg-orange-400 disabled:cursor-not-allowed  disabled:text-neutral-500"
             >
-              เพิ่ม Tag
+              เพิ่มหมวด
             </button>
           </form>
 
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+          <div className="rounded-2xl border border-neutral-800  p-4">
             <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">สรุป</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-center">
+              <div className="rounded-xl border border-neutral-800  p-3 text-center">
                 <p className="text-2xl font-black text-orange-400">{restaurants.length}</p>
                 <p className="text-[10px] font-bold text-neutral-500">ร้าน</p>
               </div>
-              <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-center">
+              <div className="rounded-xl border border-neutral-800  p-3 text-center">
                 <p className="text-2xl font-black text-sky-400">{totalTags}</p>
-                <p className="text-[10px] font-bold text-neutral-500">tag ทั้งหมด</p>
+                <p className="text-[10px] font-bold text-neutral-500">หมวดทั้งหมด</p>
               </div>
             </div>
           </div>
         </aside>
 
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
+        <section className="rounded-2xl border border-neutral-800  p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-white">
-                {selectedRestaurant ? `Tag ของร้าน ${selectedRestaurant.name}` : 'Tag เมนู'}
+                {selectedRestaurant ? `หมวดของร้าน ${selectedRestaurant.name}` : 'หมวดเมนู'}
               </h2>
-              <p className="mt-1 text-sm text-neutral-500">ใช้ tag เพื่อแยกหมวดเมนูในหน้าลูกค้า</p>
+              <p className="mt-1 text-sm text-neutral-500">ใช้หมวดเพื่อแยกเมนูในหน้าลูกค้า</p>
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="ค้นหา tag..."
-              className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm font-bold text-white placeholder-neutral-600 outline-none transition focus:border-orange-500 sm:w-64"
+              placeholder="ค้นหาหมวด..."
+              className="w-full rounded-xl border border-neutral-800  px-3 py-2 text-sm font-bold text-white placeholder-neutral-600 outline-none transition focus:border-orange-500 sm:w-64"
             />
           </div>
 
           {categorySuggestions.length > 0 && (
             <div className="mt-5 rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-sky-300">Tag แนะนำ</p>
+              <p className="text-xs font-black uppercase tracking-wide text-sky-300">หมวดแนะนำ</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {categorySuggestions.map((name) => (
                   <button
@@ -270,15 +270,15 @@ export default function AdminMenuTagsPage() {
 
           <div className="mt-5">
             {loading ? (
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-10 text-center text-sm font-bold text-orange-400">
+              <div className="rounded-2xl border border-neutral-800  p-10 text-center text-sm font-bold text-orange-400">
                 กำลังโหลด Tag...
               </div>
             ) : !selectedRestaurantId ? (
-              <div className="rounded-2xl border border-dashed border-neutral-800 bg-neutral-950 p-10 text-center text-sm text-neutral-500">
+              <div className="rounded-2xl border border-dashed border-neutral-800  p-10 text-center text-sm text-neutral-500">
                 เลือกร้านก่อนเพื่อจัดการ tag
               </div>
             ) : selectedCategories.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-neutral-800 bg-neutral-950 p-10 text-center text-sm text-neutral-500">
+              <div className="rounded-2xl border border-dashed border-neutral-800  p-10 text-center text-sm text-neutral-500">
                 ยังไม่มี tag ในร้านนี้
               </div>
             ) : (
@@ -286,7 +286,7 @@ export default function AdminMenuTagsPage() {
                 {selectedCategories.map((category, index) => (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-800 bg-neutral-950 p-4"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-800  p-4"
                   >
                     <div className="min-w-0">
                       <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${getMenuCategoryToneClasses(index)}`}>

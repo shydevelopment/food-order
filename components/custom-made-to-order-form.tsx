@@ -69,16 +69,7 @@ export default function CustomMadeToOrderForm({
       return
     }
 
-    const currentCart = readCart()
-    const hasOtherRestaurant = currentCart.some((item) => item.restaurantId !== restaurantId)
-
-    if (hasOtherRestaurant) {
-      const shouldReplace = window.confirm('ตะกร้าสั่งได้ทีละร้าน ต้องการล้างตะกร้าเดิมแล้วเลือกร้านนี้แทนไหม?')
-      if (!shouldReplace) return
-      writeCart([])
-    }
-
-    const nextCart = hasOtherRestaurant ? [] : [...currentCart]
+    const nextCart = readCart()
     const cartItemId = `custom:${restaurantId}:${Date.now()}`
 
     nextCart.push({
@@ -128,14 +119,14 @@ export default function CustomMadeToOrderForm({
         value={customName}
         onChange={(event) => setCustomName(event.target.value.slice(0, 120))}
         placeholder="เช่น กะเพราไก่ไข่ดาว, ข้าวผัดหมู, คะน้าหมูกรอบ"
-        className="mt-3 w-full resize-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none transition focus:border-amber-500"
+        className="mt-3 w-full resize-none rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none transition focus:border-amber-500"
       />
       <textarea
         rows={2}
         value={itemNote}
         onChange={(event) => setItemNote(event.target.value.slice(0, 160))}
         placeholder="รายละเอียดเพิ่มเติม เช่น เผ็ดน้อย ไม่ใส่ผัก ไม่ใส่น้ำตาล"
-        className="mt-2 w-full resize-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none transition focus:border-amber-500"
+        className="mt-2 w-full resize-none rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none transition focus:border-amber-500"
       />
 
       {unavailableMatch && (
@@ -159,7 +150,7 @@ export default function CustomMadeToOrderForm({
           type="button"
           disabled={disabled || Boolean(unavailableMatch)}
           onClick={handleAddCustomItem}
-          className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-black text-neutral-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500"
+          className="rounded-lg bg-amber-500 px-4 py-2 text-xs font-black text-neutral-950 transition hover:bg-amber-400 disabled:cursor-not-allowed  disabled:text-neutral-500"
         >
           เพิ่มเมนูตามสั่ง
         </button>

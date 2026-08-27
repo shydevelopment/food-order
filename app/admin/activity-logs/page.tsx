@@ -47,7 +47,7 @@ export default function AdminActivityLogsPage() {
       </div>
 
       {/* แถบค้นหาและตัวกรอง */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 shadow-xl flex flex-col md:flex-row gap-3 md:gap-4 justify-between items-stretch md:items-center sm:p-4">
+      <div className=" border border-neutral-800 rounded-xl p-3 shadow-xl flex flex-col md:flex-row gap-3 md:gap-4 justify-between items-stretch md:items-center sm:p-4">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">🔍</span>
           <input
@@ -55,7 +55,7 @@ export default function AdminActivityLogsPage() {
             placeholder="ค้นหากิจกรรม, สมาชิก, ออร์เดอร์, ชื่อร้าน หรือเมนู..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
+            className="w-full  border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
           />
         </div>
 
@@ -63,7 +63,7 @@ export default function AdminActivityLogsPage() {
           <select
             value={restaurantFilter}
             onChange={(e) => setRestaurantFilter(e.target.value)}
-            className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2.5 pr-9 text-sm font-bold text-white focus:border-orange-500 focus:outline-none"
+            className="w-full appearance-none rounded-lg border border-neutral-800  px-3 py-2.5 pr-9 text-sm font-bold text-white focus:border-orange-500 focus:outline-none"
           >
             <option value="">
               {role === 'restaurant' ? 'ร้านทั้งหมดของฉัน' : 'ร้านทั้งหมด'}
@@ -77,7 +77,7 @@ export default function AdminActivityLogsPage() {
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-neutral-500">▼</span>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-neutral-950 p-1 rounded-lg border border-neutral-800 overflow-x-auto">
+        <div className="flex items-center gap-1.5  p-1 rounded-lg border border-neutral-800 overflow-x-auto">
           {(['all', 'order', 'user', 'restaurant', 'menu'] as const).map((type) => (
             <button
               key={type}
@@ -90,7 +90,7 @@ export default function AdminActivityLogsPage() {
               {type === 'all' && `ทั้งหมด (${activities.length})`}
               {type === 'order' && '🛒 ออร์เดอร์'}
               {type === 'user' && '👤 สมาชิก'}
-              {type === 'restaurant' && '🏪 ร้านค้า'}
+              {type === 'restaurant' && '🏪 Restaurant'}
               {type === 'menu' && '🍽️ เมนูอาหาร'}
             </button>
           ))}
@@ -98,7 +98,7 @@ export default function AdminActivityLogsPage() {
       </div>
 
       {/* รายการแสดงผล */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-3 shadow-2xl sm:p-6">
+      <div className=" border border-neutral-800 rounded-xl p-3 shadow-2xl sm:p-6">
         {loading ? (
           <div className="py-20 text-center text-sm text-orange-500 animate-pulse font-bold">
             กำลังโหลดประวัติกิจกรรมทั้งหมด...

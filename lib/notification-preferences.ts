@@ -16,7 +16,7 @@ export const systemNotificationOptions = [
   },
   {
     id: 'admin_messages',
-    label: 'ประกาศจากแอดมิน',
+    label: 'ประกาศจาก Admin',
     description: 'แจ้งข่าวระบบและประกาศสำคัญจากผู้ดูแล',
   },
   {

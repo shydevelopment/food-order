@@ -2,6 +2,11 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  getOrderStatusDetail,
+  getOrderStatusLabel,
+  normalizeOrderStatus,
+} from '@/lib/order-status'
 
 interface OrderStatusSnapshot {
   id: string
@@ -26,27 +31,11 @@ interface StatusAlert {
 
 const statusStorageKey = 'food-order-customer-order-statuses'
 
-const statusLabels: Record<string, string> = {
-  pending: 'รอร้านรับออเดอร์',
-  preparing: 'ร้านกำลังเตรียมอาหาร',
-  delivering: 'อาหารพร้อมให้มารับแล้ว',
-  completed: 'ออเดอร์เสร็จสิ้น',
-  cancelled: 'ออเดอร์ถูกยกเลิก',
-}
-
-const statusDetails: Record<string, string> = {
-  pending: 'ร้านได้รับออเดอร์แล้ว กำลังรอยืนยัน',
-  preparing: 'ร้านเริ่มทำอาหารให้แล้ว',
-  delivering: 'สามารถไปรับอาหารที่ร้านได้ตามเวลาที่เลือก',
-  completed: 'รับอาหารเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ',
-  cancelled: 'ออเดอร์นี้ถูกยกเลิกแล้ว',
-}
-
-const normalizeStatus = (status: string | null) => status || 'pending'
-
 const readStoredStatuses = () => {
   try {
-    return JSON.parse(window.localStorage.getItem(statusStorageKey) || '{}') as Record<string, string>
+    return JSON.parse(
+      window.localStorage.getItem(statusStorageKey) || '{}',
+    ) as Record<string, string>
   } catch {
     return {}
   }
@@ -62,11 +51,12 @@ export default function CustomerOrderStatusAlerts() {
   const [statusAlert, setStatusAlert] = useState<StatusAlert | null>(null)
   const [isClosing, setIsClosing] = useState(false)
   const supabase = useMemo(
-    () => createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    ),
-    []
+    () =>
+      createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      ),
+    [],
   )
 
   useEffect(() => {
@@ -74,7 +64,7 @@ export default function CustomerOrderStatusAlerts() {
     let channel: ReturnType<typeof supabase.channel> | null = null
 
     const showStatusAlert = (order: OrderStatusSnapshot) => {
-      const status = normalizeStatus(order.status)
+      const status = normalizeOrderStatus(order.status)
 
       setIsClosing(false)
       setStatusAlert({
@@ -86,7 +76,6 @@ export default function CustomerOrderStatusAlerts() {
         pickupTime: order.pickup_time ? order.pickup_time.slice(0, 5) : null,
         cancellationReason: order.cancellation_reason,
       })
-
     }
 
     const mergeOrderStatuses = (orders: OrderStatusSnapshot[]) => {
@@ -94,7 +83,7 @@ export default function CustomerOrderStatusAlerts() {
       let alertOrder: OrderStatusSnapshot | null = null
 
       orders.forEach((order) => {
-        const nextStatus = normalizeStatus(order.status)
+        const nextStatus = normalizeOrderStatus(order.status)
         const previousStatus = storedStatuses.current[order.id]
 
         if (previousStatus && previousStatus !== nextStatus) {
@@ -129,7 +118,9 @@ export default function CustomerOrderStatusAlerts() {
 
     const start = async () => {
       storedStatuses.current = readStoredStatuses()
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
       if (!isMounted || !user) return
 
@@ -143,10 +134,15 @@ export default function CustomerOrderStatusAlerts() {
         .channel(`customer-order-status-${user.id}`)
         .on(
           'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders',
+            filter: `user_id=eq.${user.id}`,
+          },
           () => {
             void fetchOrderStatuses()
-          }
+          },
         )
         .subscribe()
     }
@@ -175,37 +171,65 @@ export default function CustomerOrderStatusAlerts() {
   }
 
   return (
-    <div className={`fixed inset-0 z-[998] flex items-center justify-center overflow-y-auto bg-black/80 px-3 py-4 text-white backdrop-blur-sm sm:px-4 ${isClosing ? 'food-alert-overlay--exit' : 'food-alert-overlay'}`}>
-      <div className={`w-full max-w-3xl rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-center shadow-2xl shadow-black/60 sm:p-8 ${isClosing ? 'food-alert-panel--exit' : 'food-alert-panel'}`}>
+    <div
+      className={`fixed inset-0 z-[998] flex items-center justify-center overflow-y-auto bg-black/80 px-3 py-4 text-white backdrop-blur-sm sm:px-4 ${isClosing ? 'food-alert-overlay--exit' : 'food-alert-overlay'}`}
+    >
+      <div
+        className={`w-full max-w-3xl rounded-2xl border border-neutral-800  p-4 text-center shadow-2xl shadow-black/60 sm:p-8 ${isClosing ? 'food-alert-panel--exit' : 'food-alert-panel'}`}
+      >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/10 text-3xl font-black text-amber-400">
           !
         </div>
 
-        <p className="mt-5 text-xs font-black uppercase tracking-wide text-orange-400">สถานะออเดอร์อัปเดต</p>
+        <p className="mt-5 text-xs font-black uppercase tracking-wide text-orange-400">
+          สถานะออเดอร์อัปเดต
+        </p>
         <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
-          {statusLabels[statusAlert.status] || 'ออเดอร์อัปเดตแล้ว'}
+          {getOrderStatusLabel(statusAlert.status) || 'ออเดอร์อัปเดตแล้ว'}
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm font-medium leading-6 text-neutral-300 sm:text-base">
           Order #{statusAlert.orderNo || statusAlert.orderId.slice(0, 8)}
-          {statusAlert.restaurantName ? ` จากร้าน ${statusAlert.restaurantName}` : ''} {statusDetails[statusAlert.status] || 'มีการเปลี่ยนแปลงสถานะ'}
+          {statusAlert.restaurantName
+            ? ` จากร้าน ${statusAlert.restaurantName}`
+            : ''}{' '}
+          {getOrderStatusDetail(statusAlert.status) || 'มีการเปลี่ยนแปลงสถานะ'}
         </p>
-        {statusAlert.status === 'cancelled' && statusAlert.cancellationReason && (
-          <div className="mx-auto mt-4 max-w-xl rounded-xl border border-red-500/25 bg-red-500/10 p-4 text-left text-sm font-bold leading-6 text-red-100">
-            <p className="text-xs font-black uppercase tracking-wide text-red-300">เหตุผลที่ร้านยกเลิก</p>
-            <p className="mt-1">{statusAlert.cancellationReason}</p>
-          </div>
-        )}
+        {statusAlert.status === 'cancelled' &&
+          statusAlert.cancellationReason && (
+            <div className="mx-auto mt-4 max-w-xl rounded-xl border border-red-500/25 bg-red-500/10 p-4 text-left text-sm font-bold leading-6 text-red-100">
+              <p className="text-xs font-black uppercase tracking-wide text-red-300">
+                เหตุผลที่ร้านยกเลิก
+              </p>
+              <p className="mt-1">{statusAlert.cancellationReason}</p>
+            </div>
+          )}
 
-        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-left text-sm font-bold leading-7 text-neutral-300">
-          <p><span className="mr-2 text-amber-400">•</span>สถานะล่าสุด: <span className="text-white">
-            {statusLabels[statusAlert.status] || 'ออเดอร์อัปเดตแล้ว'}
-          </span></p>
-          <p><span className="mr-2 text-amber-400">•</span>ยอดรวม: <span className="text-amber-400">฿{statusAlert.totalPrice.toLocaleString('th-TH')}</span></p>
+        <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-neutral-800  p-4 text-left text-sm font-bold leading-7 text-neutral-300">
+          <p>
+            <span className="mr-2 text-amber-400">•</span>สถานะล่าสุด:{' '}
+            <span className="text-white">
+              {getOrderStatusLabel(statusAlert.status) || 'ออเดอร์อัปเดตแล้ว'}
+            </span>
+          </p>
+          <p>
+            <span className="mr-2 text-amber-400">•</span>ยอดรวม:{' '}
+            <span className="text-amber-400">
+              ฿{statusAlert.totalPrice.toLocaleString('th-TH')}
+            </span>
+          </p>
           {statusAlert.pickupTime && (
-            <p><span className="mr-2 text-amber-400">•</span>เวลารับอาหาร: <span className="text-white">{statusAlert.pickupTime}</span></p>
+            <p>
+              <span className="mr-2 text-amber-400">•</span>เวลารับอาหาร:{' '}
+              <span className="text-white">{statusAlert.pickupTime}</span>
+            </p>
           )}
           {statusAlert.status === 'cancelled' && (
-            <p><span className="mr-2 text-red-400">•</span>เหตุผล: <span className="text-white">{statusAlert.cancellationReason || 'ร้านไม่ได้ระบุเหตุผล'}</span></p>
+            <p>
+              <span className="mr-2 text-red-400">•</span>เหตุผล:{' '}
+              <span className="text-white">
+                {statusAlert.cancellationReason || 'ร้านไม่ได้ระบุเหตุผล'}
+              </span>
+            </p>
           )}
         </div>
 
@@ -219,7 +243,7 @@ export default function CustomerOrderStatusAlerts() {
           <button
             type="button"
             onClick={closeAlert}
-            className="rounded-xl border border-neutral-700 bg-neutral-950 px-5 py-3 text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
+            className="rounded-xl border border-neutral-700  px-5 py-3 text-sm font-bold text-neutral-300 transition  hover:text-white"
           >
             ปิด
           </button>

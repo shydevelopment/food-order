@@ -92,6 +92,22 @@ export default async function EditProfilePage() {
       return { success: false, message: error.message }
     }
 
+    const { error: metadataError } = await supabaseServer.auth.updateUser({
+      data: {
+        ...currentUser.user_metadata,
+        username,
+        full_name: displayName,
+        display_name: displayName,
+        phone,
+        student_id: currentIsStudent ? studentId : null,
+        role: currentIsStudent ? 'student' : currentProfile?.role,
+      },
+    })
+
+    if (metadataError) {
+      return { success: false, message: metadataError.message }
+    }
+
     return { success: true }
   }
 

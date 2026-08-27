@@ -1,7 +1,7 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
-import { RESTAURANT_ACCESS_LEVEL_VALUES } from '@/lib/roles'
+import { getAccountRoleMeta, getRestaurantAccessLevelMeta, RESTAURANT_ACCESS_LEVEL_VALUES } from '@/lib/roles'
 
 const getAdminClient = () => createSupabaseAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -167,7 +167,7 @@ export async function POST(req: NextRequest) {
         user_id: adminUserId,
         action_type: 'restaurant_access_updated',
         title: 'จัดสิทธิ์ร้านอาหาร',
-        detail: `${targetProfile.full_name || targetProfile.username || userId} เป็น ${accessLevel} ของร้าน ${restaurant.name} และ role เป็น ${nextAccountRole}`,
+        detail: `${targetProfile.full_name || targetProfile.username || userId} เป็น ${getRestaurantAccessLevelMeta(accessLevel)?.thaiLabel || 'Staff'} ของร้าน ${restaurant.name} และ Role เป็น ${getAccountRoleMeta(nextAccountRole)?.thaiLabel || 'Restaurant'}`,
       })
 
     return NextResponse.json({ success: true, role: nextAccountRole })
@@ -222,7 +222,7 @@ export async function DELETE(req: NextRequest) {
         user_id: adminUserId,
         action_type: 'restaurant_access_removed',
         title: 'ลบสิทธิ์ร้านอาหาร',
-        detail: `ลบสิทธิ์ ${member.access_level} จาก restaurant ${member.restaurant_id}`,
+        detail: `ลบสิทธิ์ ${getRestaurantAccessLevelMeta(member.access_level)?.thaiLabel || 'Staff'} จากร้าน ${member.restaurant_id}`,
       })
 
     return NextResponse.json({ success: true })

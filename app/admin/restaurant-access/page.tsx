@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { getAccountRoleMeta, getRestaurantAccessLevelMeta } from '@/lib/roles';
 
 interface Profile {
   id: string;
@@ -79,7 +80,7 @@ function SearchableSelect({
             setIsOpen(true);
           }}
           placeholder={placeholder}
-          className={`w-full rounded-lg border bg-neutral-950 px-3 py-2 pr-9 text-sm text-white placeholder-neutral-600 focus:outline-none disabled:cursor-not-allowed disabled:text-neutral-600 ${
+          className={`w-full rounded-lg border  px-3 py-2 pr-9 text-sm text-white placeholder-neutral-600 focus:outline-none disabled:cursor-not-allowed disabled:text-neutral-600 ${
             invalid
               ? 'border-red-500/50 focus:border-red-500'
               : 'border-neutral-800 focus:border-orange-500'
@@ -100,7 +101,7 @@ function SearchableSelect({
         </button>
 
         {isOpen && !disabled && (
-          <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-neutral-800 bg-neutral-950 shadow-2xl">
+          <div className="absolute z-30 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-neutral-800  shadow-2xl">
             {value && (
               <button
                 type="button"
@@ -110,7 +111,7 @@ function SearchableSelect({
                   setQuery('');
                   setIsOpen(false);
                 }}
-                className="block w-full border-b border-neutral-800 px-3 py-2 text-left text-xs font-bold text-neutral-500 hover:bg-neutral-900 hover:text-white"
+                className="block w-full border-b border-neutral-800 px-3 py-2 text-left text-xs font-bold text-neutral-500  hover:text-white"
               >
                 ล้างตัวเลือก
               </button>
@@ -127,7 +128,7 @@ function SearchableSelect({
                     setQuery('');
                     setIsOpen(false);
                   }}
-                  className={`block w-full px-3 py-2 text-left transition hover:bg-neutral-900 ${
+                  className={`block w-full px-3 py-2 text-left transition  ${
                     option.value === value ? 'bg-orange-500/10 text-orange-400' : 'text-white'
                   }`}
                 >
@@ -215,7 +216,7 @@ export default function RestaurantAccessPage() {
     () => profiles.map((profile) => ({
       value: profile.id,
       label: profile.full_name || profile.username || profile.email || profile.id,
-      detail: `${profile.email || 'ไม่มีอีเมล'} • role: ${profile.role || 'user'}`,
+      detail: `${profile.email || 'ไม่มีอีเมล'} • Role: ${getAccountRoleMeta(profile.role)?.thaiLabel || 'User'}`,
     })),
     [profiles]
   );
@@ -307,10 +308,10 @@ export default function RestaurantAccessPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-orange-500">Restaurant Access</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-orange-500">สิทธิ์ร้านอาหาร</p>
           <h1 className="mt-2 text-2xl font-black text-white">จัดสิทธิ์เข้าถึงร้านอาหาร</h1>
           <p className="mt-1 text-sm text-neutral-400">
-            เลือกผู้ใช้แล้วกำหนดเป็นเจ้าของร้านหรือพนักงานประจำร้าน ระบบจะปรับ role เป็น RESTAURANT ให้อัตโนมัติ
+            เลือกผู้ใช้แล้วกำหนดเป็น Owner หรือ Staff ระบบจะปรับ Role เป็น Restaurant ให้อัตโนมัติ
           </p>
         </div>
 
@@ -321,7 +322,7 @@ export default function RestaurantAccessPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="ค้นหาร้าน, ผู้ใช้, อีเมล..."
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 py-2 pl-9 pr-4 text-xs text-white placeholder-neutral-600 focus:border-orange-500 focus:outline-none"
+            className="w-full rounded-lg border border-neutral-800  py-2 pl-9 pr-4 text-xs text-white placeholder-neutral-600 focus:border-orange-500 focus:outline-none"
           />
         </div>
       </div>
@@ -335,7 +336,7 @@ export default function RestaurantAccessPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+      <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-800  p-5 shadow-2xl">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr_180px_auto] xl:items-end">
           <div>
             <SearchableSelect
@@ -350,14 +351,14 @@ export default function RestaurantAccessPage() {
           <div>
             <SearchableSelect
               label="ผู้ใช้งาน"
-              placeholder="พิมพ์ชื่อ, username หรืออีเมล..."
+              placeholder="พิมพ์ชื่อ ชื่อผู้ใช้ หรืออีเมล..."
               value={userInput}
               options={userOptions}
               onChange={setUserInput}
             />
             {selectedProfileWillGetRestaurantRole && (
               <p className="mt-1 text-xs font-bold text-amber-400">
-                ระบบจะเปลี่ยน role ผู้ใช้นี้เป็น RESTAURANT หลังบันทึกสิทธิ์
+                ระบบจะเปลี่ยน Role ผู้ใช้นี้เป็น Restaurant หลังบันทึกสิทธิ์
               </p>
             )}
           </div>
@@ -368,10 +369,10 @@ export default function RestaurantAccessPage() {
               <select
                 value={accessLevelInput}
                 onChange={(e) => setAccessLevelInput(e.target.value as 'owner' | 'staff')}
-                className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 pr-8 text-sm text-white disabled:cursor-not-allowed disabled:text-neutral-600 focus:border-orange-500 focus:outline-none"
+                className="w-full appearance-none rounded-lg border border-neutral-800  px-3 py-2 pr-8 text-sm text-white disabled:cursor-not-allowed disabled:text-neutral-600 focus:border-orange-500 focus:outline-none"
               >
-                <option value="staff">พนักงานร้าน</option>
-                <option value="owner">เจ้าของร้าน</option>
+                <option value="staff">Staff</option>
+                <option value="owner">Owner</option>
               </select>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-xs text-neutral-500">▼</span>
             </div>
@@ -380,18 +381,18 @@ export default function RestaurantAccessPage() {
           <button
             type="submit"
             disabled={!canAssignAccess || submitLoading || loading}
-            className="rounded-lg bg-orange-500 px-5 py-2 text-xs font-black uppercase tracking-wide text-black transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-neutral-800 disabled:text-neutral-500"
+            className="rounded-lg bg-orange-500 px-5 py-2 text-xs font-black uppercase tracking-wide text-black transition hover:bg-orange-600 disabled:cursor-not-allowed  disabled:text-neutral-500"
           >
             {submitLoading ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์'}
           </button>
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+      <div className="overflow-hidden rounded-xl border border-neutral-800  shadow-2xl">
         <div className="responsive-scroll">
           <table className="responsive-table w-full border-collapse text-center text-sm">
             <thead>
-              <tr className="border-b border-neutral-800 bg-neutral-950 text-xs uppercase tracking-wide text-neutral-400">
+              <tr className="border-b border-neutral-800  text-xs uppercase tracking-wide text-neutral-400">
                 <th className="border-r border-neutral-800 p-4">ร้านอาหาร</th>
                 <th className="border-r border-neutral-800 p-4">ผู้ใช้งาน</th>
                 <th className="border-r border-neutral-800 p-4">ระดับสิทธิ์</th>
@@ -409,7 +410,7 @@ export default function RestaurantAccessPage() {
                   const profile = profilesById.get(member.user_id);
 
                   return (
-                    <tr key={member.id} className="transition hover:bg-neutral-800/45">
+                    <tr key={member.id} className="transition ">
                       <td className="border-r border-neutral-800 p-4 font-bold text-white">
                         {restaurant?.name || 'ไม่พบร้าน'}
                       </td>
@@ -423,7 +424,7 @@ export default function RestaurantAccessPage() {
                             ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
                             : 'border-blue-500/30 bg-blue-500/10 text-blue-400'
                         }`}>
-                          {member.access_level === 'owner' ? 'OWNER' : 'STAFF'}
+                          {getRestaurantAccessLevelMeta(member.access_level)?.thaiLabel || 'Staff'}
                         </span>
                       </td>
                       <td className="p-4">

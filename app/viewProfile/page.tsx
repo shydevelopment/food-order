@@ -5,6 +5,14 @@ import LogoutConfirmButton from '@/components/logout-confirm-button'
 import { formatThaiPhoneInput } from '@/lib/phone'
 import { getProfileStudentIdDisplay } from '@/lib/roles'
 
+const roleEnglishLabels: Record<string, string> = {
+  admin: 'ADMIN',
+  restaurant: 'RESTAURANT',
+  student: 'STUDENT',
+  rider: 'RIDER',
+  customer: 'CUSTOMER',
+}
+
 export default async function ViewProfilePage() {
   const supabase = await createClient()
 
@@ -32,6 +40,7 @@ export default async function ViewProfilePage() {
   
   // ดึง Role จาก Database
   const userRole = (profile?.role || user.app_metadata?.role || 'customer').toLowerCase()
+  const userRoleLabel = roleEnglishLabels[userRole] || userRole.toUpperCase()
   const studentIdDisplay = getProfileStudentIdDisplay(profile || {}, user.email)
 
   // ⚡ ฟังก์ชันกำหนด Class สีตามแบบฉบับ Navbar เป๊ะๆ
@@ -59,13 +68,13 @@ export default async function ViewProfilePage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] p-4 text-white">
-      <main className="w-full max-w-3xl bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-800/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <main className="w-full max-w-3xl  rounded-2xl shadow-2xl border border-neutral-800/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Layout แนวนอน */}
         <div className="flex flex-col md:flex-row">
           
           {/* 👈 ฝั่งซ้าย: รูป Avatar, ชื่อ, Role Badge และปุ่ม Sign Out */}
-          <div className="md:w-1/3 bg-gradient-to-b from-orange-600/20 via-neutral-900 to-neutral-900 p-6 flex flex-col items-center text-center justify-between border-b md:border-b-0 md:border-r border-neutral-800/80">
+          <div className="app-chrome md:w-1/3 bg-gradient-to-b from-orange-600/20 via-neutral-900 to-neutral-900 p-6 flex flex-col items-center text-center justify-between border-b md:border-b-0 md:border-r border-neutral-800/80">
             <div className="flex flex-col items-center w-full">
               
               {/* รูป Avatar */}
@@ -74,7 +83,7 @@ export default async function ViewProfilePage() {
                   <img
                     src={avatarUrl}
                     alt={fullName}
-                    className="w-28 h-28 rounded-2xl border-2 border-orange-500/50 object-cover shadow-xl bg-neutral-950"
+                    className="w-28 h-28 rounded-2xl border-2 border-orange-500/50 object-cover shadow-xl "
                   />
                 ) : (
                   <div className="w-28 h-28 rounded-2xl border-2 border-orange-500/50 bg-orange-500 text-black flex items-center justify-center text-4xl font-black shadow-xl">
@@ -93,10 +102,10 @@ export default async function ViewProfilePage() {
 
               {/* 🎨 Role Badge ฝั่งซ้าย (อ้างอิงสีจาก Navbar) */}
               <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${getRoleStyle(userRole)}`}>
-                {userRole === 'admin' ? '📊 ADMIN' : 
-                 userRole === 'restaurant' ? '🍔 RESTAURANT' : 
-                 userRole === 'student' ? '🎓 STUDENT' :
-                 userRole === 'rider' ? '🛵 RIDER' : '👤 CUSTOMER'}
+                {userRole === 'admin' ? `📊 ${userRoleLabel}` :
+                 userRole === 'restaurant' ? `🍔 ${userRoleLabel}` :
+                 userRole === 'student' ? `🎓 ${userRoleLabel}` :
+                 userRole === 'rider' ? `🛵 ${userRoleLabel}` : `👤 ${userRoleLabel}`}
               </span>
 
             </div>
@@ -113,13 +122,13 @@ export default async function ViewProfilePage() {
           </div>
 
           {/* 👉 ฝั่งขวา: รายละเอียดโปรไฟล์ */}
-          <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between bg-neutral-900 min-w-0">
+          <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between  min-w-0">
             <div>
               <h2 className="text-lg font-black text-neutral-200 border-b border-neutral-800/80 pb-3 mb-4">
                 ข้อมูลโปรไฟล์ (Profile Details)
               </h2>
 
-              <div className="space-y-3 bg-neutral-950/60 p-4 rounded-xl border border-neutral-800/80 text-sm">
+              <div className="space-y-3  p-4 rounded-xl border border-neutral-800/80 text-sm">
                 
                 <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">อีเมล</span>
@@ -144,15 +153,15 @@ export default async function ViewProfilePage() {
 
                 {/* 🎨 สิทธิ์การใช้งาน (Role) ในตาราง (อ้างอิงสีจาก Navbar) */}
                 <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">สิทธิ์การใช้งาน (Role)</span>
+                  <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">Role</span>
                   <span className={`px-2.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider border ${getRoleStyle(userRole)}`}>
-                    {userRole}
+                    {userRoleLabel}
                   </span>
                 </div>
 
                 <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">สถานะอีเมล</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${isEmailConfirmed ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' : 'bg-amber-950/60 text-amber-400 border border-amber-800/50'}`}>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${isEmailConfirmed ? 'bg-emerald-950/10 text-emerald-400 border border-emerald-800/50' : 'bg-amber-950/60 text-amber-400 border border-amber-800/50'}`}>
                     {isEmailConfirmed ? '✓ ยืนยันเรียบร้อย' : '⚠️ ยังไม่ได้ยืนยัน'}
                   </span>
                 </div>
