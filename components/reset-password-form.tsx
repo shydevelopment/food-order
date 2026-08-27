@@ -69,7 +69,7 @@ export function ResetPasswordForm() {
   return (
     <div className="w-full px-4 sm:max-w-md text-white animate-in">
       {/* ดีไซน์กรอบการ์ดรมดำ ล้อมรอบด้วยเส้นขอบบางหรูหรา */}
-      <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 sm:p-8 shadow-2xl w-full">
+      <div className=" border border-neutral-900 rounded-2xl p-6 sm:p-8 shadow-2xl w-full">
         
         <form onSubmit={handleResetPassword} className="flex flex-col gap-4">
           
@@ -85,17 +85,17 @@ export function ResetPasswordForm() {
             <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider" htmlFor="newPassword">
               New Password
             </label>
-            <input 
-              className="rounded-md px-4 py-2.5 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm transition-all placeholder:text-neutral-700" 
-              name="newPassword" 
-              type="password" 
+            <input
+              className="rounded-md px-4 py-2.5 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm transition-all placeholder:text-neutral-700"
+              name="newPassword"
+              type="password"
               value={newPasswordValue}
               onChange={(event) => setNewPasswordValue(event.target.value)}
               placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @"
               minLength={8}
               pattern={PASSWORD_PATTERN}
               title={PASSWORD_REQUIREMENTS_TEXT}
-              required 
+              required
             />
             <PasswordRequirements password={newPasswordValue} className="mt-2" />
           </div>
@@ -105,15 +105,15 @@ export function ResetPasswordForm() {
             <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider" htmlFor="confirmPassword">
               Confirm New Password
             </label>
-            <input 
-              className="rounded-md px-4 py-2.5 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm transition-all placeholder:text-neutral-700" 
-              name="confirmPassword" 
-              type="password" 
-              placeholder="ยืนยันรหัสผ่านใหม่อีกครั้ง" 
+            <input
+              className="rounded-md px-4 py-2.5 border border-neutral-800 focus:outline-none focus:border-orange-500 text-white text-sm transition-all placeholder:text-neutral-700"
+              name="confirmPassword"
+              type="password"
+              placeholder="ยืนยันรหัสผ่านใหม่อีกครั้ง"
               minLength={8}
               pattern={PASSWORD_PATTERN}
               title={PASSWORD_REQUIREMENTS_TEXT}
-              required 
+              required
             />
           </div>
 
@@ -121,7 +121,7 @@ export function ResetPasswordForm() {
           <button 
             type="submit" 
             disabled={isPending}
-            className="bg-orange-500 rounded-md px-6 py-2.5 text-black hover:bg-orange-600 disabled:bg-neutral-800 disabled:text-neutral-600 transition-colors font-bold text-sm cursor-pointer shadow-lg shadow-orange-500/10 mt-2 w-full"
+            className="bg-orange-500 rounded-md px-6 py-2.5 text-black hover:bg-orange-600  disabled:text-neutral-600 transition-colors font-bold text-sm cursor-pointer shadow-lg shadow-orange-500/10 mt-2 w-full"
           >
             {isPending ? 'Saving...' : 'Confirm Reset Password'}
           </button>

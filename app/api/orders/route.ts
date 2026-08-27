@@ -27,6 +27,12 @@ interface CustomerProfileRow {
   email: string | null
 }
 
+const paymentMethodLabels = {
+  cash: 'เงินสด จ่ายหน้าร้าน',
+} as const
+
+type PaymentMethod = keyof typeof paymentMethodLabels
+
 const createOrderNotifications = async (params: {
   supabaseAdmin: SupabaseClient
   customerId: string
@@ -38,6 +44,7 @@ const createOrderNotifications = async (params: {
   orderNo: number | null
   totalPrice: number
   pickupTime: string
+  paymentMethodLabel: string
   customerName: string
 }) => {
   const {
@@ -51,6 +58,7 @@ const createOrderNotifications = async (params: {
     orderNo,
     totalPrice,
     pickupTime,
+    paymentMethodLabel,
     customerName,
   } = params
 
@@ -82,7 +90,7 @@ const createOrderNotifications = async (params: {
       item_key: `order-${orderId}`,
       type: 'order',
       title: orderLabel,
-      detail: `สั่งอาหารจาก ${restaurantName} แล้ว · รับเวลา ${pickupTime}`,
+      detail: `สั่งอาหารจาก ${restaurantName} แล้ว · รับเวลา ${pickupTime} · ชำระเงิน ${paymentMethodLabel}`,
       href: `/trackorderPage?order=${orderId}`,
       tone: 'orange',
       source_created_at: now,
@@ -95,7 +103,7 @@ const createOrderNotifications = async (params: {
         item_key: `order-${orderId}`,
         type: 'order',
         title: `${orderLabel} เข้าใหม่`,
-        detail: `ลูกค้า ${customerName} · ${restaurantName} · ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} · รับเวลา ${pickupTime}`,
+        detail: `ลูกค้า ${customerName} · ${restaurantName} · ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} · รับเวลา ${pickupTime} · ชำระเงิน ${paymentMethodLabel}`,
         href: `/admin/orders?restaurantId=${restaurantId}`,
         tone: 'orange',
         source_created_at: now,
@@ -126,11 +134,18 @@ export async function POST(req: NextRequest) {
     const deliveryAddress = String(body.deliveryAddress || '').trim()
     const pickupTime = String(body.pickupTime || '').trim()
     const pickupNote = String(body.pickupNote || '').trim().slice(0, 200)
+    const paymentMethod = String(body.paymentMethod || 'cash') as PaymentMethod
     const items = Array.isArray(body.items) ? body.items as OrderItemInput[] : []
 
     if (!restaurantId || items.length === 0) {
       return NextResponse.json({ error: 'กรุณาเลือกรายการอาหารก่อนสั่งซื้อ' }, { status: 400 })
     }
+
+    if (!(paymentMethod in paymentMethodLabels)) {
+      return NextResponse.json({ error: 'วิธีชำระเงินนี้ยังไม่พร้อมใช้งาน' }, { status: 400 })
+    }
+
+    const paymentMethodLabel = paymentMethodLabels[paymentMethod]
 
     const [pickupHour, pickupMinute] = pickupTime.split(':').map((value) => Number(value))
 
@@ -247,7 +262,7 @@ export async function POST(req: NextRequest) {
       const menu = menusById.get(item.menuId)
 
       if (!menu || menu.restaurant_id !== restaurantId) {
-        return NextResponse.json({ error: 'ตะกร้ามีเมนูจากคนละร้าน กรุณาสั่งทีละร้าน' }, { status: 400 })
+        return NextResponse.json({ error: 'รายการของออเดอร์นี้มีเมนูจากร้านไม่ตรงกัน กรุณากลับไปตรวจตะกร้าอีกครั้ง' }, { status: 400 })
       }
 
       if (!menu.is_available) {
@@ -320,7 +335,7 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         action_type: 'order_created',
         title: 'สร้างคำสั่งซื้อใหม่',
-        detail: `Order #${order.order_no || String(order.id).slice(0, 8)} ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} รับเวลา ${pickupTime}`,
+        detail: `Order #${order.order_no || String(order.id).slice(0, 8)} ยอดรวม ฿${totalPrice.toLocaleString('th-TH')} รับเวลา ${pickupTime} ชำระเงิน ${paymentMethodLabel}`,
       })
 
     await createOrderNotifications({
@@ -334,6 +349,7 @@ export async function POST(req: NextRequest) {
       orderNo: order.order_no,
       totalPrice,
       pickupTime,
+      paymentMethodLabel,
       customerName: customerDisplayName,
     })
 
@@ -342,6 +358,8 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       orderNo: order.order_no,
       totalPrice,
+      paymentMethod,
+      paymentMethodLabel,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในระบบสั่งอาหาร'

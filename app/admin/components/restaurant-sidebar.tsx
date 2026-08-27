@@ -115,20 +115,20 @@ export default function RestaurantSidebar() {
   }, [supabase]);
 
   return (
-    <aside className="w-full lg:w-72 bg-neutral-900 border-b lg:border-b-0 lg:border-r border-neutral-800 p-4 lg:p-6 flex flex-col justify-between shrink-0 h-auto lg:min-h-[calc(100vh-68px)] relative">
+    <aside className="app-chrome w-full lg:w-72 bg-neutral-900 border-b lg:border-b-0 lg:border-r border-neutral-800 p-4 lg:p-6 flex flex-col justify-between shrink-0 h-auto lg:min-h-[calc(100vh-68px)] relative">
       <div>
         <div className="flex items-center justify-between gap-3 pb-3 lg:pb-4 border-b border-neutral-800">
           <div className="min-w-0">
             <h1 className="text-lg lg:text-xl font-black text-orange-500 tracking-wide uppercase">
               Restaurant Workspace
             </h1>
-            <p className="text-[10px] lg:text-xs text-gray-500">ORDER MANAGEMENT</p>
+            <p className="text-[10px] lg:text-xs text-gray-500">จัดการออเดอร์</p>
           </div>
 
           <button
             onClick={() => setIsMobileOpen(!isMobileOpen)}
             className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-800 text-xs font-bold text-gray-300 hover:text-white border border-neutral-700 active:scale-95 transition-all"
-            aria-label="Toggle Restaurant Menu"
+            aria-label="เปิดปิดเมนูร้านอาหาร"
           >
             <span>{isMobileOpen ? 'ปิด' : 'เมนู'}</span>
           </button>
@@ -145,7 +145,7 @@ export default function RestaurantSidebar() {
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
-                    alt="Restaurant User Avatar"
+                    alt="รูปโปรไฟล์ผู้ใช้ร้านอาหาร"
                     className="w-10 h-10 rounded-full border border-orange-500 object-cover shrink-0"
                   />
                 ) : (
@@ -158,7 +158,7 @@ export default function RestaurantSidebar() {
                     {profile?.full_name || profile?.username || 'Restaurant'}
                   </p>
                   <span className="inline-block text-[9px] font-black px-1.5 py-0.2 bg-orange-500/20 text-orange-400 border border-orange-500/40 rounded uppercase tracking-wide mt-0.5">
-                    ร้านค้า
+                    Restaurant
                   </span>
                 </div>
               </div>

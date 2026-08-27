@@ -22,7 +22,7 @@ function SignUpButton() {
       disabled={pending}
       className="bg-orange-500 rounded-md px-4 py-2 text-black mb-3 hover:bg-orange-600 transition-colors font-bold tracking-wide cursor-pointer shadow-lg shadow-orange-500/10 disabled:cursor-wait disabled:opacity-70"
     >
-      {pending ? 'กำลังสมัครสมาชิก...' : 'Sign Up'}
+      {pending ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
     </button>
   )
 }
@@ -33,7 +33,7 @@ function StudentMailIcon({ active }: { active: boolean }) {
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors ${
         active
           ? 'border-orange-500/40 bg-orange-500 text-black'
-          : 'border-neutral-800 bg-neutral-900 text-orange-400'
+          : 'border-neutral-800  text-orange-400'
       }`}
       aria-hidden="true"
     >
@@ -53,7 +53,7 @@ function PersonalMailIcon({ active }: { active: boolean }) {
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors ${
         active
           ? 'border-orange-500/40 bg-orange-500 text-black'
-          : 'border-neutral-800 bg-neutral-900 text-orange-400'
+          : 'border-neutral-800  text-orange-400'
       }`}
       aria-hidden="true"
     >
@@ -86,7 +86,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
       <form action={signUpAction} className="animate-in flex-1 flex flex-col w-full justify-center gap-1">
         
         <h2 className="text-2xl font-black text-center mb-6 text-orange-500 tracking-wide">
-          CREATE ACCOUNT
+          สมัครสมาชิก
         </h2>
 
         <div className="mb-5 grid auto-rows-fr gap-3 sm:grid-cols-2" role="radiogroup" aria-label="เลือกประเภทบัญชี">
@@ -94,7 +94,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
             className={`flex min-h-[96px] cursor-pointer rounded-lg border p-4 transition-all ${
               isStudentSignup
                 ? 'border-orange-500 bg-orange-500/15 shadow-lg shadow-orange-500/10'
-                : 'border-neutral-800 bg-neutral-950 hover:border-neutral-700'
+                : 'border-neutral-800  hover:border-neutral-700'
             }`}
           >
             <input
@@ -118,7 +118,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
             className={`flex min-h-[96px] cursor-pointer rounded-lg border p-4 transition-all ${
               !isStudentSignup
                 ? 'border-orange-500 bg-orange-500/15 shadow-lg shadow-orange-500/10'
-                : 'border-neutral-800 bg-neutral-950 hover:border-neutral-700'
+                : 'border-neutral-800  hover:border-neutral-700'
             }`}
           >
             <input
@@ -140,7 +140,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         </div>
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="username">
-          {isStudentSignup ? 'Student ID (รหัสนักศึกษา)' : 'Username'}
+          {isStudentSignup ? 'รหัสนักศึกษา' : 'ชื่อผู้ใช้'}
         </label>
         {isStudentSignup ? (
           <input
@@ -153,10 +153,10 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           />
         ) : (
           <input
-            className="mb-4 rounded-md border border-neutral-800 bg-neutral-900 px-4 py-2 text-white placeholder:text-neutral-600 transition-all focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+            className="mb-4 rounded-md border border-neutral-800  px-4 py-2 text-white placeholder:text-neutral-600 transition-all focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
             name="username"
             type="text"
-            placeholder="username"
+            placeholder="ชื่อผู้ใช้"
             required
           />
         )}
@@ -164,7 +164,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         {!isStudentSignup && (
           <>
             <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="studentIdPreview">
-              Student ID (รหัสนักศึกษา)
+              รหัสนักศึกษา
             </label>
             <input
               id="studentIdPreview"
@@ -177,21 +177,21 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         )}
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="displayName">
-          Display Name
+          ชื่อที่แสดง
         </label>
         <input
-          className="rounded-md px-4 py-2 bg-neutral-900 border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
+          className="rounded-md px-4 py-2  border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
           name="displayName"
           type="text"
-          placeholder="Display Name"
+          placeholder="ชื่อที่แสดง"
           required
         />
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="phone">
-          Phone Number (เบอร์โทรศัพท์)
+          เบอร์โทรศัพท์
         </label>
         <input
-          className="rounded-md px-4 py-2 bg-neutral-900 border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
+          className="rounded-md px-4 py-2  border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
           name="phone"
           type="tel"
           inputMode="tel"
@@ -205,10 +205,10 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         />
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="email">
-          Email
+          อีเมล
         </label>
         <input
-          className="rounded-md px-4 py-2 bg-neutral-900 border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
+          className="rounded-md px-4 py-2  border border-neutral-800 mb-4 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
           name="email"
           type="email"
           placeholder={isStudentSignup ? 's6612345678910@email.kmutnb.ac.th' : 'you@example.com'}
@@ -226,11 +226,11 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         )}
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="password">
-          Password
+          รหัสผ่าน
         </label>
         <div className="relative mb-4">
           <input
-            className="w-full rounded-md pl-4 pr-14 py-2 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
+            className="w-full rounded-md pl-4 pr-14 py-2  border border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
             type={showPassword ? "text" : "password"}
             name="password"
             value={password}
@@ -246,17 +246,17 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black tracking-widest text-neutral-500 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer select-none"
           >
-            {showPassword ? "HIDE" : "SHOW"}
+            {showPassword ? 'ซ่อน' : 'แสดง'}
           </button>
         </div>
         <PasswordRequirements password={password} className="-mt-2 mb-4" />
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="confirmPassword">
-          Confirm Password
+          ยืนยันรหัสผ่าน
         </label>
         <div className="relative mb-6">
           <input
-            className="w-full rounded-md pl-4 pr-14 py-2 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
+            className="w-full rounded-md pl-4 pr-14 py-2  border border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder:text-neutral-600 transition-all"
             type={showPassword ? "text" : "password"}
             name="confirmPassword"
             placeholder="••••••••"
@@ -270,7 +270,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black tracking-widest text-neutral-500 hover:text-orange-500 transition-colors focus:outline-none cursor-pointer select-none"
           >
-            {showPassword ? "HIDE" : "SHOW"}
+            {showPassword ? 'ซ่อน' : 'แสดง'}
           </button>
         </div>
 
@@ -279,9 +279,9 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
         <Link
           href="/login"
           onClick={() => setIsOpeningLogin(true)}
-          className="border border-neutral-800 rounded-md px-4 py-2 text-neutral-400 mb-2 text-center hover:bg-neutral-900 hover:text-orange-500 hover:border-orange-500 transition-all font-medium"
+          className="border border-neutral-800 rounded-md px-4 py-2 text-neutral-400 mb-2 text-center  hover:text-orange-500 hover:border-orange-500 transition-all font-medium"
         >
-          {isOpeningLogin ? 'กำลังเปิดหน้า Login...' : 'Sign In'}
+          {isOpeningLogin ? 'กำลังเปิดหน้าเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
         </Link>
 
         {message && (

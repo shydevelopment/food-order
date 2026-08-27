@@ -1,6 +1,7 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
+import { getAccountRoleMeta } from '@/lib/roles'
 
 interface RestaurantRow {
   id: string
@@ -221,7 +222,7 @@ export async function GET(req: NextRequest) {
       restaurantId: restaurant.id,
       restaurantName: restaurant.name,
       title: 'ร้านอาหารในระบบ',
-      detail: `ร้าน "${restaurant.name}" ${restaurant.owner_id ? `• owner_id: ${restaurant.owner_id.slice(0, 8)}` : '• ยังไม่มีเจ้าของร้าน'}`,
+      detail: `ร้าน "${restaurant.name}" ${restaurant.owner_id ? `• owner_id: ${restaurant.owner_id.slice(0, 8)}` : '• ยังไม่มี Owner'}`,
       timestamp: parseTimestamp(restaurant.created_at),
       icon: '🏪',
       colorClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
@@ -233,7 +234,7 @@ export async function GET(req: NextRequest) {
       restaurantId: null,
       restaurantName: null,
       title: 'สมาชิกในระบบ',
-      detail: `${row.full_name || row.username || 'สมาชิก'} (@${row.username || 'user'}) • บทบาท: ${row.role || 'customer'}`,
+      detail: `${row.full_name || row.username || 'สมาชิก'} (@${row.username || 'ผู้ใช้'}) • Role: ${getAccountRoleMeta(row.role)?.thaiLabel || 'Customer'}`,
       timestamp: parseTimestamp(row.created_at),
       icon: '👤',
       colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',

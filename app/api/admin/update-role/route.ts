@@ -1,7 +1,7 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
-import { ACCOUNT_ROLE_VALUES, canHaveRestaurantAccess, getProfileStudentId, resolveAccountRoleForEmail } from '@/lib/roles'
+import { ACCOUNT_ROLE_VALUES, canHaveRestaurantAccess, getAccountRoleMeta, getProfileStudentId, resolveAccountRoleForEmail } from '@/lib/roles'
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest) {
     const { userId, role } = await req.json()
 
     if (!userId || !ACCOUNT_ROLE_VALUES.includes(role)) {
-      return NextResponse.json({ error: 'ข้อมูล role ไม่ถูกต้อง' }, { status: 400 })
+      return NextResponse.json({ error: 'ข้อมูล Role ไม่ถูกต้อง' }, { status: 400 })
     }
 
     const supabaseAdmin = createSupabaseAdminClient(
@@ -30,12 +30,12 @@ export async function PATCH(req: NextRequest) {
       .single()
 
     if (adminProfileError || adminProfile?.role !== 'admin') {
-      return NextResponse.json({ error: 'ไม่มีสิทธิ์เปลี่ยน role ผู้ใช้งาน' }, { status: 403 })
+      return NextResponse.json({ error: 'ไม่มีสิทธิ์เปลี่ยน Role ผู้ใช้งาน' }, { status: 403 })
     }
 
     if (userId === user.id && role !== 'admin') {
       return NextResponse.json(
-        { error: 'ไม่สามารถลดสิทธิ์ admin ของบัญชีตัวเองได้' },
+        { error: 'ไม่สามารถลดสิทธิ์ Admin ของบัญชีตัวเองได้' },
         { status: 400 }
       )
     }
@@ -96,13 +96,13 @@ export async function PATCH(req: NextRequest) {
       .insert({
         user_id: user.id,
         action_type: 'role_updated',
-        title: 'เปลี่ยนบทบาทผู้ใช้งาน',
-        detail: `${targetProfile.full_name || targetProfile.username || userId} เปลี่ยนจาก ${targetProfile.role || 'user'} เป็น ${resolvedRole}`,
+        title: 'เปลี่ยน Role ผู้ใช้งาน',
+        detail: `${targetProfile.full_name || targetProfile.username || userId} เปลี่ยนจาก ${getAccountRoleMeta(targetProfile.role)?.thaiLabel || 'User'} เป็น ${getAccountRoleMeta(resolvedRole)?.thaiLabel || 'User'}`,
       })
 
     return NextResponse.json({ success: true, role: resolvedRole })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเปลี่ยน role'
+    const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเปลี่ยน Role'
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -7,10 +7,10 @@ import { usePathname } from 'next/navigation';
 export default function Footer() {
   const pathname = usePathname();
   const links = [
-    { href: '/aboutusPage', label: 'About Us' },
-    { href: '/termsofusePage', label: 'Terms of Use' },
-    { href: '/privacypolicyPage', label: 'Privacy Policy' },
-    { href: '/contactPage', label: 'Contact Us' },
+    { href: '/aboutusPage', label: 'เกี่ยวกับเรา' },
+    { href: '/termsofusePage', label: 'เงื่อนไขการใช้งาน' },
+    { href: '/privacypolicyPage', label: 'นโยบายความเป็นส่วนตัว' },
+    { href: '/contactPage', label: 'ติดต่อเรา' },
   ];
 
   return (
@@ -20,10 +20,10 @@ export default function Footer() {
         <div className="flex min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
           <span className="text-orange-500 font-black text-lg tracking-wide">shydeveloper.xyz</span>
           <p className="text-[11px] text-gray-600 mt-1">
-            © {new Date().getFullYear()} FoodOrder App. All rights reserved.
+            © {new Date().getFullYear()} แอปฟู้ดออเดอร์ สงวนลิขสิทธิ์
           </p>
           <p className="text-[11px] text-gray-600 mt-1">
-            Built with Next.js , Tailwindcss & Supabase
+            สร้างด้วย Next.js, Tailwind CSS และ Supabase
           </p>
         </div>
 
@@ -38,7 +38,7 @@ export default function Footer() {
                 className={`rounded-lg px-3 py-2 transition-colors ${
                   isActive
                     ? 'bg-orange-500 text-black'
-                    : 'text-gray-500 hover:bg-neutral-900 hover:text-orange-400'
+                    : 'text-gray-500  hover:text-orange-400'
                 }`}
               >
                 {link.label}

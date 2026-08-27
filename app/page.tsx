@@ -2,6 +2,7 @@ import { createClient } from '@/supabase/service'
 import Link from 'next/link'
 import { getBangkokDayIndex, isMenuAvailableOnDay } from '@/lib/menu-days'
 import { getRestaurantTypeMeta, RESTAURANT_TYPES } from '@/lib/restaurant-types'
+import { formatRestaurantTimeRange, isRestaurantOpenNow } from '@/lib/restaurant-hours'
 import HomeClockBadge from '@/components/home-clock-badge'
 
 interface Restaurant {
@@ -22,11 +23,6 @@ interface Menu {
   restaurant_id: string
   is_available: boolean | null
   available_days: number[] | null
-}
-
-const formatTimeRange = (openTime: string | null, closeTime: string | null) => {
-  if (!openTime && !closeTime) return 'ยังไม่ระบุเวลา'
-  return `${openTime?.slice(0, 5) || '--:--'} - ${closeTime?.slice(0, 5) || '--:--'} น.`
 }
 
 export default async function Index() {
@@ -60,7 +56,9 @@ export default async function Index() {
   const menuRows = (menus || []) as Menu[]
   const todayMenus = menuRows.filter((menu) => isMenuAvailableOnDay(menu.available_days, todayIndex))
   const availableTodayMenus = todayMenus.filter((menu) => menu.is_available)
-  const openRestaurants = restaurantRows.filter((restaurant) => restaurant.status === 'open')
+  const openRestaurants = restaurantRows.filter((restaurant) => (
+    isRestaurantOpenNow(restaurant.status, restaurant.open_time, restaurant.close_time)
+  ))
   const featuredRestaurant = openRestaurants[0] || restaurantRows[0] || null
 
   const menusByRestaurant = new Map<string, Menu[]>()
@@ -85,7 +83,7 @@ export default async function Index() {
   return (
     <div className="home-page min-h-screen text-white">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-0 pb-8 sm:px-2 lg:gap-6">
-        <section className="home-hero overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-950">
+        <section className="home-hero overflow-hidden rounded-3xl border border-neutral-800 ">
           <div className="grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(0,1.04fr)_minmax(390px,0.96fr)]">
             <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
               <div>
@@ -112,7 +110,7 @@ export default async function Index() {
                   </Link>
                   <Link
                     href={user ? '/trackorderPage' : '/login'}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-700 bg-neutral-900 px-6 text-sm font-black text-white transition hover:border-sky-500/50 hover:text-sky-300 active:scale-95"
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-700  px-6 text-sm font-black text-white transition hover:border-sky-500/50 hover:text-sky-300 active:scale-95"
                   >
                     {user ? 'ติดตามออเดอร์' : 'เข้าสู่ระบบ'}
                   </Link>
@@ -134,7 +132,7 @@ export default async function Index() {
                   [todayMenus.length, 'เมนูวันนี้', 'text-sky-300'],
                   [availableTodayMenus.length, 'พร้อมขาย', 'text-pink-300'],
                 ].map(([value, label, tone]) => (
-                  <div key={label} className="home-stat-card rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+                  <div key={label} className="home-stat-card rounded-2xl border border-neutral-800  p-4">
                     <p className={`text-2xl font-black ${tone}`}>{value}</p>
                     <p className="mt-1 text-xs font-bold text-neutral-500">{label}</p>
                   </div>
@@ -142,7 +140,7 @@ export default async function Index() {
               </div>
             </div>
 
-            <div className="home-featured-media relative min-h-[360px] overflow-hidden border-t border-neutral-800 bg-neutral-900 lg:border-l lg:border-t-0">
+            <div className="home-featured-media relative min-h-[360px] overflow-hidden border-t border-neutral-800  lg:border-l lg:border-t-0">
               {featuredRestaurant ? (
                 <>
                   <img
@@ -154,11 +152,11 @@ export default async function Index() {
                   <div className="home-on-image absolute inset-x-0 bottom-0 p-5 sm:p-7">
                     <div className="mb-3 flex flex-wrap gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-black ${
-                        featuredRestaurant.status === 'open'
+                        isRestaurantOpenNow(featuredRestaurant.status, featuredRestaurant.open_time, featuredRestaurant.close_time)
                           ? 'bg-emerald-500 text-white'
                           : 'bg-red-500 text-white'
                       }`}>
-                        {featuredRestaurant.status === 'open' ? 'เปิดอยู่' : 'ปิดแล้ว'}
+                        {isRestaurantOpenNow(featuredRestaurant.status, featuredRestaurant.open_time, featuredRestaurant.close_time) ? 'เปิดอยู่' : 'ปิดแล้ว'}
                       </span>
                       <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-black text-white backdrop-blur">
                         {featuredType.icon} {featuredType.label}
@@ -171,7 +169,7 @@ export default async function Index() {
                     <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                       <div className="home-glass-card rounded-2xl border border-white/10 bg-black/45 p-3 backdrop-blur">
                         <p className="text-xs font-bold text-neutral-400">เวลาเปิด</p>
-                        <p className="mt-1 font-black text-amber-300">{formatTimeRange(featuredRestaurant.open_time, featuredRestaurant.close_time)}</p>
+                        <p className="mt-1 font-black text-amber-300">{formatRestaurantTimeRange(featuredRestaurant.open_time, featuredRestaurant.close_time)}</p>
                       </div>
                       <div className="home-glass-card rounded-2xl border border-white/10 bg-black/45 p-3 backdrop-blur">
                         <p className="text-xs font-bold text-neutral-400">เมนูพร้อมขาย</p>
@@ -190,7 +188,7 @@ export default async function Index() {
                 <div className="flex h-full min-h-[360px] items-center justify-center p-8 text-center">
                   <div>
                     <h2 className="text-2xl font-black text-white">ยังไม่มีร้านอาหารในระบบ</h2>
-                    <p className="mt-2 text-sm text-neutral-500">เพิ่มร้านในหน้าแอดมินแล้วร้านจะแสดงตรงนี้</p>
+                    <p className="mt-2 text-sm text-neutral-500">เพิ่มร้านในหน้า Admin แล้วร้านจะแสดงตรงนี้</p>
                   </div>
                 </div>
               )}
@@ -199,7 +197,7 @@ export default async function Index() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="home-panel rounded-3xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
+          <div className="home-panel rounded-3xl border border-neutral-800  p-4 sm:p-5">
             <div className="mb-4 flex items-end justify-between gap-3">
               <div>
                 <h2 className="text-xl font-black text-white">ร้านที่เปิดอยู่ตอนนี้</h2>
@@ -211,7 +209,7 @@ export default async function Index() {
             </div>
 
             {quickRestaurants.length === 0 ? (
-              <div className="home-empty-state rounded-2xl border border-neutral-800 bg-neutral-950 p-8 text-center">
+              <div className="home-empty-state rounded-2xl border border-neutral-800  p-8 text-center">
                 <p className="font-bold text-neutral-300">ตอนนี้ยังไม่มีร้านเปิด</p>
                 <p className="mt-1 text-sm text-neutral-500">ลองดูร้านทั้งหมดเพื่อเช็กเวลาเปิดปิด</p>
               </div>
@@ -225,9 +223,9 @@ export default async function Index() {
                     <Link
                       key={restaurant.id}
                       href={`/storePage/${restaurant.id}`}
-                      className="home-quick-card group grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-2xl border border-neutral-800 bg-neutral-950 p-3 transition hover:border-orange-500/40 hover:bg-neutral-900"
+                      className="home-quick-card group grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-2xl border border-neutral-800  p-3 transition hover:border-orange-500/40 "
                     >
-                      <div className="relative h-24 overflow-hidden rounded-xl bg-neutral-800">
+                      <div className="relative h-24 overflow-hidden rounded-xl ">
                         <img
                           src={restaurant.image_url || '/placeholder.jpg'}
                           alt={restaurant.name}
@@ -242,7 +240,7 @@ export default async function Index() {
                         <h3 className="mt-1 truncate text-lg font-black text-white">{restaurant.name}</h3>
                         <p className="mt-1 line-clamp-1 text-xs text-neutral-500">{restaurant.address || 'ยังไม่ระบุที่อยู่ร้าน'}</p>
                         <div className="mt-3 flex items-center justify-between gap-2 text-xs">
-                          <span className="font-bold text-neutral-400">{formatTimeRange(restaurant.open_time, restaurant.close_time)}</span>
+                          <span className="font-bold text-neutral-400">{formatRestaurantTimeRange(restaurant.open_time, restaurant.close_time)}</span>
                           <span className="rounded-full bg-emerald-500/15 px-2 py-1 font-black text-emerald-300">{availableCount} เมนู</span>
                         </div>
                       </div>
@@ -253,7 +251,7 @@ export default async function Index() {
             )}
           </div>
 
-          <aside className="home-panel rounded-3xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
+          <aside className="home-panel rounded-3xl border border-neutral-800  p-4 sm:p-5">
             <h2 className="text-xl font-black text-white">หมวดร้าน</h2>
             <p className="mt-1 text-sm text-neutral-500">กดเพื่อกรองร้านตามประเภท</p>
             <div className="mt-4 space-y-2">
@@ -261,7 +259,7 @@ export default async function Index() {
                 <Link
                   key={type.value}
                   href={`/storePage?type=${type.value}`}
-                  className="home-category-link flex items-center justify-between gap-3 rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3 transition hover:border-orange-500/40 hover:bg-neutral-900"
+                  className="home-category-link flex items-center justify-between gap-3 rounded-2xl border border-neutral-800  px-4 py-3 transition hover:border-orange-500/40 "
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-black text-white">

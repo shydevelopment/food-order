@@ -36,33 +36,33 @@ export function ForgotPasswordForm({ sendAction }: ForgotPasswordFormProps) {
 
   return (
     <div className="flex flex-col w-full px-4 sm:max-w-md justify-center gap-2 mt-12 mx-auto text-white">
-      <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-6 sm:p-8 shadow-2xl w-full">
+      <div className=" border border-neutral-900 rounded-2xl p-6 sm:p-8 shadow-2xl w-full">
         
         <form onSubmit={handleSubmit} className="animate-in flex-1 flex flex-col w-full justify-center gap-1">
           <h2 className="text-2xl font-black text-center mb-1 text-orange-500 tracking-wide uppercase">
-            Reset Password
+            รีเซ็ตรหัสผ่าน
           </h2>
           <p className="text-xs text-neutral-400 text-center mb-6">
             กรอกอีเมลของคุณเพื่อรับลิงก์กู้คืนรหัสผ่าน
           </p>
 
           <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="email">
-            Email Address
+            อีเมล
           </label>
           <input
-            className="rounded-md px-4 py-2.5 bg-neutral-900 border border-neutral-800 mb-6 focus:outline-none focus:border-orange-500 text-white text-sm"
+            className="rounded-md px-4 py-2.5  border border-neutral-800 mb-6 focus:outline-none focus:border-orange-500 text-white text-sm"
             name="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="อีเมลของคุณ"
             required
           />
 
           <button
             type="submit"
             disabled={isPending}
-            className="bg-orange-500 rounded-md px-4 py-2.5 text-black mb-4 hover:bg-orange-600 disabled:bg-neutral-800 transition-colors font-bold text-sm cursor-pointer shadow-lg w-full"
+            className="bg-orange-500 rounded-md px-4 py-2.5 text-black mb-4 hover:bg-orange-600  transition-colors font-bold text-sm cursor-pointer shadow-lg w-full"
           >
-            {isPending ? 'Sending Link...' : 'Send Reset Link'}
+            {isPending ? 'กำลังส่งลิงก์...' : 'ส่งลิงก์รีเซ็ตรหัสผ่าน'}
           </button>
 
           <div className="text-center text-sm text-neutral-400">

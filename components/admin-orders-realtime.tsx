@@ -460,7 +460,7 @@ export default function AdminOrdersRealtime() {
       <div className={`rounded-xl border px-4 py-3 text-sm ${realtimeClassName}`}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            <span className="font-bold">Realtime</span>
+            <span className="font-bold">เรียลไทม์</span>
             <span className="ml-1 text-neutral-300">
               {realtimeCopy[realtimeStatus]}
             </span>
@@ -472,7 +472,7 @@ export default function AdminOrdersRealtime() {
                 onClick={requestPushPermission}
                 className="rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs font-black text-orange-300 transition hover:bg-orange-500/20"
               >
-                เปิด Push Notification
+                เปิดแจ้งเตือนแบบพุช
               </button>
             )}
             {pushPermission === 'granted' && (
@@ -491,7 +491,7 @@ export default function AdminOrdersRealtime() {
 
       {orderAlert && (
         <div className={`fixed inset-0 z-[998] flex items-center justify-center overflow-y-auto bg-black/80 px-3 py-4 text-white backdrop-blur-sm sm:px-4 ${isOrderAlertClosing ? 'food-alert-overlay--exit' : 'food-alert-overlay'}`}>
-          <div className={`relative w-full max-w-3xl rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-center shadow-2xl shadow-black/60 sm:p-8 ${isOrderAlertClosing ? 'food-alert-panel--exit' : 'food-alert-panel'}`}>
+          <div className={`relative w-full max-w-3xl rounded-2xl border border-neutral-800  p-4 text-center shadow-2xl shadow-black/60 sm:p-8 ${isOrderAlertClosing ? 'food-alert-panel--exit' : 'food-alert-panel'}`}>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/10 text-3xl font-black text-amber-400">
               !
             </div>
@@ -506,7 +506,7 @@ export default function AdminOrdersRealtime() {
               Order #{orderAlert.orderNo || orderAlert.orderId.slice(0, 8)} ยอดรวม ฿{orderAlert.totalPrice.toLocaleString('th-TH')}
             </p>
 
-            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-left text-sm font-bold leading-7 text-neutral-300">
+            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-neutral-800  p-4 text-left text-sm font-bold leading-7 text-neutral-300">
               <p><span className="mr-2 text-amber-400">•</span>สถานะ: <span className="text-white">
                 {orderAlert.type === 'pickup-reminder' ? 'ลูกค้าใกล้มารับอาหารที่ร้าน' : 'รอร้านรับออเดอร์'}
               </span></p>
@@ -539,7 +539,7 @@ export default function AdminOrdersRealtime() {
               <button
                 type="button"
                 onClick={closeOrderAlert}
-                className="rounded-xl border border-neutral-700 bg-neutral-950 px-5 py-3 text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 hover:text-white"
+                className="rounded-xl border border-neutral-700  px-5 py-3 text-sm font-bold text-neutral-300 transition  hover:text-white"
               >
                 ปิด
               </button>
@@ -548,7 +548,7 @@ export default function AdminOrdersRealtime() {
               type="button"
               onClick={closeOrderAlert}
               aria-label="ปิดแจ้งเตือน"
-              className="absolute right-4 top-4 rounded-xl px-3 py-2 text-sm font-black text-neutral-500 transition hover:bg-neutral-800 hover:text-white"
+              className="absolute right-4 top-4 rounded-xl px-3 py-2 text-sm font-black text-neutral-500 transition  hover:text-white"
             >
               x
             </button>

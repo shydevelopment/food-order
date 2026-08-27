@@ -2,11 +2,11 @@ export default function TermsOfUsePage() {
   const sections = [
     {
       title: '1. การยอมรับเงื่อนไข',
-      body: 'เมื่อคุณเข้าใช้งาน Food Order KMUTNB ถือว่าคุณยอมรับเงื่อนไขการใช้งานนี้ ผู้ใช้สามารถดูร้านอาหารและเมนูได้โดยไม่ต้องสมัครสมาชิก แต่การสั่งอาหาร ติดตามคำสั่งซื้อ และจัดการบัญชีจำเป็นต้องเข้าสู่ระบบก่อน',
+      body: 'เมื่อคุณเข้าใช้งานฟู้ดออเดอร์ KMUTNB ถือว่าคุณยอมรับเงื่อนไขการใช้งานนี้ ผู้ใช้สามารถดูร้านอาหารและเมนูได้โดยไม่ต้องสมัครสมาชิก แต่การสั่งอาหาร ติดตามคำสั่งซื้อ และจัดการบัญชีจำเป็นต้องเข้าสู่ระบบก่อน',
     },
     {
-      title: '2. บัญชีผู้ใช้และบทบาท',
-      body: 'ผู้ใช้ต้องกรอกข้อมูลบัญชีให้ถูกต้อง ระบบอาจกำหนดบทบาทตามข้อมูลบัญชี เช่น นักศึกษา เจ้าของร้าน หรือผู้ดูแลระบบ โดยสิทธิ์การเข้าถึงแต่ละหน้าจะขึ้นอยู่กับบทบาทและสิทธิ์ที่ได้รับ',
+      title: '2. บัญชีผู้ใช้และ Role',
+      body: 'ผู้ใช้ต้องกรอกข้อมูลบัญชีให้ถูกต้อง ระบบอาจกำหนด Role ตามข้อมูลบัญชี เช่น Student, Owner หรือ Admin โดยสิทธิ์การเข้าถึงแต่ละหน้าจะขึ้นอยู่กับ Role และสิทธิ์ที่ได้รับ',
     },
     {
       title: '3. การสั่งอาหาร',
@@ -14,7 +14,7 @@ export default function TermsOfUsePage() {
     },
     {
       title: '4. การจัดการร้านอาหาร',
-      body: 'เจ้าของร้านและพนักงานร้านที่ได้รับสิทธิ์สามารถจัดการข้อมูลร้าน เมนู และออเดอร์ได้เฉพาะร้านที่ตนได้รับสิทธิ์เท่านั้น ห้ามแก้ไขข้อมูลร้านหรือออเดอร์ที่ไม่ได้รับอนุญาต',
+      body: 'Owner และ Staff ที่ได้รับสิทธิ์สามารถจัดการข้อมูลร้าน เมนู และออเดอร์ได้เฉพาะร้านที่ตนได้รับสิทธิ์เท่านั้น ห้ามแก้ไขข้อมูลร้านหรือออเดอร์ที่ไม่ได้รับอนุญาต',
     },
     {
       title: '5. ข้อห้ามในการใช้งาน',
@@ -22,23 +22,23 @@ export default function TermsOfUsePage() {
     },
     {
       title: '6. การเปลี่ยนแปลงเงื่อนไข',
-      body: 'ระบบอาจปรับปรุงเงื่อนไขการใช้งานตามความเหมาะสม หากมีการเปลี่ยนแปลงสำคัญ ผู้ดูแลระบบจะแจ้งให้ผู้ใช้ทราบผ่านช่องทางที่เหมาะสม',
+      body: 'ระบบอาจปรับปรุงเงื่อนไขการใช้งานตามความเหมาะสม หากมีการเปลี่ยนแปลงสำคัญ Admin จะแจ้งให้ผู้ใช้ทราบผ่านช่องทางที่เหมาะสม',
     },
   ]
 
   return (
     <div className="mx-auto max-w-4xl px-0 py-4 text-white sm:px-4 sm:py-12">
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl sm:p-6 md:p-8">
-        <p className="text-sm font-bold uppercase tracking-wide text-amber-400">Terms of Use</p>
+      <section className="rounded-2xl border border-neutral-800  p-4 shadow-2xl sm:p-6 md:p-8">
+        <p className="text-sm font-bold uppercase tracking-wide text-amber-400">เงื่อนไขการใช้งาน</p>
         <h1 className="mt-3 text-2xl font-black sm:text-3xl md:text-4xl">เงื่อนไขการใช้งาน</h1>
         <p className="mt-4 text-sm leading-7 text-neutral-400">
-          ข้อกำหนดสำหรับการใช้งานเว็บไซต์ Food Order KMUTNB เพื่อให้การดูร้านอาหาร การสั่งอาหาร
+          ข้อกำหนดสำหรับการใช้งานเว็บไซต์ฟู้ดออเดอร์ KMUTNB เพื่อให้การดูร้านอาหาร การสั่งอาหาร
           และการจัดการระบบเป็นไปอย่างถูกต้องและปลอดภัย
         </p>
 
         <div className="mt-6 space-y-3 md:mt-8 md:space-y-4">
           {sections.map((section) => (
-            <article key={section.title} className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 sm:p-5">
+            <article key={section.title} className="rounded-xl border border-neutral-800  p-4 sm:p-5">
               <h2 className="text-base font-black text-white sm:text-lg">{section.title}</h2>
               <p className="mt-2 text-sm leading-7 text-neutral-400">{section.body}</p>
             </article>

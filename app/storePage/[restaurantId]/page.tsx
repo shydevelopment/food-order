@@ -7,6 +7,7 @@ import { formatThaiPhoneInput } from '@/lib/phone'
 import { getRestaurantTypeMeta, supportsCustomMenuText, supportsSpecialOption } from '@/lib/restaurant-types'
 import { getBangkokDayIndex, isMenuAvailableOnDay, WEEKDAY_OPTIONS } from '@/lib/menu-days'
 import { getMenuCategoryToneClasses } from '@/lib/menu-categories'
+import { formatRestaurantTimeRange, isRestaurantOpenNow } from '@/lib/restaurant-hours'
 
 interface Restaurant {
   id: string
@@ -43,11 +44,6 @@ interface MenuCategory {
 
 const formatPrice = (price: number | string) => {
   return `฿${Number(price).toLocaleString('th-TH')}`
-}
-
-const formatTimeRange = (openTime: string | null, closeTime: string | null) => {
-  if (!openTime && !closeTime) return 'ยังไม่ระบุเวลา'
-  return `${openTime?.slice(0, 5) || '--:--'} - ${closeTime?.slice(0, 5) || '--:--'} น.`
 }
 
 export default async function RestaurantStorePage({
@@ -97,7 +93,7 @@ export default async function RestaurantStorePage({
   }
 
   const store = restaurant as Restaurant
-  const isOpen = store.status === 'open'
+  const isOpen = isRestaurantOpenNow(store.status, store.open_time, store.close_time)
   const restaurantType = getRestaurantTypeMeta(store.restaurant_type)
   const canWriteCustomMenu = supportsCustomMenuText(store.restaurant_type)
   const canChooseSpecial = supportsSpecialOption(store.restaurant_type)
@@ -124,25 +120,25 @@ export default async function RestaurantStorePage({
       ? [{
         id: 'uncategorized',
         name: 'เมนูอื่นๆ',
-        toneClass: 'border-neutral-700 bg-neutral-800 text-neutral-300',
+        toneClass: 'border-neutral-700  text-neutral-300',
         menus: uncategorizedMenus,
       }]
       : []),
   ]
 
   return (
-    <div className="min-h-screen bg-neutral-950 pb-12 text-white">
+    <div className="min-h-screen  pb-12 text-white">
       <main className="w-full px-0 pt-4 sm:px-2 sm:pt-6">
         <div className="mb-4">
           <Link
             href="/storePage"
-            className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-black text-neutral-300 transition hover:border-orange-500/40 hover:text-orange-300"
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-800  px-3 py-2 text-xs font-black text-neutral-300 transition hover:border-orange-500/40 hover:text-orange-300"
           >
             ← กลับไปเลือกร้าน
           </Link>
         </div>
 
-        <section className="overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+        <section className="overflow-hidden rounded-3xl border border-neutral-800  shadow-2xl">
           <div className="relative min-h-[320px]">
             <img
               src={store.image_url || '/placeholder.jpg'}
@@ -176,7 +172,7 @@ export default async function RestaurantStorePage({
               <div className="mt-6 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
                   <p className="text-xs font-bold text-neutral-400">เวลาทำการ</p>
-                  <p className="mt-1 font-black text-white">{formatTimeRange(store.open_time, store.close_time)}</p>
+                  <p className="mt-1 font-black text-white">{formatRestaurantTimeRange(store.open_time, store.close_time)}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
                   <p className="text-xs font-bold text-neutral-400">เมนูวันนี้</p>
@@ -193,7 +189,7 @@ export default async function RestaurantStorePage({
 
         <section className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
           <aside className="space-y-4">
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4">
+            <div className="rounded-3xl border border-neutral-800  p-4">
               <h2 className="text-lg font-black text-white">ข้อมูลร้าน</h2>
               <div className="mt-4 space-y-3 text-sm text-neutral-400">
                 <p className="flex gap-2">
@@ -202,7 +198,7 @@ export default async function RestaurantStorePage({
                 </p>
                 <p className="flex gap-2">
                   <span className="shrink-0 text-amber-400">●</span>
-                  <span>{formatTimeRange(store.open_time, store.close_time)}</span>
+                  <span>{formatRestaurantTimeRange(store.open_time, store.close_time)}</span>
                 </p>
                 <p className="flex gap-2">
                   <span className="shrink-0 text-emerald-400">●</span>
@@ -245,16 +241,16 @@ export default async function RestaurantStorePage({
           </aside>
 
           <div className="space-y-5">
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
+            <div className="rounded-3xl border border-neutral-800  p-4 sm:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-amber-400">Menu</p>
+                  <p className="text-xs font-black uppercase tracking-wide text-amber-400">เมนู</p>
                   <h2 className="mt-1 text-2xl font-black text-white">
                     {canWriteCustomMenu ? 'สั่งอาหารตามสั่ง' : `เมนูที่ขาย${todayLabel}`}
                   </h2>
                   <p className="mt-1 text-sm text-neutral-500">{restaurantType.description}</p>
                 </div>
-                <span className="w-fit rounded-full border border-neutral-800 bg-neutral-950 px-3 py-1 text-xs font-bold text-neutral-400">
+                <span className="w-fit rounded-full border border-neutral-800  px-3 py-1 text-xs font-bold text-neutral-400">
                   {todayMenus.length} เมนู
                 </span>
               </div>
@@ -298,8 +294,8 @@ export default async function RestaurantStorePage({
                           const canSubmitMenu = Boolean(canOrder && !menuUnavailableMatch)
 
                           return (
-                            <article key={menu.id} className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950">
-                              <div className="relative h-44 overflow-hidden bg-neutral-800">
+                            <article key={menu.id} className="overflow-hidden rounded-2xl border border-neutral-800 ">
+                              <div className="relative h-44 overflow-hidden ">
                                 <img
                                   src={menu.image_url || '/placeholder.jpg'}
                                   alt={menu.name}

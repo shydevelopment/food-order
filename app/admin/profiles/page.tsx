@@ -232,7 +232,7 @@ export default function AdminUsersPage() {
             👥 ข้อมูลผู้ใช้งานทั้งหมด
           </h2>
           <p className="text-sm text-gray-400">
-            ดูรายละเอียดโปรไฟล์ ชื่อผู้ใช้ เบอร์โทรศัพท์ และบทบาทในระบบ
+            ดูรายละเอียดโปรไฟล์ ชื่อผู้ใช้ เบอร์โทรศัพท์ และ Role ในระบบ
           </p>
         </div>
 
@@ -250,10 +250,10 @@ export default function AdminUsersPage() {
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">🔍</span>
             <input
               type="text"
-              placeholder="ค้นหาชื่อ, Username, อีเมล หรือเบอร์โทร..."
+              placeholder="ค้นหาชื่อ ชื่อผู้ใช้ อีเมล หรือเบอร์โทร..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-gray-550 focus:outline-none focus:border-orange-550 transition-colors"
+              className="w-full  border border-neutral-800 rounded-lg pl-9 pr-4 py-2 text-xs text-white placeholder-gray-550 focus:outline-none focus:border-orange-550 transition-colors"
             />
           </div>
         </div>
@@ -264,34 +264,34 @@ export default function AdminUsersPage() {
           กำลังดึงข้อมูลโปรไฟล์ผู้ใช้งาน...
         </div>
       ) : (
-        <div className="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
+        <div className=" rounded-xl border border-neutral-800 overflow-hidden shadow-2xl">
           <div className="responsive-scroll">
             <table className="responsive-table w-full border-collapse border border-neutral-800 text-center">
               <thead>
-                <tr className="bg-neutral-950 text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
+                <tr className=" text-gray-400 text-xs uppercase tracking-wider border-b border-neutral-800">
                   <th className="p-4 font-medium text-center border-r border-neutral-800 w-24">รูปภาพ</th>
-                  <th className="p-4 font-medium text-center border-r border-neutral-800">ชื่อจริง / Full Name</th>
-                  <th className="p-4 font-medium text-center border-r border-neutral-800">ชื่อผู้ใช้ / Username</th>
-                  <th className="p-4 font-medium text-center border-r border-neutral-800">อีเมล / Email</th>
+                  <th className="p-4 font-medium text-center border-r border-neutral-800">ชื่อจริง</th>
+                  <th className="p-4 font-medium text-center border-r border-neutral-800">ชื่อผู้ใช้</th>
+                  <th className="p-4 font-medium text-center border-r border-neutral-800">อีเมล</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">เบอร์โทรศัพท์</th>
                   <th className="p-4 font-medium text-center border-r border-neutral-800">รหัสนศ</th>
-                  <th className="p-4 font-medium text-center border-r border-neutral-800">บทบาท (Role)</th>
+                  <th className="p-4 font-medium text-center border-r border-neutral-800">Role</th>
                   <th className="p-4 font-medium text-center">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800 text-sm">
                 {filteredProfiles.map((user) => (
-                  <tr key={user.id} className="hover:bg-neutral-800/40 transition-colors">
+                  <tr key={user.id} className=" transition-colors">
                     <td className="p-4 border-r border-neutral-800">
                       <div className="flex justify-center">
                         {user.avatar_url ? (
                           <img 
                             src={user.avatar_url} 
-                            alt="avatar" 
+                            alt="รูปโปรไฟล์"
                             className="w-10 h-10 rounded-full border border-neutral-700 object-cover" 
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-orange-500 font-black">
+                          <div className="w-10 h-10 rounded-full  border border-neutral-700 flex items-center justify-center text-orange-500 font-black">
                             {(user.full_name || user.username || 'U')[0].toUpperCase()}
                           </div>
                         )}
@@ -314,7 +314,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-4 text-center border-r border-neutral-800">
                       <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${getAccountRoleMeta(user.role)?.badgeClass || 'bg-gray-500/10 text-gray-400 border-gray-500/30'}`}>
-                        {user.role || 'user'}
+                        {getAccountRoleMeta(user.role)?.thaiLabel || 'User'}
                       </span>
                     </td>
                     <td className="p-4 text-center">
@@ -348,11 +348,11 @@ export default function AdminUsersPage() {
       {/* ========================================== */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl sm:p-6">
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-xl border border-neutral-800  p-4 shadow-2xl sm:p-6">
             <div className="mb-4 flex items-center justify-between border-b border-neutral-800 pb-2">
               <div>
                 <h3 className="text-lg font-black text-white">➕ เพิ่มบัญชีผู้ใช้งาน</h3>
-                <p className="mt-0.5 text-xs text-neutral-500">สร้างบัญชีใหม่พร้อมกำหนดบทบาทในระบบ</p>
+                <p className="mt-0.5 text-xs text-neutral-500">สร้างบัญชีใหม่พร้อมกำหนด Role ในระบบ</p>
               </div>
               <button
                 type="button"
@@ -366,14 +366,14 @@ export default function AdminUsersPage() {
             <form onSubmit={handleCreateAccount} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">Username *</label>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">ชื่อผู้ใช้ *</label>
                   <input
                     type="text"
                     required
                     value={newUsernameInput}
                     onChange={(e) => setNewUsernameInput(e.target.value)}
-                    placeholder="เช่น somchai"
-                    className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                    placeholder="เช่น ชื่อผู้ใช้"
+                    className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                   />
                 </div>
 
@@ -383,10 +383,10 @@ export default function AdminUsersPage() {
                     <select
                       value={newRoleInput}
                       onChange={(e) => setNewRoleInput(e.target.value)}
-                      className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white transition-colors focus:border-orange-550 focus:outline-none"
+                      className="w-full appearance-none rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white transition-colors focus:border-orange-550 focus:outline-none"
                     >
                       {ACCOUNT_ROLES.map((role) => (
-                        <option key={role.value} value={role.value} className="bg-neutral-950 text-white">
+                        <option key={role.value} value={role.value} className=" text-white">
                           {role.label.toUpperCase()}
                         </option>
                       ))}
@@ -403,8 +403,8 @@ export default function AdminUsersPage() {
                   required
                   value={newEmailInput}
                   onChange={(e) => setNewEmailInput(e.target.value)}
-                  placeholder="example@mail.com"
-                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                  placeholder="อีเมลผู้ใช้"
+                  className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                 />
               </div>
 
@@ -421,19 +421,19 @@ export default function AdminUsersPage() {
                     newEmailInput,
                   )}
                   readOnly
-                  className="w-full cursor-not-allowed rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-neutral-400"
+                  className="w-full cursor-not-allowed rounded-lg border border-neutral-800  px-3 py-2 font-mono text-sm text-neutral-400"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">ชื่อจริง / Full Name *</label>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">ชื่อจริง *</label>
                 <input
                   type="text"
                   required
                   value={newFullNameInput}
                   onChange={(e) => setNewFullNameInput(e.target.value)}
                   placeholder="กรอกชื่อ-นามสกุล..."
-                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                  className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                 />
               </div>
 
@@ -448,7 +448,7 @@ export default function AdminUsersPage() {
                   placeholder="เช่น 0891234567"
                   pattern={THAI_PHONE_INPUT_PATTERN}
                   title={THAI_PHONE_REQUIREMENTS_TEXT}
-                  className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                  className="w-full rounded-lg border border-neutral-800  px-3 py-2 font-mono text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                 />
               </div>
 
@@ -464,7 +464,7 @@ export default function AdminUsersPage() {
                     value={newPasswordInput}
                     onChange={(e) => setNewPasswordInput(e.target.value)}
                     placeholder="อย่างน้อย 8 ตัว มี A-Z, 0-9 และ @"
-                    className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                    className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                   />
                   <PasswordRequirements password={newPasswordInput} className="mt-2" />
                 </div>
@@ -480,7 +480,7 @@ export default function AdminUsersPage() {
                     value={newConfirmPasswordInput}
                     onChange={(e) => setNewConfirmPasswordInput(e.target.value)}
                     placeholder="กรอกรหัสผ่านซ้ำ"
-                    className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
+                    className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white placeholder-neutral-700 transition-colors focus:border-orange-550 focus:outline-none"
                   />
                 </div>
               </div>
@@ -490,7 +490,7 @@ export default function AdminUsersPage() {
                   type="button"
                   onClick={handleCloseAddModal}
                   disabled={createLoading}
-                  className="rounded-lg bg-neutral-800 px-4 py-2 text-xs font-bold text-gray-300 transition-colors hover:bg-neutral-700 disabled:opacity-50"
+                  className="rounded-lg  px-4 py-2 text-xs font-bold text-gray-300 transition-colors  disabled:opacity-50"
                 >
                   ยกเลิก
                 </button>
@@ -537,7 +537,7 @@ export default function AdminUsersPage() {
             .animate-content-out { animation: smoothSlideDown 0.2s ease-in forwards; }
           `}</style>
 
-          <div className={`max-h-[92vh] w-full max-w-md overflow-y-auto bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6 ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
+          <div className={`max-h-[92vh] w-full max-w-md overflow-y-auto  border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6 ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
               <h3 className="text-lg font-black text-white">✏️ แก้ไขข้อมูลโปรไฟล์</h3>
               <button 
@@ -550,29 +550,29 @@ export default function AdminUsersPage() {
             </div>
 
             <form onSubmit={handleSaveChanges} className="space-y-4">
-              {/* 🟢 แก้ไขได้: ชื่อผู้ใช้ / Username */}
+              {/* แก้ไขได้: ชื่อผู้ใช้ */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ชื่อผู้ใช้ / Username</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ชื่อผู้ใช้</label>
                 <input 
                   type="text" 
                   required
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
                   placeholder="กรอกชื่อผู้ใช้..."
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
                 />
               </div>
 
-              {/* 🟢 แก้ไขได้: อีเมล / Email Address */}
+              {/* แก้ไขได้: อีเมล */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">อีเมล / Email Address</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">อีเมล</label>
                 <input 
                   type="email" 
                   required
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="example@mail.com"
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
+                  placeholder="อีเมลผู้ใช้"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
                 />
               </div>
 
@@ -582,26 +582,26 @@ export default function AdminUsersPage() {
                   type="text"
                   value={selectedUser ? getProfileStudentIdDisplay(selectedUser, emailInput) : ''}
                   readOnly
-                  className="w-full cursor-not-allowed rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm text-neutral-400"
+                  className="w-full cursor-not-allowed rounded-lg border border-neutral-800  px-3 py-2 font-mono text-sm text-neutral-400"
                 />
               </div>
 
-              {/* ชื่อจริง / Full Name */}
+              {/* ชื่อจริง */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ชื่อจริง / Full Name</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ชื่อจริง</label>
                 <input 
                   type="text" 
                   required
                   value={fullNameInput}
                   onChange={(e) => setFullNameInput(e.target.value)}
                   placeholder="กรอกชื่อ-นามสกุลจริง..."
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors"
                 />
               </div>
 
-              {/* เบอร์โทรศัพท์ / Phone */}
+              {/* เบอร์โทรศัพท์ */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เบอร์โทรศัพท์ / Phone</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เบอร์โทรศัพท์</label>
                 <input 
                   type="tel"
                   inputMode="tel"
@@ -611,20 +611,20 @@ export default function AdminUsersPage() {
                   placeholder="เช่น 0891234567..."
                   pattern={THAI_PHONE_INPUT_PATTERN}
                   title={THAI_PHONE_REQUIREMENTS_TEXT}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
+                  className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-700 focus:outline-none focus:border-orange-550 transition-colors font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">บทบาท / Role</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Role</label>
                 <div className="relative">
                   <select
                     value={roleInput}
                     onChange={(e) => setRoleInput(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-white transition-colors focus:border-orange-550 focus:outline-none"
+                    className="w-full appearance-none rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white transition-colors focus:border-orange-550 focus:outline-none"
                   >
                     {ACCOUNT_ROLES.map((role) => (
-                      <option key={role.value} value={role.value} className="bg-neutral-950 text-white">
+                      <option key={role.value} value={role.value} className=" text-white">
                         {role.label.toUpperCase()}
                       </option>
                     ))}
@@ -637,7 +637,7 @@ export default function AdminUsersPage() {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="bg-neutral-800 hover:bg-neutral-700 text-gray-300 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
+                  className="  text-gray-300 px-4 py-2 rounded-lg text-xs font-bold transition-colors"
                 >
                   ยกเลิก
                 </button>

@@ -133,11 +133,11 @@ export default function OrderChatBox({ orderId, title }: OrderChatBoxProps) {
   }
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-950">
+    <div className="rounded-xl border border-neutral-800 ">
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-neutral-900"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition "
       >
         <span className="min-w-0">
           <span className="block text-sm font-black text-white">{title}</span>
@@ -152,9 +152,9 @@ export default function OrderChatBox({ orderId, title }: OrderChatBoxProps) {
         <div className="border-t border-neutral-800 p-3">
           <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {loading ? (
-              <div className="rounded-xl bg-neutral-900 p-4 text-center text-sm text-neutral-400">กำลังโหลดแชท...</div>
+              <div className="rounded-xl  p-4 text-center text-sm text-neutral-400">กำลังโหลดแชท...</div>
             ) : messages.length === 0 ? (
-              <div className="rounded-xl bg-neutral-900 p-4 text-center text-sm text-neutral-400">ยังไม่มีข้อความ</div>
+              <div className="rounded-xl  p-4 text-center text-sm text-neutral-400">ยังไม่มีข้อความ</div>
             ) : (
               messages.map((message) => {
                 const isOwnMessage = message.sender_id === currentUserId
@@ -164,7 +164,7 @@ export default function OrderChatBox({ orderId, title }: OrderChatBoxProps) {
                     <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm ${
                       isOwnMessage
                         ? 'bg-orange-500 text-black'
-                        : 'border border-neutral-800 bg-neutral-900 text-neutral-200'
+                        : 'border border-neutral-800  text-neutral-200'
                     }`}
                     >
                       <p className="whitespace-pre-wrap break-words">{message.body}</p>
@@ -199,7 +199,7 @@ export default function OrderChatBox({ orderId, title }: OrderChatBoxProps) {
             <button
               type="submit"
               disabled={sending || !messageInput.trim()}
-              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-black text-black transition hover:bg-orange-400 disabled:bg-neutral-800 disabled:text-neutral-500"
+              className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-black text-black transition hover:bg-orange-400  disabled:text-neutral-500"
             >
               {sending ? 'ส่ง...' : 'ส่ง'}
             </button>

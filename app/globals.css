@@ -57,25 +57,9 @@ body {
 }
 
 html[data-theme="light"] .bg-black,
-html[data-theme="light"] .bg-neutral-950,
 html[data-theme="light"] .bg-zinc-950 {
   background-color: var(--background) !important;
   color: var(--foreground) !important;
-}
-
-html[data-theme="light"] .bg-neutral-900,
-html[data-theme="light"] .bg-neutral-900\/80,
-html[data-theme="light"] .bg-neutral-900\/70,
-html[data-theme="light"] .bg-neutral-900\/60,
-html[data-theme="light"] .bg-neutral-950\/40,
-html[data-theme="light"] .bg-neutral-950\/50,
-html[data-theme="light"] .bg-neutral-950\/60,
-html[data-theme="light"] .bg-neutral-950\/70,
-html[data-theme="light"] .bg-neutral-950\/80,
-html[data-theme="light"] .bg-neutral-950\/35,
-html[data-theme="light"] .bg-neutral-950\/30,
-html[data-theme="light"] .bg-neutral-900\/50 {
-  background-color: var(--surface) !important;
 }
 
 html[data-theme="light"] .bg-black\/45,
@@ -84,20 +68,6 @@ html[data-theme="light"] .bg-black\/35,
 html[data-theme="light"] .bg-black\/30 {
   background-color: rgba(255, 255, 255, 0.82) !important;
   color: #111827 !important;
-}
-
-html[data-theme="light"] .bg-neutral-800,
-html[data-theme="light"] .bg-neutral-800\/60,
-html[data-theme="light"] .bg-neutral-800\/50,
-html[data-theme="light"] .bg-neutral-800\/45,
-html[data-theme="light"] .bg-neutral-700,
-html[data-theme="light"] .bg-neutral-700\/60,
-html[data-theme="light"] .hover\:bg-neutral-800:hover,
-html[data-theme="light"] .hover\:bg-neutral-800\/60:hover,
-html[data-theme="light"] .hover\:bg-neutral-800\/45:hover,
-html[data-theme="light"] .hover\:bg-neutral-700:hover,
-html[data-theme="light"] .active\:bg-neutral-800:active {
-  background-color: var(--surface-soft) !important;
 }
 
 html[data-theme="light"] .bg-amber-500\/10,
@@ -208,6 +178,58 @@ html[data-theme="light"] .text-purple-500,
 html[data-theme="light"] .hover\:text-purple-400:hover,
 html[data-theme="light"] .hover\:text-purple-500:hover {
   color: #7e22ce !important;
+}
+
+html[data-theme="light"] .app-chrome {
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme="light"] .app-chrome .bg-neutral-950 {
+  background-color: #020617 !important;
+}
+
+html[data-theme="light"] .app-chrome .bg-neutral-900 {
+  background-color: #0f172a !important;
+}
+
+html[data-theme="light"] .app-chrome .bg-neutral-800,
+html[data-theme="light"] .app-chrome .hover\:bg-neutral-800:hover,
+html[data-theme="light"] .app-chrome .active\:bg-neutral-800:active {
+  background-color: #1e293b !important;
+}
+
+html[data-theme="light"] .app-chrome .border-neutral-900,
+html[data-theme="light"] .app-chrome .border-neutral-800,
+html[data-theme="light"] .app-chrome .border-neutral-800\/80,
+html[data-theme="light"] .app-chrome .border-neutral-800\/60,
+html[data-theme="light"] .app-chrome .border-neutral-700 {
+  border-color: #1e293b !important;
+}
+
+html[data-theme="light"] .app-chrome .text-white,
+html[data-theme="light"] .app-chrome .text-gray-100,
+html[data-theme="light"] .app-chrome .text-gray-200,
+html[data-theme="light"] .app-chrome .text-neutral-100,
+html[data-theme="light"] .app-chrome .text-neutral-200 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="light"] .app-chrome .text-gray-300,
+html[data-theme="light"] .app-chrome .text-neutral-300 {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="light"] .app-chrome .text-gray-400,
+html[data-theme="light"] .app-chrome .text-neutral-400 {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="light"] .app-chrome .text-gray-500,
+html[data-theme="light"] .app-chrome .text-neutral-500,
+html[data-theme="light"] .app-chrome .text-gray-600,
+html[data-theme="light"] .app-chrome .text-neutral-600 {
+  color: #64748b !important;
 }
 
 html[data-theme="light"] input,

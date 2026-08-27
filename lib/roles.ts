@@ -2,29 +2,29 @@ export const ACCOUNT_ROLES = [
   {
     value: 'customer',
     label: 'Customer',
-    thaiLabel: 'ลูกค้า',
-    description: 'ดูร้าน ดูเมนู สั่งอาหาร และติดตามออเดอร์ของตัวเอง',
+    thaiLabel: 'Customer',
+    description: 'Browse restaurants, order food, and track personal orders.',
     badgeClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   },
   {
     value: 'student',
     label: 'Student',
-    thaiLabel: 'นักศึกษา',
-    description: 'บัญชีที่ใช้อีเมลมหาลัย @email.kmutnb.ac.th สำหรับสั่งอาหารและสิทธินักศึกษา',
+    thaiLabel: 'Student',
+    description: 'KMUTNB student account using @email.kmutnb.ac.th.',
     badgeClass: 'bg-white/10 text-white border-white/40',
   },
   {
     value: 'restaurant',
     label: 'Restaurant',
-    thaiLabel: 'ร้านค้า',
-    description: 'เข้าพื้นที่ร้านตามสิทธิ์ owner/staff ที่ได้รับ',
+    thaiLabel: 'Restaurant',
+    description: 'Access restaurant workspaces based on Owner or Staff permission.',
     badgeClass: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
   },
   {
     value: 'admin',
     label: 'Admin',
-    thaiLabel: 'แอดมิน',
-    description: 'จัดการระบบ ผู้ใช้ ร้านอาหาร ออเดอร์ และสิทธิ์ร้านทั้งหมด',
+    thaiLabel: 'Admin',
+    description: 'Manage users, restaurants, orders, and access permissions.',
     badgeClass: 'bg-red-500/10 text-red-500 border-red-500/30',
   },
 ] as const
@@ -33,15 +33,15 @@ export const RESTAURANT_ACCESS_LEVELS = [
   {
     value: 'owner',
     label: 'Owner',
-    thaiLabel: 'เจ้าของร้าน',
-    description: 'แก้ไขร้าน เพิ่มเมนู เพิ่มลูกน้อง และรับออเดอร์',
+    thaiLabel: 'Owner',
+    description: 'Edit restaurants, add menus, manage staff, and handle orders.',
     badgeClass: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
   },
   {
     value: 'staff',
     label: 'Staff',
-    thaiLabel: 'พนักงานร้าน',
-    description: 'รับออเดอร์และดูข้อมูลร้านที่ได้รับสิทธิ์',
+    thaiLabel: 'Staff',
+    description: 'Handle orders and view assigned restaurant data.',
     badgeClass: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
   },
 ] as const
@@ -104,4 +104,8 @@ export const resolveAccountRoleForEmail = (
 
 export const getAccountRoleMeta = (role: string | null | undefined) => (
   ACCOUNT_ROLES.find((item) => item.value === role) || null
+)
+
+export const getRestaurantAccessLevelMeta = (level: string | null | undefined) => (
+  RESTAURANT_ACCESS_LEVELS.find((item) => item.value === level) || null
 )

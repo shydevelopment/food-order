@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { ActivityLogItem } from './components/ActivityLogItem';
+import { getAccountRoleMeta } from '@/lib/roles';
 
 export default function AdminDashboardHome() {
   const supabase = createBrowserClient(
@@ -130,7 +131,7 @@ export default function AdminDashboardHome() {
       const formattedUsers = (latestUsers || []).map((u) => ({
         id: `user-${u.id}`,
         title: `ผู้ใช้งานในระบบ`,
-        detail: `${u.full_name || u.username || 'สมาชิก'} (@${u.username || 'user'}) • บทบาท: ${u.role || 'customer'}`,
+        detail: `${u.full_name || u.username || 'สมาชิก'} (@${u.username || 'ผู้ใช้'}) • Role: ${getAccountRoleMeta(u.role)?.thaiLabel || 'Customer'}`,
         timestamp: parseSafeDate(u.created_at), // ⚡ ดึงวันที่สมัครจริง
         icon: '👤',
         colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
@@ -181,7 +182,7 @@ export default function AdminDashboardHome() {
 
       {/* การ์ดสรุปข้อมูลเด่นๆ */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-6">
-        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
+        <div className=" border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">ผู้ใช้งานในระบบทั้งหมด</div>
           <div className="text-2xl font-black text-white mt-2 sm:text-3xl">
             {loadingStats ? (
@@ -194,7 +195,7 @@ export default function AdminDashboardHome() {
           </div>
         </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
+        <div className=" border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">ร้านอาหารพาร์ทเนอร์</div>
           <div className="text-2xl font-black text-orange-500 mt-2 sm:text-3xl">
             {loadingStats ? (
@@ -207,7 +208,7 @@ export default function AdminDashboardHome() {
           </div>
         </div>
 
-        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
+        <div className=" border border-neutral-800 p-4 rounded-xl shadow-xl sm:p-6">
           <div className="text-gray-500 text-xs font-bold uppercase tracking-wider">ออร์เดอร์วันนี้</div>
           <div className="text-2xl font-black text-emerald-400 mt-2 sm:text-3xl">
             {loadingStats ? (
@@ -222,7 +223,7 @@ export default function AdminDashboardHome() {
       </div>
 
       {/* 📜 ส่วนแสดง Activity Log */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6">
+      <div className=" border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6">
         <div className="mb-5 flex flex-col gap-3 border-b border-neutral-800 pb-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -232,7 +233,7 @@ export default function AdminDashboardHome() {
               <span className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                 isRealtimeActive 
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                  : 'bg-neutral-800 text-gray-400 border-neutral-700'
+                  : ' text-gray-400 border-neutral-700'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${isRealtimeActive ? 'bg-emerald-400 animate-ping' : 'bg-gray-500'}`} />
                 {isRealtimeActive ? 'Real-time Live' : 'Connecting...'}
