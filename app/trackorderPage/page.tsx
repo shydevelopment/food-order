@@ -368,14 +368,14 @@ export default async function TrackOrderPage({
                           {formatPickupTime(order.pickup_time)}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+                      <div className="payment-method-card rounded-xl p-3">
+                        <p className="payment-method-eyebrow text-xs font-bold uppercase tracking-wide">
                           วิธีชำระเงิน
                         </p>
-                        <p className="mt-1 text-sm font-black text-emerald-300">
+                        <p className="payment-method-title mt-1 text-sm font-black">
                           {paymentMethodLabel}
                         </p>
-                        <p className="mt-0.5 text-xs text-neutral-500">
+                        <p className="payment-method-note mt-0.5 text-xs">
                           ชำระเงินตอนรับอาหาร
                         </p>
                       </div>

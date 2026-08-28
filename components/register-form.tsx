@@ -1,12 +1,21 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useFormStatus } from 'react-dom'
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT } from '@/lib/password-policy'
 import { formatThaiPhoneInput, THAI_PHONE_INPUT_PATTERN, THAI_PHONE_REQUIREMENTS_TEXT } from '@/lib/phone'
-import { NON_STUDENT_LABEL } from '@/lib/roles'
 import PasswordRequirements from '@/components/password-requirements'
+
+const REGISTER_DRAFT_STORAGE_KEY = 'food-order-register-draft'
+
+type RegisterDraft = {
+  signupType: 'student' | 'normal'
+  username: string
+  displayName: string
+  phone: string
+  email: string
+}
 
 interface RegisterFormProps {
   signUpAction: (formData: FormData) => Promise<never>
@@ -76,10 +85,55 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
   const [showPassword, setShowPassword] = useState(false)
   const [isOpeningLogin, setIsOpeningLogin] = useState(false)
   const [signupType, setSignupType] = useState<'student' | 'normal'>('student')
+  const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const hasLoadedDraft = useRef(false)
   const studentUsername = signupType === 'student' ? getStudentUsernamePreview(email) : ''
   const isStudentSignup = signupType === 'student'
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const savedDraft = window.sessionStorage.getItem(REGISTER_DRAFT_STORAGE_KEY)
+      if (!savedDraft) {
+        hasLoadedDraft.current = true
+        return
+      }
+
+      try {
+        const parsedDraft = JSON.parse(savedDraft) as Partial<RegisterDraft>
+        if (parsedDraft.signupType === 'student' || parsedDraft.signupType === 'normal') {
+          setSignupType(parsedDraft.signupType)
+        }
+        setUsername(parsedDraft.username || '')
+        setDisplayName(parsedDraft.displayName || '')
+        setPhone(parsedDraft.phone || '')
+        setEmail(parsedDraft.email || '')
+      } catch {
+        window.sessionStorage.removeItem(REGISTER_DRAFT_STORAGE_KEY)
+      } finally {
+        hasLoadedDraft.current = true
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  useEffect(() => {
+    if (!hasLoadedDraft.current) return
+
+    const draft: RegisterDraft = {
+      signupType,
+      username,
+      displayName,
+      phone,
+      email,
+    }
+
+    window.sessionStorage.setItem(REGISTER_DRAFT_STORAGE_KEY, JSON.stringify(draft))
+  }, [signupType, username, displayName, phone, email])
 
   return (
     <div className="flex-1 flex flex-col w-full px-4 sm:max-w-xl justify-center gap-2 mt-8 sm:mt-12 mx-auto text-white">
@@ -157,23 +211,10 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
             name="username"
             type="text"
             placeholder="ชื่อผู้ใช้"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             required
           />
-        )}
-
-        {!isStudentSignup && (
-          <>
-            <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="studentIdPreview">
-              รหัสนักศึกษา
-            </label>
-            <input
-              id="studentIdPreview"
-              className="mb-4 cursor-not-allowed rounded-md border border-white/20 bg-white/5 px-4 py-2 text-white/70 placeholder:text-white/70"
-              type="text"
-              value={NON_STUDENT_LABEL}
-              readOnly
-            />
-          </>
         )}
 
         <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1" htmlFor="displayName">
@@ -184,6 +225,8 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           name="displayName"
           type="text"
           placeholder="ชื่อที่แสดง"
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
           required
         />
 
@@ -196,8 +239,9 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
           type="tel"
           inputMode="tel"
           placeholder="0812345678"
+          value={phone}
           onChange={(event) => {
-            event.currentTarget.value = formatThaiPhoneInput(event.currentTarget.value)
+            setPhone(formatThaiPhoneInput(event.currentTarget.value))
           }}
           pattern={THAI_PHONE_INPUT_PATTERN}
           title={THAI_PHONE_REQUIREMENTS_TEXT}
