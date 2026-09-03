@@ -452,14 +452,9 @@ html[data-theme="light"] .notifications-item:hover {
 }
 
 .ai-chat-suggestions-scroll {
-  cursor: grab;
   scroll-behavior: smooth;
-  scroll-padding-inline: 0.75rem;
+   scroll-padding-inline: 0.75rem;
   -webkit-overflow-scrolling: touch;
-}
-
-.ai-chat-suggestions-scroll:active {
-  cursor: grabbing;
 }
 
 html[data-theme="light"] .ai-chat-panel {

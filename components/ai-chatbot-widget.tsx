@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent, MouseEvent, PointerEvent, WheelEvent } from 'react'
+import type { FormEvent, WheelEvent } from 'react'
 
 type ChatMode = 'openrouter' | 'local-demo'
 
@@ -17,6 +17,7 @@ type ChatMessage = {
     category: string
     content: string
   }>
+  suggestedQuestions?: string[]
 }
 
 type RestaurantRecommendation = {
@@ -65,8 +66,9 @@ export default function AiChatbotWidget() {
       id: 'welcome',
       role: 'assistant',
       content:
-        'สวัสดีครับ มีอะไรให้ผมช่วยครับ?"',
+        'สวัสดีครับ 👋 บอกผมได้เลยว่าอยากกินอะไร มีงบเท่าไหร่ หรืออยากหาร้านที่เปิดอยู่ตอนนี้',
       mode: 'local-demo',
+      suggestedQuestions: STARTER_QUESTIONS,
     },
   ])
   const [input, setInput] = useState('')
@@ -79,10 +81,6 @@ export default function AiChatbotWidget() {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const suggestionsScrollRef = useRef<HTMLDivElement | null>(null)
-  const isDraggingSuggestionsRef = useRef(false)
-  const suggestionDragStartXRef = useRef(0)
-  const suggestionDragScrollLeftRef = useRef(0)
-  const hasDraggedSuggestionsRef = useRef(false)
 
   useEffect(() => {
     if (!isOpen) return
@@ -165,6 +163,7 @@ export default function AiChatbotWidget() {
           mode: result.mode,
           recommendations: result.recommendations || [],
           sources: result.sources || [],
+          suggestedQuestions: result.suggestedQuestions || [],
         },
       ])
     } catch (error) {
@@ -195,6 +194,11 @@ export default function AiChatbotWidget() {
     setMemories([])
   }
 
+  const latestSuggestions = [...messages]
+    .reverse()
+    .find((message) => message.role === 'assistant' && message.suggestedQuestions?.length)
+    ?.suggestedQuestions || STARTER_QUESTIONS
+
   function handleSuggestionWheel(event: WheelEvent<HTMLDivElement>) {
     const scroller = suggestionsScrollRef.current
     if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return
@@ -206,54 +210,6 @@ export default function AiChatbotWidget() {
     scroller.scrollLeft += delta
   }
 
-  function handleSuggestionPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if (event.button !== 0) return
-
-    const scroller = suggestionsScrollRef.current
-    if (!scroller || scroller.scrollWidth <= scroller.clientWidth) return
-
-    isDraggingSuggestionsRef.current = true
-    hasDraggedSuggestionsRef.current = false
-    suggestionDragStartXRef.current = event.clientX
-    suggestionDragScrollLeftRef.current = scroller.scrollLeft
-    scroller.setPointerCapture(event.pointerId)
-  }
-
-  function handleSuggestionPointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (!isDraggingSuggestionsRef.current) return
-
-    const scroller = suggestionsScrollRef.current
-    if (!scroller) return
-
-    const distance = event.clientX - suggestionDragStartXRef.current
-    if (Math.abs(distance) > 4) {
-      hasDraggedSuggestionsRef.current = true
-    }
-    scroller.scrollLeft = suggestionDragScrollLeftRef.current - distance
-  }
-
-  function handleSuggestionPointerEnd(event: PointerEvent<HTMLDivElement>) {
-    if (!isDraggingSuggestionsRef.current) return
-
-    isDraggingSuggestionsRef.current = false
-    const scroller = suggestionsScrollRef.current
-    if (scroller?.hasPointerCapture(event.pointerId)) {
-      scroller.releasePointerCapture(event.pointerId)
-    }
-
-    window.setTimeout(() => {
-      hasDraggedSuggestionsRef.current = false
-    }, 0)
-  }
-
-  function handleSuggestionClickCapture(event: MouseEvent<HTMLDivElement>) {
-    if (!hasDraggedSuggestionsRef.current) return
-
-    event.preventDefault()
-    event.stopPropagation()
-    hasDraggedSuggestionsRef.current = false
-  }
-
   return (
     <div className="fixed bottom-3 right-3 z-[80] sm:bottom-5 sm:right-5">
       {isOpen && (
@@ -263,10 +219,11 @@ export default function AiChatbotWidget() {
               <div className="flex min-w-0 items-center gap-1.5">
                 <h2 className="truncate text-sm font-black text-white">AI CHATBOT</h2>
                 <span className="home-brand-badge shrink-0 rounded-full border border-orange-500/30 bg-orange-500/10 px-2.5 py-0.5 text-xs font-black text-orange-300">
-                  Demo!
+                  AI
                 </span>
               </div>
               <p className="mt-0.5 text-xs font-bold text-neutral-500">
+                ค้นหาร้าน เมนู และราคา
                 {memories.length > 0 ? ` · จำ ${memories.length} รายการ` : ''}
               </p>
             </div>
@@ -298,7 +255,7 @@ export default function AiChatbotWidget() {
             </div>
           </header>
 
-          <div className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
+          <div aria-live="polite" aria-busy={isSending} className="flex-1 space-y-3 overflow-y-auto px-3 py-4">
             {messages.map((message) => (
               <article
                 key={message.id}
@@ -409,14 +366,9 @@ export default function AiChatbotWidget() {
               <div
                 ref={suggestionsScrollRef}
                 onWheel={handleSuggestionWheel}
-                onPointerDown={handleSuggestionPointerDown}
-                onPointerMove={handleSuggestionPointerMove}
-                onPointerUp={handleSuggestionPointerEnd}
-                onPointerCancel={handleSuggestionPointerEnd}
-                onClickCapture={handleSuggestionClickCapture}
                 className="ai-chat-suggestions-scroll scrollbar-hide flex max-w-full touch-pan-x select-none gap-2 overflow-x-auto overscroll-x-contain pb-1 pr-5"
               >
-                {STARTER_QUESTIONS.map((question) => (
+                {latestSuggestions.map((question) => (
                   <button
                     key={question}
                     type="button"
