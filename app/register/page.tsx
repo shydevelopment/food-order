@@ -97,10 +97,10 @@ export default async function RegisterPage({
 
     if (data?.user && data.user.identities && data.user.identities.length === 0) {
       const msg = encodeURIComponent('อีเมลนี้ถูกใช้งานและยืนยันตัวตนแล้ว กรุณาเข้าสู่ระบบ')
-      redirect(`/login?message=${msg}`)
+      redirect(`/register?message=${msg}`)
     }
 
-    const successMsg = encodeURIComponent('สมัครสมาชิกสำเร็จ! ระบบได้ส่งอีเมลสำหรับยืนยันตัวตนไปยังอีเมลของคุณแล้ว กรุณาตรวจสอบกล่องข้อความ (รวมถึงจดหมายขยะ) เพื่อเปิดใช้งานบัญชี')
+    const successMsg = encodeURIComponent('สมัครสมาชิกสำเร็จ! ระบบได้ส่งอีเมลสำหรับยืนยันตัวตนไปยังอีเมลของคุณแล้ว เพื่อเปิดใช้งานบัญชี')
     
     redirect(`/login?message=${successMsg}&type=success`)
   }

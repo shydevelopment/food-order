@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/supabase/service'
-import { getRestaurantTypeMeta, RESTAURANT_TYPES, RESTAURANT_TYPE_VALUES } from '@/lib/restaurant-types'
+import { getRestaurantTypeMeta, RESTAURANT_TYPES, RESTAURANT_TYPE_VALUES, supportsCustomMenuText } from '@/lib/restaurant-types'
 import { formatThaiPhoneInput } from '@/lib/phone'
 import { getBangkokDayIndex, isMenuAvailableOnDay, WEEKDAY_OPTIONS } from '@/lib/menu-days'
 import { formatRestaurantTimeRange, isRestaurantOpenNow } from '@/lib/restaurant-hours'
@@ -183,15 +183,16 @@ export default async function StoreIndexPage({
               {restaurantRows.map((store) => {
                 const isOpen = isRestaurantOpenNow(store.status, store.open_time, store.close_time)
                 const typeMeta = getRestaurantTypeMeta(store.restaurant_type)
+                const canWriteCustomMenu = supportsCustomMenuText(store.restaurant_type)
                 const todayMenus = menusByRestaurant.get(store.id) || []
                 const availableMenus = todayMenus.filter((menu) => menu.is_available)
 
                 return (
                   <article
                     key={store.id}
-                    className="group overflow-hidden rounded-3xl border border-neutral-800  shadow-2xl shadow-black/30 transition hover:-translate-y-0.5 hover:border-orange-500/40"
+                    className="group flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-800  shadow-2xl shadow-black/30 transition hover:-translate-y-0.5 hover:border-orange-500/40"
                   >
-                    <Link href={`/storePage/${store.id}`} className="block">
+                    <Link href={`/storePage/${store.id}`} className="block shrink-0">
                       <div className="relative h-48 overflow-hidden ">
                         <img
                           src={store.image_url || '/placeholder.jpg'}
@@ -205,9 +206,11 @@ export default async function StoreIndexPage({
                           }`}>
                             {isOpen ? 'เปิดอยู่' : 'ปิดแล้ว'}
                           </span>
-                          <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-black text-white backdrop-blur">
-                            {availableMenus.length} เมนูวันนี้
-                          </span>
+                          {!canWriteCustomMenu && (
+                            <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-black text-white backdrop-blur">
+                              {availableMenus.length} เมนูวันนี้
+                            </span>
+                          )}
                         </div>
                         <div className="absolute bottom-4 left-4 right-4">
                           <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[10px] font-black text-amber-200 backdrop-blur">
@@ -221,7 +224,7 @@ export default async function StoreIndexPage({
                       </div>
                     </Link>
 
-                    <div className="space-y-4 p-4">
+                    <div className="flex flex-1 flex-col gap-4 p-4">
                       <p className="line-clamp-2 min-h-10 text-sm leading-5 text-neutral-400">
                         {store.description || typeMeta.description}
                       </p>
@@ -241,22 +244,24 @@ export default async function StoreIndexPage({
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-center">
-                        <div className="rounded-2xl border border-neutral-800  p-3">
-                          <p className="text-xl font-black text-amber-400">{todayMenus.length}</p>
-                          <p className="text-[10px] font-bold text-neutral-500">เมนูของวันนี้</p>
+                      {!canWriteCustomMenu && (
+                        <div className="grid grid-cols-2 gap-2 text-center">
+                          <div className="rounded-2xl border border-neutral-800  p-3">
+                            <p className="text-xl font-black text-amber-400">{todayMenus.length}</p>
+                            <p className="text-[10px] font-bold text-neutral-500">เมนูของวันนี้</p>
+                          </div>
+                          <div className="rounded-2xl border border-neutral-800  p-3">
+                            <p className="text-xl font-black text-emerald-400">{availableMenus.length}</p>
+                            <p className="text-[10px] font-bold text-neutral-500">พร้อมขาย</p>
+                          </div>
                         </div>
-                        <div className="rounded-2xl border border-neutral-800  p-3">
-                          <p className="text-xl font-black text-emerald-400">{availableMenus.length}</p>
-                          <p className="text-[10px] font-bold text-neutral-500">พร้อมขาย</p>
-                        </div>
-                      </div>
+                      )}
 
                       <Link
                         href={`/storePage/${store.id}`}
-                        className="flex w-full items-center justify-center rounded-2xl bg-orange-500 px-4 py-3 text-sm font-black text-black transition hover:bg-orange-400"
+                        className="mt-auto flex w-full items-center justify-center rounded-2xl bg-orange-500 px-4 py-3 text-sm font-black text-black transition hover:bg-orange-400"
                       >
-                        เข้าร้าน
+                        {canWriteCustomMenu ? 'สั่งตามสั่ง' : 'ดูเมนู'}
                       </Link>
                     </div>
                   </article>

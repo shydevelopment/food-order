@@ -13,14 +13,21 @@ const formatBangkokTime = () => (
 )
 
 export default function HomeClockBadge() {
-  const [time, setTime] = useState(formatBangkokTime)
+  const [time, setTime] = useState('--:--:--')
 
   useEffect(() => {
+    const firstTick = window.setTimeout(() => {
+      setTime(formatBangkokTime())
+    }, 0)
+
     const timer = window.setInterval(() => {
       setTime(formatBangkokTime())
     }, 1000)
 
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearTimeout(firstTick)
+      window.clearInterval(timer)
+    }
   }, [])
 
   return (

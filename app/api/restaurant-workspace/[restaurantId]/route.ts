@@ -302,9 +302,33 @@ export async function POST(
 
     if (body.action === 'menu') {
       const availableDays = normalizeMenuAvailableDays(body.available_days, ALL_WEEKDAY_VALUES)
+      const name = String(body.name || '').trim()
+      const description = String(body.description || '').trim()
+      const imageUrl = String(body.image_url || '').trim()
+      const price = Number(body.price)
       const categoryId = typeof body.category_id === 'string' && body.category_id.trim()
         ? body.category_id.trim()
         : null
+
+      if (!name) {
+        return NextResponse.json({ error: 'กรุณากรอกชื่อเมนู' }, { status: 400 })
+      }
+
+      if (!Number.isFinite(price) || price <= 0) {
+        return NextResponse.json({ error: 'กรุณากรอกราคาเมนูให้ถูกต้อง' }, { status: 400 })
+      }
+
+      if (!description) {
+        return NextResponse.json({ error: 'กรุณากรอกรายละเอียดเมนู' }, { status: 400 })
+      }
+
+      if (!imageUrl) {
+        return NextResponse.json({ error: 'กรุณาอัปโหลดรูปภาพเมนูอาหาร' }, { status: 400 })
+      }
+
+      if (availableDays.length === 0) {
+        return NextResponse.json({ error: 'กรุณาเลือกวันที่เมนูนี้เข้าร้านอย่างน้อย 1 วัน' }, { status: 400 })
+      }
 
       if (categoryId) {
         const { data: category, error: categoryError } = await auth.supabaseAdmin
@@ -327,16 +351,35 @@ export async function POST(
         if (!category) {
           return NextResponse.json({ error: 'หมวดเมนูนี้ไม่ได้อยู่ในร้านนี้' }, { status: 400 })
         }
+      } else {
+        const { count, error: categoriesCountError } = await auth.supabaseAdmin
+          .from('menu_categories')
+          .select('id', { count: 'exact', head: true })
+          .eq('restaurant_id', restaurantId)
+
+        if (categoriesCountError) {
+          if (categoriesCountError.message?.includes('schema cache') || categoriesCountError.message?.includes('menu_categories')) {
+            return NextResponse.json({
+              error: 'ฐานข้อมูลยังไม่มีตารางหมวดเมนู กรุณารันไฟล์ supabase/sql/menu_categories_tags.sql ใน Supabase SQL Editor ก่อน',
+            }, { status: 400 })
+          }
+
+          return NextResponse.json({ error: categoriesCountError.message }, { status: 400 })
+        }
+
+        if ((count || 0) > 0) {
+          return NextResponse.json({ error: 'กรุณาเลือกหมวดเมนู' }, { status: 400 })
+        }
       }
 
       const { data, error } = await auth.supabaseAdmin
         .from('menus')
         .insert({
           restaurant_id: restaurantId,
-          name: body.name,
-          price: Number(body.price),
-          description: body.description || null,
-          image_url: body.image_url || null,
+          name,
+          price,
+          description,
+          image_url: imageUrl,
           is_available: Boolean(body.is_available),
           available_days: availableDays,
           category_id: categoryId,

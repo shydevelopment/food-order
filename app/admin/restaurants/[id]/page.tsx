@@ -297,24 +297,30 @@ export default function RestaurantDetailPage() {
   const handleAddMenu = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canManage) return alert('เฉพาะ Owner เท่านั้นที่เพิ่มเมนูได้');
-    if (!newMenu.name || !newMenu.price) return alert('กรุณากรอกชื่อเมนูและราคา');
 
-    setActionLoading(true);
-    let uploadedImageUrl = null;
+    const menuName = newMenu.name.trim();
+    const menuDescription = newMenu.description.trim();
+    const menuPrice = Number(newMenu.price);
+
+    if (!menuName) return alert('กรุณากรอกชื่อเมนู');
+    if (!Number.isFinite(menuPrice) || menuPrice <= 0) return alert('กรุณากรอกราคาเมนูให้ถูกต้อง');
+    if (categories.length > 0 && !newMenu.category_id) return alert('กรุณาเลือกหมวดเมนู');
+    if (newMenu.available_days.length === 0) return alert('กรุณาเลือกวันที่เมนูนี้เข้าร้านอย่างน้อย 1 วัน');
+    if (!imageFile) return alert('กรุณาอัปโหลดรูปภาพเมนูอาหาร');
+    if (!menuDescription) return alert('กรุณากรอกรายละเอียดเมนู');
 
     try {
-      if (imageFile) {
-        uploadedImageUrl = await uploadWorkspaceImage(imageFile, 'menus');
-      }
+      setActionLoading(true);
+      const uploadedImageUrl = await uploadWorkspaceImage(imageFile, 'menus');
 
       const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'menu',
-          name: newMenu.name,
-          price: parseFloat(newMenu.price),
-          description: newMenu.description || null,
+          name: menuName,
+          price: menuPrice,
+          description: menuDescription,
           image_url: uploadedImageUrl,
           is_available: newMenu.is_available,
           available_days: newMenu.available_days,
@@ -1188,13 +1194,14 @@ export default function RestaurantDetailPage() {
                 <input type="text" required placeholder={menuNamePlaceholder} value={newMenu.name} onChange={(e) => setNewMenu({...newMenu, name: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1">หมวดเมนู</label>
+                <label className="block text-xs font-bold text-neutral-400 mb-1">หมวดเมนู {categories.length > 0 ? '*' : ''}</label>
                 <select
+                  required={categories.length > 0}
                   value={newMenu.category_id}
                   onChange={(event) => setNewMenu({...newMenu, category_id: event.target.value})}
                   className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white outline-none transition focus:border-orange-500"
                 >
-                  <option value="">ไม่ระบุหมวด</option>
+                  <option value="">{categories.length > 0 ? 'เลือกหมวดเมนู' : 'ยังไม่มีหมวดเมนู'}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
@@ -1206,7 +1213,7 @@ export default function RestaurantDetailPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">ราคา (บาท) *</label>
-                  <input type="number" required min="0" step="0.01" placeholder="50" value={newMenu.price} onChange={(e) => setNewMenu({...newMenu, price: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+                  <input type="number" required min="1" step="0.01" placeholder="50" value={newMenu.price} onChange={(e) => setNewMenu({...newMenu, price: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">สถานะเริ่มต้น</label>
@@ -1261,12 +1268,12 @@ export default function RestaurantDetailPage() {
                 <p className="mt-2 text-xs text-neutral-500">ถ้าไม่ติ๊กวันไหน เมนูนั้นจะไม่แสดงในหน้าลูกค้าของวันนั้น</p>
               </div>
               <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1">รูปภาพเมนูอาหาร</label>
-                <input type="file" accept="image/*" onChange={(e) => e.target.files && setImageFile(e.target.files[0])} className="w-full  border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold  file:text-white  cursor-pointer" />
+                <label className="block text-xs font-bold text-neutral-400 mb-1">รูปภาพเมนูอาหาร *</label>
+                <input type="file" accept="image/*" required onChange={(e) => e.target.files && setImageFile(e.target.files[0])} className="w-full  border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold  file:text-white  cursor-pointer" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1">{menuDescriptionLabel}</label>
-                <textarea rows={2} placeholder={menuDescriptionPlaceholder} value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 resize-none" />
+                <label className="block text-xs font-bold text-neutral-400 mb-1">{menuDescriptionLabel} *</label>
+                <textarea rows={2} required placeholder={menuDescriptionPlaceholder} value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 resize-none" />
               </div>
               <div className="flex flex-col-reverse gap-3 pt-2 border-t border-neutral-800 mt-4 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => { setIsModalOpen(false); setImageFile(null); }} className="  text-neutral-300 px-4 py-2 rounded-lg text-xs font-bold">ยกเลิก</button>

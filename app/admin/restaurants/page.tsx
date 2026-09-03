@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { DEFAULT_RESTAURANT_TYPE, getRestaurantTypeMeta, RESTAURANT_TYPES } from '@/lib/restaurant-types';
-import { formatThaiPhoneInput } from '@/lib/phone';
+import { formatThaiPhoneInput, THAI_PHONE_INPUT_PATTERN, THAI_PHONE_REQUIREMENTS_TEXT, validateThaiPhone } from '@/lib/phone';
 
 export default function AdminRestaurantsPage() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
@@ -213,9 +213,23 @@ export default function AdminRestaurantsPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitLoading(true);
 
     try {
+      const email = modalMode === 'edit' ? String(selectedRest?.email || '') : emailInput;
+      const phoneValidation = validateThaiPhone(phoneInput);
+
+      if (!email.trim()) throw new Error('กรุณากรอกอีเมลร้านอาหาร');
+      if (!nameInput.trim()) throw new Error('กรุณากรอกชื่อร้านอาหาร');
+      if (!restaurantTypeInput) throw new Error('กรุณาเลือกรูปแบบร้าน');
+      if (!descriptionInput.trim()) throw new Error('กรุณากรอกคำอธิบายรายละเอียดร้าน');
+      if (!phoneValidation.success) throw new Error(phoneValidation.message);
+      if (!openTimeInput) throw new Error('กรุณากรอกเวลาเปิดทำการ');
+      if (!closeTimeInput) throw new Error('กรุณากรอกเวลาปิดทำการ');
+      if (!addressInput.trim()) throw new Error('กรุณากรอกที่อยู่ร้านอาหาร');
+      if (!statusInput) throw new Error('กรุณาเลือกสถานะร้านค้า');
+      if (modalMode === 'add' && !imageFile) throw new Error('กรุณาอัปโหลดรูปภาพโลโก้หน้าร้าน');
+
+      setSubmitLoading(true);
       let uploadedImageUrl = selectedRest?.image_url || null;
 
       if (imageFile) {
@@ -223,13 +237,13 @@ export default function AdminRestaurantsPage() {
       }
 
       const restaurantPayload = {
-        name: nameInput,
-        email: emailInput || null,
-        phone: phoneInput || null,
-        address: addressInput || null,
+        name: nameInput.trim(),
+        email: email.trim(),
+        phone: phoneValidation.phone,
+        address: addressInput.trim(),
         status: statusInput,
         image_url: uploadedImageUrl,
-        description: descriptionInput || null,
+        description: descriptionInput.trim(),
         open_time: openTimeInput,
         close_time: closeTimeInput,
         restaurant_type: restaurantTypeInput,
@@ -438,7 +452,7 @@ export default function AdminRestaurantsPage() {
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">
-                  Email ร้านค้า {modalMode === 'edit' && '(แก้ไขไม่ได้)'}
+                  Email ร้านค้า * {modalMode === 'edit' && '(แก้ไขไม่ได้)'}
                 </label>
                 <input 
                   type="email" 
@@ -496,9 +510,10 @@ export default function AdminRestaurantsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">คำอธิบายรายละเอียดร้าน</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">คำอธิบายรายละเอียดร้าน *</label>
                 <textarea 
                   rows={2}
+                  required
                   value={descriptionInput}
                   onChange={(e) => setDescriptionInput(e.target.value)}
                   placeholder="เช่น ร้านกะเพราพริกแห้งรสเด็ด เผ็ดพ่นไฟ..."
@@ -507,9 +522,12 @@ export default function AdminRestaurantsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เบอร์โทรศัพท์ร้าน</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">เบอร์โทรศัพท์ร้าน *</label>
                 <input 
                   type="text" 
+                  required
+                  pattern={THAI_PHONE_INPUT_PATTERN}
+                  title={THAI_PHONE_REQUIREMENTS_TEXT}
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(formatThaiPhoneInput(e.target.value))}
                   placeholder="กรอกเบอร์โทรติดต่อร้าน..."
@@ -543,19 +561,21 @@ export default function AdminRestaurantsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รูปภาพโลโก้หน้าร้าน</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รูปภาพโลโก้หน้าร้าน {modalMode === 'add' ? '*' : ''}</label>
                 <input 
                   type="file" 
                   accept="image/*"
+                  required={modalMode === 'add'}
                   onChange={(e) => e.target.files && setImageFile(e.target.files[0])}
                   className="w-full  border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold  file:text-white  cursor-pointer"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ที่อยู่ร้านอาหาร</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">ที่อยู่ร้านอาหาร *</label>
                 <textarea 
                   rows={2}
+                  required
                   value={addressInput}
                   onChange={(e) => setAddressInput(e.target.value)}
                   placeholder="ระบุที่ตั้งร้านโดยละเอียด..."
@@ -564,7 +584,7 @@ export default function AdminRestaurantsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">สถานะร้านค้า (กำหนดเอง)</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">สถานะร้านค้า (กำหนดเอง) *</label>
                 <div className="relative">
                   <select
                     value={statusInput}

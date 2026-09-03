@@ -169,19 +169,23 @@ export default async function RestaurantStorePage({
                 {store.description || restaurantType.description}
               </p>
 
-              <div className="mt-6 grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+              <div className={`mt-6 grid grid-cols-1 gap-3 text-sm ${canWriteCustomMenu ? 'sm:grid-cols-1' : 'sm:grid-cols-3'}`}>
                 <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
                   <p className="text-xs font-bold text-neutral-400">เวลาทำการ</p>
                   <p className="mt-1 font-black text-white">{formatRestaurantTimeRange(store.open_time, store.close_time)}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
-                  <p className="text-xs font-bold text-neutral-400">เมนูวันนี้</p>
-                  <p className="mt-1 font-black text-amber-300">{todayMenus.length} รายการ</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
-                  <p className="text-xs font-bold text-neutral-400">พร้อมขาย</p>
-                  <p className="mt-1 font-black text-emerald-300">{availableMenus.length} รายการ</p>
-                </div>
+                {!canWriteCustomMenu && (
+                  <>
+                    <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
+                      <p className="text-xs font-bold text-neutral-400">เมนูวันนี้</p>
+                      <p className="mt-1 font-black text-amber-300">{todayMenus.length} รายการ</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/45 p-4 backdrop-blur">
+                      <p className="text-xs font-bold text-neutral-400">พร้อมขาย</p>
+                      <p className="mt-1 font-black text-emerald-300">{availableMenus.length} รายการ</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -241,7 +245,7 @@ export default async function RestaurantStorePage({
           </aside>
 
           <div className="space-y-5">
-            <div className="rounded-3xl border border-neutral-800  p-4 sm:p-5">
+            <div id="menu" className="scroll-mt-24 rounded-3xl border border-neutral-800  p-4 sm:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-xs font-black uppercase tracking-wide text-amber-400">เมนู</p>
@@ -250,9 +254,11 @@ export default async function RestaurantStorePage({
                   </h2>
                   <p className="mt-1 text-sm text-neutral-500">{restaurantType.description}</p>
                 </div>
-                <span className="w-fit rounded-full border border-neutral-800  px-3 py-1 text-xs font-bold text-neutral-400">
-                  {todayMenus.length} เมนู
-                </span>
+                {!canWriteCustomMenu && (
+                  <span className="w-fit rounded-full border border-neutral-800  px-3 py-1 text-xs font-bold text-neutral-400">
+                    {todayMenus.length} เมนู
+                  </span>
+                )}
               </div>
 
               {canWriteCustomMenu && user && (

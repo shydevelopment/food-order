@@ -580,14 +580,14 @@ export default async function AdminOrdersPage({
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-300">
+                  <div className="payment-method-card rounded-xl p-4">
+                    <p className="payment-method-eyebrow text-xs font-bold uppercase tracking-wide">
                       วิธีชำระเงิน
                     </p>
-                    <p className="mt-1 text-sm font-black text-emerald-200">
+                    <p className="payment-method-title mt-1 text-sm font-black">
                       {paymentMethodLabel}
                     </p>
-                    <p className="mt-0.5 text-xs text-emerald-300/80">
+                    <p className="payment-method-note mt-0.5 text-xs">
                       ลูกค้าชำระเงินตอนรับอาหาร
                     </p>
                   </div>

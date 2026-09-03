@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 // 1. เปลี่ยนมานำเข้าฟอนต์ Kanit จาก Google Fonts
 import { Kanit } from "next/font/google"; 
 import Navbar from "@/components/navbar"; 
@@ -7,6 +8,7 @@ import PageTransition from "@/components/page-transition";
 import RealtimeRefresh from "@/components/realtime-refresh";
 import CustomerOrderStatusAlerts from "@/components/customer-order-status-alerts";
 import ChatMessageAlerts from "@/components/chat-message-alerts";
+import AiChatbotWidget from "@/components/ai-chatbot-widget";
 import "./globals.css";
 
 // 2. ตั้งค่าน้ำหนักฟอนต์และเปิดตัวรองรับภาษาไทย (thai)
@@ -28,24 +30,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className="h-full antialiased" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var theme = localStorage.getItem('food-order-theme') === 'light' ? 'light' : 'dark';
-                document.documentElement.dataset.theme = theme;
-                document.documentElement.style.colorScheme = theme;
-              } catch (_) {
-                document.documentElement.dataset.theme = 'dark';
-                document.documentElement.style.colorScheme = 'dark';
-              }
-            `,
-          }}
-        />
-      </head>
       {/* 3. สั่งเรียกใช้ฟอนต์ผ่าน className โดยให้ธีมพื้นหลังคุมจาก globals.css */}
       <body className={`${kanit.className} min-h-screen w-full flex flex-col m-0 p-0`}>
+        <Script id="food-order-theme-init" strategy="beforeInteractive">
+          {`
+            try {
+              var theme = localStorage.getItem('food-order-theme') === 'light' ? 'light' : 'dark';
+              document.documentElement.dataset.theme = theme;
+              document.documentElement.style.colorScheme = theme;
+            } catch (_) {
+              document.documentElement.dataset.theme = 'dark';
+              document.documentElement.style.colorScheme = 'dark';
+            }
+          `}
+        </Script>
         <RealtimeRefresh />
         <CustomerOrderStatusAlerts />
         <ChatMessageAlerts />
@@ -60,6 +58,7 @@ export default function RootLayout({
 
         {/* ส่วนท้ายของเว็บยืดเต็มจอ */}
         <Footer />
+        <AiChatbotWidget />
 
       </body>
     </html>
