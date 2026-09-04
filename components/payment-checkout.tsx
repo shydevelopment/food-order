@@ -243,8 +243,8 @@ export default function PaymentCheckout() {
       clearCheckoutData()
       window.location.href =
         createdOrderIds.length === 1
-          ? `/trackorderPage?order=${createdOrderIds[0]}`
-          : '/trackorderPage'
+          ? `/orders?order=${createdOrderIds[0]}`
+          : '/orders'
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสั่งอาหาร'
@@ -267,7 +267,7 @@ export default function PaymentCheckout() {
           กลับไปตะกร้าเพื่อเลือกเวลารับอาหารและยืนยันคำสั่งซื้อก่อน
         </p>
         <Link
-          href="/cartPage"
+          href="/cart"
           className="mt-6 inline-flex rounded-xl bg-amber-500 px-5 py-3 text-sm font-black text-neutral-950 transition hover:bg-amber-400"
         >
           กลับไปตะกร้า
@@ -297,7 +297,7 @@ export default function PaymentCheckout() {
               {profileRequiredMessage}
             </p>
             <Link
-              href="/editPage"
+              href="/profile/edit"
               className="mt-3 inline-flex text-sm font-black text-amber-400 hover:text-amber-300"
             >
               ไปแก้ไขโปรไฟล์
@@ -437,7 +437,7 @@ export default function PaymentCheckout() {
         </button>
 
         <Link
-          href="/cartPage"
+          href="/cart"
           className="mt-3 flex w-full justify-center rounded-xl border border-neutral-800 px-5 py-3 text-sm font-bold text-neutral-400 transition  hover:text-white"
         >
           กลับไปแก้ไขตะกร้า

@@ -145,7 +145,7 @@ export default async function StoreIndexPage({
           <div className="mb-5 overflow-x-auto pb-1">
             <div className="flex min-w-max gap-2">
               <Link
-                href="/storePage"
+                href="/restaurants"
                 className={`rounded-2xl border px-4 py-3 text-xs font-black transition ${
                   selectedType === 'all'
                     ? 'border-orange-500 bg-orange-500 text-black'
@@ -158,7 +158,7 @@ export default async function StoreIndexPage({
               {RESTAURANT_TYPES.map((type) => (
                 <Link
                   key={type.value}
-                  href={`/storePage?type=${type.value}`}
+                  href={`/restaurants?type=${type.value}`}
                   className={`rounded-2xl border px-4 py-3 text-xs font-black transition ${
                     selectedType === type.value
                       ? 'border-orange-500 bg-orange-500 text-black'
@@ -192,7 +192,7 @@ export default async function StoreIndexPage({
                     key={store.id}
                     className="group flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-800  shadow-2xl shadow-black/30 transition hover:-translate-y-0.5 hover:border-orange-500/40"
                   >
-                    <Link href={`/storePage/${store.id}`} className="block shrink-0">
+                    <Link href={`/restaurants/${store.id}`} className="block shrink-0">
                       <div className="relative h-48 overflow-hidden ">
                         <img
                           src={store.image_url || '/placeholder.jpg'}
@@ -258,7 +258,7 @@ export default async function StoreIndexPage({
                       )}
 
                       <Link
-                        href={`/storePage/${store.id}`}
+                        href={`/restaurants/${store.id}`}
                         className="mt-auto flex w-full items-center justify-center rounded-2xl bg-orange-500 px-4 py-3 text-sm font-black text-black transition hover:bg-orange-400"
                       >
                         {canWriteCustomMenu ? 'สั่งตามสั่ง' : 'ดูเมนู'}

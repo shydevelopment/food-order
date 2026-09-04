@@ -259,16 +259,16 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/storePage"
-            className={`transition-all active:scale-90 ${pathname === '/storePage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+            href="/restaurants"
+            className={`transition-all active:scale-90 ${pathname === '/restaurants' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
           >
             ร้านอาหาร
           </Link>
 
           {user && (
             <a
-              href="/trackorderPage"
-              className={`transition-all active:scale-90 ${pathname === '/trackorderPage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+              href="/orders"
+              className={`transition-all active:scale-90 ${pathname === '/orders' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
             >
               ติดตามคำสั่งซื้อ
             </a>
@@ -424,7 +424,7 @@ export default function Navbar() {
           {/* CART ICON */}
           {user && (
             <a
-              href="/cartPage"
+              href="/cart"
               className="relative text-gray-300 hover:text-orange-500 transition-all active:scale-75 p-1 group"
             >
               <svg
@@ -536,14 +536,14 @@ export default function Navbar() {
                     </div>
 
                     <a
-                      href="/viewProfile"
+                      href="/profile"
                       className="block px-4 py-2 text-sm hover:bg-neutral-800 hover:text-orange-400 transition-colors active:bg-neutral-700"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       👤 ดูโปรไฟล์
                     </a>
                     <a
-                      href="/editPage"
+                      href="/profile/edit"
                       className="block px-4 py-2 text-sm hover:bg-neutral-800 hover:text-orange-400 transition-colors active:bg-neutral-700"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -686,15 +686,15 @@ export default function Navbar() {
                     🏠 หน้าแรก
                   </Link>
                   <Link
-                    href="/storePage"
-                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+                    href="/restaurants"
+                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/restaurants' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     🍔 ร้านอาหาร
                   </Link>
                   <a
-                    href="/trackorderPage"
-                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/trackorderPage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+                    href="/orders"
+                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/orders' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     📍 ติดตามคำสั่งซื้อ
@@ -714,14 +714,14 @@ export default function Navbar() {
 
                 <div className="space-y-2 pt-1">
                   <a
-                    href="/viewProfile"
+                    href="/profile"
                     className="block p-2 rounded-lg text-sm text-gray-300 hover:bg-neutral-900 hover:text-orange-400 transition-all active:scale-95 active:bg-neutral-800"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     👤 ดูโปรไฟล์
                   </a>
                   <a
-                    href="/editPage"
+                    href="/profile/edit"
                     className="block p-2 rounded-lg text-sm text-gray-300 hover:bg-neutral-900 hover:text-orange-400 transition-all active:scale-95 active:bg-neutral-800"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -753,8 +753,8 @@ export default function Navbar() {
                   🏠 หน้าแรก
                 </Link>
                 <Link
-                  href="/storePage"
-                  className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+                  href="/restaurants"
+                  className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/restaurants' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   🍔 ร้านอาหาร

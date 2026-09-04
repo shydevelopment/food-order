@@ -87,7 +87,7 @@ export default function CustomMadeToOrderForm({
     })
 
     writeCart(nextCart)
-    window.location.href = '/cartPage'
+    window.location.href = '/cart'
   }
 
   return (

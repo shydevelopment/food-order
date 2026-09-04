@@ -91,7 +91,7 @@ const createOrderNotifications = async (params: {
       type: 'order',
       title: orderLabel,
       detail: `สั่งอาหารจาก ${restaurantName} แล้ว · รับเวลา ${pickupTime} · ชำระเงิน ${paymentMethodLabel}`,
-      href: `/trackorderPage?order=${orderId}`,
+      href: `/orders?order=${orderId}`,
       tone: 'orange',
       source_created_at: now,
       updated_at: now,

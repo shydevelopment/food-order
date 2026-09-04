@@ -131,7 +131,7 @@ export default async function RestaurantStorePage({
       <main className="w-full px-0 pt-4 sm:px-2 sm:pt-6">
         <div className="mb-4">
           <Link
-            href="/storePage"
+            href="/restaurants"
             className="inline-flex items-center gap-2 rounded-full border border-neutral-800  px-3 py-2 text-xs font-black text-neutral-300 transition hover:border-orange-500/40 hover:text-orange-300"
           >
             ← กลับไปเลือกร้าน

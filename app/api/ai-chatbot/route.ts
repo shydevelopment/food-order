@@ -456,7 +456,7 @@ function buildRestaurantRecommendations(
         ? `tel:${restaurant.phone.replace(/[^\d+]/g, '')}`
         : restaurant.email
           ? `mailto:${restaurant.email}`
-          : '/contactPage'
+          : '/contact'
       const contactLabel = restaurant.phone
         ? 'โทรหาร้าน'
         : restaurant.email
@@ -474,8 +474,8 @@ function buildRestaurantRecommendations(
         id: restaurant.id,
         name: restaurant.name,
         description: restaurant.description || typeMeta.description,
-        href: `/storePage/${restaurant.id}`,
-        menuHref: `/storePage/${restaurant.id}#menu`,
+        href: `/restaurants/${restaurant.id}`,
+        menuHref: `/restaurants/${restaurant.id}#menu`,
         contactHref,
         contactLabel,
         imageUrl: restaurant.image_url || '/placeholder.jpg',

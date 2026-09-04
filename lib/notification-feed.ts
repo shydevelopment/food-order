@@ -209,7 +209,7 @@ const getOrderNotifications = async (
         : `สั่งอาหารจาก ${restaurantName} แล้ว · รับเวลา ${pickupText}`,
       href: isStaffView
         ? `/admin/orders?restaurantId=${order.restaurant_id}`
-        : `/trackorderPage?order=${order.id}`,
+        : `/orders?order=${order.id}`,
       created_at: order.created_at,
       tone: 'orange',
     }
@@ -310,8 +310,8 @@ const getChatNotifications = async (
       href: isStaffView
         ? '/admin/orders'
         : conversation?.order_id
-          ? `/trackorderPage?order=${conversation.order_id}`
-          : '/trackorderPage',
+          ? `/orders?order=${conversation.order_id}`
+          : '/orders',
       created_at: message.created_at,
       tone: 'sky',
     }

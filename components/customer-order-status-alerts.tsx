@@ -235,7 +235,7 @@ export default function CustomerOrderStatusAlerts() {
 
         <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
           <a
-            href={`/trackorderPage?order=${statusAlert.orderId}`}
+            href={`/orders?order=${statusAlert.orderId}`}
             className="rounded-xl bg-orange-500 px-5 py-3 text-center text-sm font-black text-black shadow-lg shadow-orange-500/10 transition hover:bg-orange-400"
           >
             ดูออเดอร์

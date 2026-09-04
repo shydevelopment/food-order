@@ -290,7 +290,7 @@ export default function CartCheckout() {
           เลือกเมนูจากหน้าร้านอาหารก่อน แล้วกลับมายืนยันคำสั่งซื้อที่นี่
         </p>
         <Link
-          href="/storePage"
+          href="/restaurants"
           className="mt-6 inline-flex rounded-lg bg-amber-500 px-5 py-2.5 text-sm font-bold text-neutral-950 transition hover:bg-amber-400"
         >
           ไปเลือกเมนู
@@ -332,7 +332,7 @@ export default function CartCheckout() {
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
               <a
-                href="/editPage"
+                href="/profile/edit"
                 className="rounded-xl bg-orange-500 px-5 py-3 text-center text-sm font-black text-black shadow-lg shadow-orange-500/10 transition hover:bg-orange-400"
               >
                 ไปแก้ไขโปรไฟล์

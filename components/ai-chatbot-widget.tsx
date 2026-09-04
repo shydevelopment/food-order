@@ -392,7 +392,7 @@ export default function AiChatbotWidget() {
                 className="min-w-0 flex-1 rounded-2xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-orange-500 sm:py-2.5"
               />
               <a
-                href="/contactPage"
+                href="/contact"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500/10 text-orange-300 transition hover:border-orange-500/70 hover:bg-orange-500 hover:text-black active:scale-90 sm:h-11 sm:w-11"
                 title="ติดต่อ"
                 aria-label="ติดต่อ"
