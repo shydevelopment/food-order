@@ -51,7 +51,7 @@ const formatPickupTime = (pickupTime: string | null) => {
 const paymentMethodLabel = 'เงินสด จ่ายหน้าร้าน'
 
 const buildTrackOrderHref = (orderId: string) => {
-  return `/trackorderPage?order=${orderId}`
+  return `/orders?order=${orderId}`
 }
 
 export default async function TrackOrderPage({
@@ -164,7 +164,7 @@ export default async function TrackOrderPage({
             </p>
           </div>
           <Link
-            href="/storePage"
+            href="/restaurants"
             className="inline-flex items-center justify-center rounded-lg border border-neutral-800 px-4 py-2 text-sm font-bold text-neutral-300 transition  hover:text-white"
           >
             สั่งอาหารเพิ่ม

@@ -1,0 +1,12 @@
+Generated with the built-in image_gen tool.
+
+Use case: logo-brand
+Asset type: final logo PNG for a Thai food ordering website.
+Primary request: Create one polished original logo for "food-order".
+Style: minimal flat vector-like graphic, friendly modern geometric branding, crisp clean edges.
+Subject: a memorable simple orange takeaway food bag icon incorporating a bowl and subtle smile through negative space, paired with the wordmark.
+Composition: a single centered horizontal logo lockup, icon to the left and exact wordmark to the right, generous clear padding, no extra variants or presentation board.
+Color palette: warm vivid orange (#f97316) with deep charcoal wordmark, consistent with the orange food-order website.
+Text (verbatim): "food-order", all lowercase, bold rounded sans serif, carefully kerned and completely readable.
+Background: genuinely transparent with alpha, no solid background.
+Constraints: flat colors, professional and recognizable at small sizes. No gradients, shadows, 3D, photographic mockup, tagline, extra text, border, or watermark.

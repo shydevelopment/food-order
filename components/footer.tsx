@@ -7,10 +7,10 @@ import { usePathname } from 'next/navigation';
 export default function Footer() {
   const pathname = usePathname();
   const links = [
-    { href: '/aboutusPage', label: 'เกี่ยวกับเรา' },
-    { href: '/termsofusePage', label: 'เงื่อนไขการใช้งาน' },
-    { href: '/privacypolicyPage', label: 'นโยบายความเป็นส่วนตัว' },
-    { href: '/contactPage', label: 'ติดต่อเรา' },
+    { href: '/about', label: 'เกี่ยวกับเรา' },
+    { href: '/terms-of-use', label: 'เงื่อนไขการใช้งาน' },
+    { href: '/privacy-policy', label: 'นโยบายความเป็นส่วนตัว' },
+    { href: '/contact', label: 'ติดต่อเรา' },
   ];
 
   return (

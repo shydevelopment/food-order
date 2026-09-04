@@ -54,7 +54,7 @@ const createCustomerStatusNotification = async (params: {
       type: 'order',
       title: `${orderLabel} · ${getOrderStatusNotificationLabel(status)}`,
       detail: detailParts.join(' ·'),
-      href: `/trackorderPage?order=${order.id}`,
+      href: `/orders?order=${order.id}`,
       tone: getOrderStatusTone(status),
       is_read: false,
       source_created_at: now,

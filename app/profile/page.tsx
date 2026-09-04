@@ -177,7 +177,7 @@ export default async function ViewProfilePage() {
             {/* ปุ่มแก้ไขข้อมูลโปรไฟล์ */}
             <div className="mt-6">
               <Link
-                href="/editPage"
+                href="/profile/edit"
                 className="block w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-2.5 px-4 rounded-xl transition-all active:scale-95 text-center text-sm shadow-lg shadow-orange-500/10 cursor-pointer"
               >
                 ✏️ แก้ไขข้อมูลโปรไฟล์

@@ -103,13 +103,13 @@ export default async function Index() {
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                   <Link
-                    href="/storePage"
+                    href="/restaurants"
                     className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-orange-500 px-6 text-sm font-black text-black transition hover:bg-orange-400 active:scale-95"
                   >
                     ดูร้านอาหาร
                   </Link>
                   <Link
-                    href={user ? '/trackorderPage' : '/login'}
+                    href={user ? '/orders' : '/login'}
                     className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-700  px-6 text-sm font-black text-white transition hover:border-sky-500/50 hover:text-sky-300 active:scale-95"
                   >
                     {user ? 'ติดตามออเดอร์' : 'เข้าสู่ระบบ'}
@@ -177,7 +177,7 @@ export default async function Index() {
                       </div>
                     </div>
                     <Link
-                      href={`/storePage/${featuredRestaurant.id}`}
+                      href={`/restaurants/${featuredRestaurant.id}`}
                       className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-neutral-950 transition hover:bg-orange-200 active:scale-95 sm:w-auto"
                     >
                       เข้าร้านแนะนำ
@@ -203,7 +203,7 @@ export default async function Index() {
                 <h2 className="text-xl font-black text-white">ร้านที่เปิดอยู่ตอนนี้</h2>
                 <p className="mt-1 text-sm text-neutral-500">เลือกเข้าร้านเพื่อดูเมนูของวันนี้</p>
               </div>
-              <Link href="/storePage" className="shrink-0 text-sm font-black text-orange-400 transition hover:text-orange-300">
+              <Link href="/restaurants" className="shrink-0 text-sm font-black text-orange-400 transition hover:text-orange-300">
                 ดูทั้งหมด
               </Link>
             </div>
@@ -222,7 +222,7 @@ export default async function Index() {
                   return (
                     <Link
                       key={restaurant.id}
-                      href={`/storePage/${restaurant.id}`}
+                      href={`/restaurants/${restaurant.id}`}
                       className="home-quick-card group grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-2xl border border-neutral-800  p-3 transition hover:border-orange-500/40 "
                     >
                       <div className="relative h-24 overflow-hidden rounded-xl ">
@@ -258,7 +258,7 @@ export default async function Index() {
               {RESTAURANT_TYPES.map((type) => (
                 <Link
                   key={type.value}
-                  href={`/storePage?type=${type.value}`}
+                  href={`/restaurants?type=${type.value}`}
                   className="home-category-link flex items-center justify-between gap-3 rounded-2xl border border-neutral-800  px-4 py-3 transition hover:border-orange-500/40 "
                 >
                   <span className="min-w-0">

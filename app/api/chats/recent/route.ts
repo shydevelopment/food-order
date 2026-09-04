@@ -187,8 +187,8 @@ export async function GET(req: NextRequest) {
           target_path: profile.role === 'restaurant' || profile.role === 'admin'
             ? '/admin/orders'
             : conversation?.order_id
-              ? `/trackorderPage?order=${conversation.order_id}`
-              : '/trackorderPage',
+              ? `/orders?order=${conversation.order_id}`
+              : '/orders',
         }
       }),
     })

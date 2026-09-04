@@ -37,3 +37,22 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Application routes
+
+Use lowercase, kebab-case URL segments. Profile editing lives under `/profile/edit`; restaurant details live under `/restaurants/[restaurantId]`.
+
+| Page | Path |
+| --- | --- |
+| Restaurants | `/restaurants` |
+| Restaurant details | `/restaurants/[restaurantId]` |
+| Order tracking | `/orders` |
+| Cart | `/cart` |
+| Profile | `/profile` |
+| Edit profile | `/profile/edit` |
+| About | `/about` |
+| Contact | `/contact` |
+| Privacy policy | `/privacy-policy` |
+| Terms of use | `/terms-of-use` |
+
+Legacy URLs redirect permanently in `next.config.ts`, preserving restaurant IDs and query parameters. Use the canonical paths above for new links.
