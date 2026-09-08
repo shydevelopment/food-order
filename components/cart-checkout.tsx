@@ -520,7 +520,7 @@ export default function CartCheckout() {
               pattern="([01][0-9]|2[0-3]):[0-5][0-9]"
               placeholder="เลือกเวลารับอาหาร"
               title="กรุณากรอกเวลาเป็น HH:MM เช่น 11:27"
-              className="min-w-0 flex-1 rounded-l-xl bg-transparent px-3 py-2 text-sm font-black text-white placeholder-neutral-600 outline-none"
+              className="min-w-0 flex-1 rounded-l-xl bg-neutral-950 px-3 py-2 text-sm font-black text-white placeholder-neutral-600 outline-none"
             />
             <button
               type="button"
@@ -532,8 +532,8 @@ export default function CartCheckout() {
           </div>
 
           {showPickupTimePicker && (
-            <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-amber-500/30  shadow-2xl shadow-black/60">
-              <div className="flex items-center justify-between gap-3 border-b border-neutral-800  px-4 py-3">
+            <div className="time-picker-panel absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-2xl border border-amber-500/30 shadow-2xl shadow-black/60">
+              <div className="flex items-center justify-between gap-3 border-b border-neutral-800 px-4 py-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-wide text-amber-400">
                     เลือกเวลาไปรับ
@@ -556,7 +556,7 @@ export default function CartCheckout() {
                 <div
                   ref={hourWheelRef}
                   onScroll={(event) => handleWheelScroll('hour', event)}
-                  className="scrollbar-hide relative h-48 snap-y snap-mandatory overflow-y-auto rounded-2xl border border-neutral-800 bg-black py-[72px]"
+                  className="time-picker-wheel scrollbar-hide relative h-48 snap-y snap-mandatory overflow-y-auto rounded-2xl border border-neutral-800 py-[72px]"
                 >
                   <div className="space-y-2 px-2">
                     {suggestedPickupTimes.map((hour) => (
@@ -583,7 +583,7 @@ export default function CartCheckout() {
                 <div
                   ref={minuteWheelRef}
                   onScroll={(event) => handleWheelScroll('minute', event)}
-                  className="scrollbar-hide relative h-48 snap-y snap-mandatory overflow-y-auto rounded-2xl border border-neutral-800 bg-black py-[72px]"
+                  className="time-picker-wheel scrollbar-hide relative h-48 snap-y snap-mandatory overflow-y-auto rounded-2xl border border-neutral-800 py-[72px]"
                 >
                   <div className="space-y-2 px-2">
                     {suggestedPickupMinutes.map((minute) => (

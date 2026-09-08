@@ -3,6 +3,7 @@ import { activeOrderStatuses } from '@/lib/order-status'
 
 export interface NotificationFeedItem {
   id: string
+  order_id?: string | null
   type: 'order' | 'chat'
   title: string
   detail: string
@@ -68,6 +69,7 @@ interface CustomerRow {
 
 interface NotificationRow {
   id: string
+  order_id: string | null
   item_key: string
   type: 'order' | 'chat'
   title: string
@@ -202,6 +204,7 @@ const getOrderNotifications = async (
 
     return {
       id: `order-${order.id}`,
+      order_id: order.id,
       type: 'order',
       title: isStaffView ? `${orderLabel} เข้าใหม่` : orderLabel,
       detail: isStaffView
@@ -304,6 +307,7 @@ const getChatNotifications = async (
 
     return {
       id: `chat-${message.id}`,
+      order_id: conversation?.order_id || null,
       type: 'chat',
       title: sender?.full_name || sender?.username || 'ข้อความใหม่',
       detail: `${message.body}${restaurantName ? ` · ${restaurantName}` : ''}`,
@@ -327,6 +331,7 @@ const syncNotificationsToSupabase = async (
 
   const payload = items.map((item) => ({
     user_id: userId,
+    order_id: item.order_id || null,
     item_key: item.id,
     type: item.type,
     title: item.title,
@@ -363,7 +368,7 @@ const readNotificationsFromSupabase = async (
   const { data, error } = await supabaseAdmin
     .from('notifications')
     .select(
-      'id, item_key, type, title, detail, href, tone, is_read, source_created_at',
+      'id, order_id, item_key, type, title, detail, href, tone, is_read, source_created_at',
     )
     .eq('user_id', userId)
     .order('source_created_at', { ascending: false })
@@ -385,10 +390,15 @@ const readNotificationsFromSupabase = async (
   return ((data || []) as NotificationRow[])
     .map((item): NotificationFeedItem => {
       const itemKey = item.item_key || item.id
-      const isActiveOrder = isActiveOrderNotification(itemKey, activeOrderIds)
+      const isActiveOrder = isActiveOrderNotification(
+        itemKey,
+        activeOrderIds,
+        item.order_id,
+      )
 
       return {
         id: itemKey,
+        order_id: item.order_id,
         type: item.type,
         title: item.title,
         detail: item.detail,
@@ -405,8 +415,10 @@ const readNotificationsFromSupabase = async (
 const isActiveOrderNotification = (
   itemKey: string,
   activeOrderIds: Set<string>,
+  orderId: string | null,
 ) => {
   if (activeOrderIds.size === 0) return false
+  if (orderId && activeOrderIds.has(orderId)) return true
   if (
     itemKey.startsWith('order-') &&
     activeOrderIds.has(itemKey.slice('order-'.length))
@@ -454,17 +466,13 @@ export const getNotificationFeed = async (
     getOrderNotifications(supabaseAdmin, userId, profile, allowedRestaurantIds),
     getChatNotifications(supabaseAdmin, userId, profile, allowedRestaurantIds),
   ])
-  const derivedItems = [...orderItems, ...chatItems].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  )
   const activeOrderIds = new Set(
     orderItems
       .filter((item) => item.id.startsWith('order-'))
       .map((item) => item.id.slice('order-'.length)),
   )
 
-  await syncNotificationsToSupabase(supabaseAdmin, userId, derivedItems)
+  await syncNotificationsToSupabase(supabaseAdmin, userId, chatItems)
 
   return {
     profile,

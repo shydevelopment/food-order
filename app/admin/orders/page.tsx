@@ -65,6 +65,13 @@ interface Menu {
   image_url: string | null
 }
 
+interface OrderPayment {
+  id: string
+  order_id: string
+  method: string
+  status: string
+}
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -252,6 +259,18 @@ export default async function AdminOrdersPage({
           .in('order_id', orderIds)
       : { data: [] }
 
+  const { data: orderPayments, error: orderPaymentsError } =
+    orderIds.length > 0
+      ? await supabaseAdmin
+          .from('payments')
+          .select('id, order_id, method, status')
+          .in('order_id', orderIds)
+      : { data: [], error: null }
+
+  if (orderPaymentsError) {
+    console.error('Error fetching order payments:', orderPaymentsError.message)
+  }
+
   const itemRows = (orderItems || []) as OrderItem[]
   const menuIds = Array.from(
     new Set(itemRows.map((item) => item.menu_id).filter(Boolean)),
@@ -323,6 +342,12 @@ export default async function AdminOrdersPage({
     list.push(item)
     itemsByOrder.set(item.order_id, list)
   })
+  const paymentsByOrderId = new Map(
+    ((orderPayments || []) as OrderPayment[]).map((payment) => [
+      payment.order_id,
+      payment,
+    ]),
+  )
 
   const menusById = new Map((menus || []).map((menu: Menu) => [menu.id, menu]))
   const restaurantsById = new Map(
@@ -516,6 +541,10 @@ export default async function AdminOrdersPage({
             const restaurant = restaurantsById.get(order.restaurant_id)
             const customer = customersById.get(order.user_id)
             const orderItemsForOrder = itemsByOrder.get(order.id) || []
+            const payment = paymentsByOrderId.get(order.id)
+            const cashPaymentPending =
+              !payment ||
+              (payment.method === 'cash' && payment.status !== 'paid')
 
             return (
               <article
@@ -588,7 +617,9 @@ export default async function AdminOrdersPage({
                       {paymentMethodLabel}
                     </p>
                     <p className="payment-method-note mt-0.5 text-xs">
-                      ลูกค้าชำระเงินตอนรับอาหาร
+                      {cashPaymentPending
+                        ? 'รอยืนยันรับเงินก่อนปิดออเดอร์'
+                        : 'ยืนยันรับเงินแล้ว'}
                     </p>
                   </div>
 
@@ -675,6 +706,8 @@ export default async function AdminOrdersPage({
                     <OrderStatusActions
                       orderId={order.id}
                       status={order.status}
+                      cashPaymentPending={cashPaymentPending}
+                      cashPaymentId={payment?.id}
                     />
                     <OrderChatBox
                       orderId={order.id}

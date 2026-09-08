@@ -41,7 +41,7 @@ export default function ThemeToggle() {
       title={isLight ? 'ธีมขาว' : 'ธีมดำ'}
       onClick={toggleTheme}
       suppressHydrationWarning
-      className="inline-flex h-8 w-14 shrink-0 items-center rounded-full border border-transparent bg-transparent p-1 transition-colors duration-200 ease-out hover:border-orange-500/60 active:scale-95 sm:h-9 sm:w-[68px]"
+      className="inline-flex h-8 w-14 shrink-0 items-center rounded-full border border-neutral-700 bg-neutral-900 p-1 transition-colors duration-200 ease-out hover:border-orange-500/60 active:scale-95 sm:h-9 sm:w-[68px]"
     >
       <span
         suppressHydrationWarning

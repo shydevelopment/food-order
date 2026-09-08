@@ -48,6 +48,7 @@ export default function AdminLayout({
 
       const isRestaurantAllowedPage =
         pathname === '/admin/orders' ||
+        pathname === '/admin/payments' ||
         pathname === '/admin/activity-logs' ||
         pathname.startsWith('/admin/restaurants/');
 

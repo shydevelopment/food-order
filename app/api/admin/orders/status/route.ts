@@ -50,6 +50,7 @@ const createCustomerStatusNotification = async (params: {
   const { error } = await supabaseAdmin.from('notifications').upsert(
     {
       user_id: order.user_id,
+      order_id: order.id,
       item_key: getOrderStatusNotificationKey(order.id, status),
       type: 'order',
       title: `${orderLabel} · ${getOrderStatusNotificationLabel(status)}`,
@@ -127,7 +128,7 @@ export async function PATCH(req: NextRequest) {
 
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
-      .select('id, order_no, user_id, restaurant_id, total_price, pickup_time')
+      .select('id, order_no, user_id, restaurant_id, total_price, pickup_time, status')
       .eq('id', orderId)
       .single()
 
@@ -168,6 +169,42 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json(
           { error: 'คุณเห็นได้เฉพาะออร์เดอร์ของร้านตัวเอง' },
           { status: 403 },
+        )
+      }
+    }
+
+    if (nextStatus === 'completed') {
+      if (order.status !== 'delivering') {
+        return NextResponse.json(
+          { error: 'กรุณาเปลี่ยนสถานะเป็น “พร้อมให้มารับอาหาร” ก่อนปิดออเดอร์' },
+          { status: 400 },
+        )
+      }
+
+      const { data: payment, error: paymentError } = await supabaseAdmin
+        .from('payments')
+        .select('method, status')
+        .eq('order_id', order.id)
+        .maybeSingle()
+
+      if (paymentError) {
+        return NextResponse.json(
+          { error: 'ไม่สามารถตรวจสอบการชำระเงินได้ กรุณาตรวจสอบหน้า Payment ก่อนปิดออเดอร์' },
+          { status: 400 },
+        )
+      }
+
+      if (!payment) {
+        return NextResponse.json(
+          { error: 'ไม่พบรายการชำระเงิน กรุณายืนยันข้อมูลที่หน้า Payment ก่อนปิดออเดอร์' },
+          { status: 400 },
+        )
+      }
+
+      if (payment.method === 'cash' && payment.status !== 'paid') {
+        return NextResponse.json(
+          { error: 'ออเดอร์เงินสดนี้ยังไม่ได้ยืนยันรับเงิน กรุณายืนยันที่หน้า Payment ก่อนปิดออเดอร์' },
+          { status: 400 },
         )
       }
     }

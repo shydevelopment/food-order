@@ -216,6 +216,17 @@ export default function RestaurantSidebar() {
               </Link>
 
               <Link
+                href="/admin/payments"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black transition-all active:scale-95 ${
+                  pathname === '/admin/payments'
+                    ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <FlaticonIcon name="credit-card" className="h-4 w-4 shrink-0" /> การชำระเงิน
+              </Link>
+
+              <Link
                 href="/admin/activity-logs"
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black transition-all active:scale-95 ${
                   pathname === '/admin/activity-logs'

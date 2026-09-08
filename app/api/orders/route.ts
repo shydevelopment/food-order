@@ -87,6 +87,7 @@ const createOrderNotifications = async (params: {
   const notifications = [
     {
       user_id: customerId,
+      order_id: orderId,
       item_key: `order-${orderId}`,
       type: 'order',
       title: orderLabel,
@@ -100,6 +101,7 @@ const createOrderNotifications = async (params: {
       .filter((ownerId) => ownerId !== customerId)
       .map((ownerId) => ({
         user_id: ownerId,
+        order_id: orderId,
         item_key: `order-${orderId}`,
         type: 'order',
         title: `${orderLabel} เข้าใหม่`,
@@ -327,6 +329,21 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json({ error: orderItemsError.message }, { status: 400 })
+    }
+
+    const { error: paymentError } = await supabaseAdmin
+      .from('payments')
+      .insert({
+        order_id: order.id,
+        restaurant_id: restaurantId,
+        customer_id: user.id,
+        method: paymentMethod,
+        status: 'pending',
+        amount: totalPrice,
+      })
+
+    if (paymentError) {
+      console.error('Error creating payment record:', paymentError.message)
     }
 
     await supabaseAdmin

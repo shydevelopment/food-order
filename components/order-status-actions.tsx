@@ -7,6 +7,8 @@ import { getOrderStatusLabel } from '@/lib/order-status'
 interface OrderStatusActionsProps {
   orderId: string
   status: string | null
+  cashPaymentPending?: boolean
+  cashPaymentId?: string
 }
 
 const nextActions = [
@@ -19,7 +21,7 @@ const nextActions = [
   {
     status: 'completed',
     label: 'เสร็จสิ้น',
-    visibleFrom: ['delivering', 'preparing'],
+    visibleFrom: ['delivering'],
   },
   {
     status: 'cancelled',
@@ -31,6 +33,8 @@ const nextActions = [
 export default function OrderStatusActions({
   orderId,
   status,
+  cashPaymentPending = false,
+  cashPaymentId,
 }: OrderStatusActionsProps) {
   const router = useRouter()
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
@@ -86,6 +90,34 @@ export default function OrderStatusActions({
     void handleUpdateStatus('cancelled', cleanedReason)
   }
 
+  const handleConfirmCashPayment = async () => {
+    if (!cashPaymentId) return
+
+    setUpdatingStatus('cash')
+    try {
+      const response = await fetch(`/api/admin/payments/${cashPaymentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' }),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'ไม่สามารถยืนยันรับเงินสดได้')
+      }
+
+      router.refresh()
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'ไม่สามารถยืนยันรับเงินสดได้',
+      )
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
   if (status === 'completed' || status === 'cancelled') {
     return null
   }
@@ -99,7 +131,10 @@ export default function OrderStatusActions({
             <button
               key={action.status}
               type="button"
-              disabled={Boolean(updatingStatus)}
+              disabled={
+                Boolean(updatingStatus) ||
+                (action.status === 'completed' && cashPaymentPending)
+              }
               onClick={() => {
                 if (action.status === 'cancelled') {
                   setShowCancelDialog(true)
@@ -116,10 +151,33 @@ export default function OrderStatusActions({
             >
               {updatingStatus === action.status
                 ? 'กำลังบันทึก...'
-                : action.label}
+                : action.status === 'completed' && cashPaymentPending
+                  ? 'รอยืนยันเงินสด'
+                  : action.label}
             </button>
           ))}
+        {cashPaymentPending && status === 'delivering' && cashPaymentId && (
+          <button
+            type="button"
+            disabled={Boolean(updatingStatus)}
+            onClick={() => void handleConfirmCashPayment()}
+            className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-black text-neutral-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {updatingStatus === 'cash'
+              ? 'กำลังยืนยันเงินสด...'
+              : 'ยืนยันรับเงินสด'}
+          </button>
+        )}
       </div>
+
+      {cashPaymentPending && status === 'delivering' && !cashPaymentId && (
+        <a
+          href="/admin/payments?method=cash&status=pending"
+          className="inline-flex text-xs font-bold text-amber-300 underline decoration-amber-500/50 underline-offset-4 transition hover:text-amber-200"
+        >
+          ยืนยันรับเงินสดในหน้า Payment ก่อนปิดออเดอร์
+        </a>
+      )}
 
       {showCancelDialog && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/75 px-4 py-6 text-white backdrop-blur-sm food-alert-overlay">
