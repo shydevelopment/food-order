@@ -25,6 +25,9 @@ export default function Footer() {
           <p className="text-[11px] text-gray-600 mt-1">
             สร้างด้วย Next.js, Tailwind CSS และ Supabase
           </p>
+          <p className="text-[10px] text-gray-700 mt-1">
+            Uicons by <a href="https://www.flaticon.com/uicons" className="hover:text-orange-400">Flaticon</a>
+          </p>
         </div>
 
         <div className="grid w-full grid-cols-2 gap-2 text-center text-xs font-bold sm:flex sm:flex-wrap sm:justify-center sm:text-sm lg:w-auto lg:gap-4">

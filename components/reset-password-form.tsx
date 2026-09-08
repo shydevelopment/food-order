@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy'
 import PasswordRequirements from '@/components/password-requirements'
+import StatusIcon from '@/components/status-icon'
 
 export function ResetPasswordForm() {
   const [isPending, setIsPending] = useState(false)
@@ -42,12 +43,12 @@ export function ResetPasswordForm() {
     }
 
     try {
-      // 3. 💡 อัปเดตรหัสผ่านใหม่ลงระบบได้เลยโดยตรง (ไม่ต้องใช้รหัสผ่านเดิม)
+      // 3. อัปเดตรหัสผ่านใหม่ลงระบบได้เลยโดยตรง (ไม่ต้องใช้รหัสผ่านเดิม)
       const { error } = await supabase.auth.updateUser({ password: newPassword })
 
       if (error) throw error
 
-      setSuccessMessage('ตั้งรหัสผ่านใหม่ของคุณสำเร็จเรียบร้อยแล้ว! 🔒')
+      setSuccessMessage('ตั้งรหัสผ่านใหม่ของคุณสำเร็จเรียบร้อยแล้ว!')
       setNewPasswordValue('')
       formTarget.reset()
 
@@ -129,14 +130,14 @@ export function ResetPasswordForm() {
           {/* กล่องข้อความแจ้งเตือนสีเขียวเมื่อทำงานสำเร็จ */}
           {successMessage && (
             <div className="p-3 bg-emerald-950/30 border border-emerald-900/40 text-center text-emerald-400 rounded-md text-xs font-medium mt-2">
-              ✅ {successMessage}
+              <StatusIcon type="success" />{' '}{successMessage}
             </div>
           )}
 
           {/* กล่องข้อความแจ้งเตือนสีแดงเมื่อเกิด Error */}
           {errorMessage && (
             <div className="p-3 bg-red-950/20 border border-red-900/40 text-center text-red-400 rounded-md text-xs font-medium mt-2">
-              ⚠️ {errorMessage}
+              <StatusIcon type="error" />{' '}{errorMessage}
             </div>
           )}
 

@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useEffect, useState } from 'react';
+import FlaticonIcon from '@/components/flaticon-icon';
 import { DEFAULT_RESTAURANT_TYPE, getRestaurantTypeMeta, RESTAURANT_TYPES } from '@/lib/restaurant-types';
 import { formatThaiPhoneInput, THAI_PHONE_INPUT_PATTERN, THAI_PHONE_REQUIREMENTS_TEXT, validateThaiPhone } from '@/lib/phone';
 
@@ -10,10 +11,10 @@ export default function AdminRestaurantsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ⏱️ State เวลาปัจจุบัน สำหรับกระตุ้นให้สถานะอัปเดตแบบ Real-time
+  // State เวลาปัจจุบัน สำหรับกระตุ้นให้สถานะอัปเดตแบบ Real-time
   const [now, setNow] = useState(new Date());
 
-  // ⚡ State สำหรับระบบ Popup Modal
+  // State สำหรับระบบ Popup Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('edit'); 
@@ -36,7 +37,7 @@ export default function AdminRestaurantsPage() {
     // eslint-disable-next-line react-hooks/immutability
     fetchRestaurants();
 
-    // 🔄 ตัวนับเวลาให้อัปเดตสถานะอัตโนมัติทุกๆ 30 วินาที
+    // ตัวนับเวลาให้อัปเดตสถานะอัตโนมัติทุกๆ 30 วินาที
     const timer = setInterval(() => {
       setNow(new Date());
     }, 30000);
@@ -44,7 +45,7 @@ export default function AdminRestaurantsPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // 🕒 ฟังก์ชันคำนวณสถานะร้านอาหาร (มีแค่ "เปิดบริการ" และ "ปิดร้าน")
+  // ฟังก์ชันคำนวณสถานะร้านอาหาร (มีแค่ "เปิดบริการ" และ "ปิดร้าน")
   const getRestaurantStatus = (openTime?: string, closeTime?: string, dbStatus?: string) => {
     // 1. ถ้าร้านถูกตั้งค่าปิดแบบ Manual ให้ปิดร้านทันที
     if (dbStatus === 'closed') {
@@ -159,13 +160,13 @@ export default function AdminRestaurantsPage() {
     if (!selectedRest) return;
     
     const userInput = prompt(
-      `⚠️ คำเตือน: การลบร้าน "${selectedRest.name}" จะทำลายข้อมูลเมนูอาหารทั้งหมดของร้านนี้ด้วย!\n\nกรุณาพิมพ์ชื่อร้านว่า "${selectedRest.name}" เพื่อยืนยันการลบ:`
+      `คำเตือน: การลบร้าน "${selectedRest.name}" จะทำลายข้อมูลเมนูอาหารทั้งหมดของร้านนี้ด้วย!\n\nกรุณาพิมพ์ชื่อร้านว่า "${selectedRest.name}" เพื่อยืนยันการลบ:`
     );
 
     if (userInput === null) return;
 
     if (userInput !== selectedRest.name) {
-      alert('❌ ชื่อร้านไม่ถูกต้อง! ระบบยกเลิกการลบร้านอาหารเพื่อความปลอดภัย');
+      alert('ชื่อร้านไม่ถูกต้อง! ระบบยกเลิกการลบร้านอาหารเพื่อความปลอดภัย');
       return;
     }
 
@@ -183,7 +184,7 @@ export default function AdminRestaurantsPage() {
 
       if (!res.ok) throw new Error(result.error || 'ไม่สามารถลบร้านอาหารได้');
 
-      alert('🗑️ ลบร้านอาหารออกจากระบบเรียบร้อยแล้ว!');
+      alert('ลบร้านอาหารออกจากระบบเรียบร้อยแล้ว!');
       handleCloseModal();
       fetchRestaurants(); 
     } catch (error: any) {
@@ -258,7 +259,7 @@ export default function AdminRestaurantsPage() {
         const result = await res.json();
 
         if (!res.ok) throw new Error(result.error || 'ไม่สามารถเพิ่มร้านอาหารได้');
-        alert('✨ เพิ่มร้านอาหารใหม่เข้าสู่ระบบสำเร็จ!');
+        alert('เพิ่มร้านอาหารใหม่เข้าสู่ระบบสำเร็จ!');
       } else {
         if (!selectedRest) return;
         const res = await fetch('/api/admin/restaurants', {
@@ -272,7 +273,7 @@ export default function AdminRestaurantsPage() {
         const result = await res.json();
 
         if (!res.ok) throw new Error(result.error || 'ไม่สามารถแก้ไขร้านอาหารได้');
-        alert('💾 บันทึกการแก้ไขข้อมูลร้านอาหารสำเร็จ!');
+        alert('บันทึกการแก้ไขข้อมูลร้านอาหารสำเร็จ!');
       }
 
       handleCloseModal();
@@ -299,7 +300,10 @@ export default function AdminRestaurantsPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-white uppercase tracking-wide">
-            🏢 จัดการร้านอาหารทั้งหมด
+            <span className="inline-flex items-center gap-2">
+              <FlaticonIcon name="shop" className="h-6 w-6" />
+              จัดการร้านอาหารทั้งหมด
+            </span>
           </h2>
           <p className="text-sm text-gray-400">
             ดูรายละเอียด ตรวจสอบสถานะการเปิด-ปิดร้าน และแก้ไขข้อมูลร้านอาหารในระบบ
@@ -312,11 +316,13 @@ export default function AdminRestaurantsPage() {
             onClick={handleOpenAddModal}
             className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 shrink-0 flex items-center justify-center gap-1.5 active:scale-95"
           >
-            <span>➕</span> เพิ่มร้านอาหาร
+            <FlaticonIcon name="plus" className="h-4 w-4" /> เพิ่มร้านอาหาร
           </button>
 
           <div className="relative w-full sm:w-64">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">🔍</span>
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">
+              <FlaticonIcon name="search" className="h-4 w-4" />
+            </span>
             <input
               type="text"
               placeholder="ค้นหาชื่อร้าน, อีเมล หรือเบอร์โทร..."
@@ -363,7 +369,7 @@ export default function AdminRestaurantsPage() {
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-lg  border border-neutral-700 flex items-center justify-center text-orange-500 font-black text-lg">
-                              🏪
+                              <FlaticonIcon name="shop" className="h-6 w-6" />
                             </div>
                           )}
                         </div>
@@ -385,7 +391,7 @@ export default function AdminRestaurantsPage() {
                       <td className="p-4 text-gray-300 border-r border-neutral-800 text-center break-all">{rest.email || '-'}</td>
                       <td className="p-4 font-mono text-gray-400 border-r border-neutral-800 text-center">{rest.phone ? formatThaiPhoneInput(rest.phone) : '-'}</td>
                       
-                      {/* 🔥 แสดงเฉพาะ "เปิดบริการ" หรือ "ปิดร้าน" */}
+                      {/* แสดงเฉพาะ "เปิดบริการ" หรือ "ปิดร้าน" */}
                       <td className="p-4 text-center border-r border-neutral-800">
                         <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${statusInfo.badgeClass}`}>
                           {statusInfo.label}
@@ -438,7 +444,10 @@ export default function AdminRestaurantsPage() {
           <div className={`w-full max-w-md  border border-neutral-800 rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh] ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
               <h3 className="text-lg font-black text-white">
-                {modalMode === 'add' ? '✨ เพิ่มร้านอาหารใหม่' : '✏️ แก้ไขข้อมูลร้านอาหาร'}
+                <span className="inline-flex items-center gap-2">
+                  <FlaticonIcon name={modalMode === 'add' ? 'plus' : 'edit'} className="h-5 w-5" />
+                  {modalMode === 'add' ? 'เพิ่มร้านอาหารใหม่' : 'แก้ไขข้อมูลร้านอาหาร'}
+                </span>
               </h3>
               <button 
                 type="button"
@@ -500,7 +509,7 @@ export default function AdminRestaurantsPage() {
                         className="sr-only"
                       />
                       <span className="flex items-center gap-2 text-sm font-black text-white">
-                        <span className="text-lg">{type.icon}</span>
+                        <FlaticonIcon name={type.icon} className="h-5 w-5" />
                         {type.label}
                       </span>
                       <span className="mt-1 block text-[11px] leading-4 text-neutral-500">{type.description}</span>
@@ -606,7 +615,10 @@ export default function AdminRestaurantsPage() {
                     onClick={handleDeleteRestaurant}
                     className="bg-red-950/40 hover:bg-red-900/40 text-red-400 px-4 py-2 rounded-lg text-xs font-bold border border-red-900/30 transition-all active:scale-95 disabled:opacity-50"
                   >
-                    🗑️ ลบร้านนี้
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="trash" className="h-4 w-4" />
+                      ลบร้านนี้
+                    </span>
                   </button>
                 ) : (
                   <div></div> 
@@ -625,7 +637,12 @@ export default function AdminRestaurantsPage() {
                     disabled={submitLoading}
                     className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-colors shadow-lg shadow-orange-500/10"
                   >
-                    {submitLoading ? 'กำลังบันทึก...' : '💾 บันทึกข้อมูล'}
+                    {submitLoading ? 'กำลังบันทึก...' : (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <FlaticonIcon name="disk" className="h-4 w-4" />
+                        บันทึกข้อมูล
+                      </span>
+                    )}
                   </button>
                 </div>
 

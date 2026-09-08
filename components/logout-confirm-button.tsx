@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import StatusIcon from '@/components/status-icon'
 
 type LogoutContext = 'default' | 'admin' | 'restaurant'
 
@@ -74,7 +75,7 @@ export default function LogoutConfirmButton({
         <div className="fixed inset-0 z-[999] flex items-center justify-center overflow-y-auto bg-black/80 px-3 py-4 backdrop-blur-sm sm:px-4">
           <div className="w-full max-w-xl rounded-2xl border border-neutral-800  p-4 text-center shadow-2xl sm:p-8">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/40 bg-amber-500/10 text-2xl sm:h-16 sm:w-16 sm:text-3xl">
-              ⚠️
+              <StatusIcon type="error" className="h-7 w-7" />
             </div>
 
             <p className="mt-4 text-xs font-black uppercase tracking-wide text-orange-400">{copy.badge}</p>

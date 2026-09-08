@@ -6,6 +6,7 @@ import { useFormStatus } from 'react-dom'
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT } from '@/lib/password-policy'
 import { formatThaiPhoneInput, THAI_PHONE_INPUT_PATTERN, THAI_PHONE_REQUIREMENTS_TEXT } from '@/lib/phone'
 import PasswordRequirements from '@/components/password-requirements'
+import StatusIcon from '@/components/status-icon'
 
 const REGISTER_DRAFT_STORAGE_KEY = 'food-order-register-draft'
 
@@ -330,7 +331,7 @@ export default function RegisterForm({ signUpAction, message }: RegisterFormProp
 
         {message && (
           <p className="mt-4 p-4 bg-red-950/20 border border-red-900/40 text-center text-red-400 rounded-md text-sm font-medium">
-            ⚠️ {message}
+            <StatusIcon type="error" />{' '}{message}
           </p>
         )}
       </form>

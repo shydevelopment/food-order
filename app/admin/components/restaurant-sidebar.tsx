@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
+import FlaticonIcon from '@/components/flaticon-icon';
 
 interface RestaurantProfile {
   username: string | null;
@@ -189,14 +190,14 @@ export default function RestaurantSidebar() {
                           : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                       }`}
                     >
-                      <span>🏪</span>
+                      <FlaticonIcon name="shop" className="h-4 w-4 shrink-0" />
                       <span className="min-w-0 truncate">จัดการข้อมูลร้าน</span>
                     </Link>
                     <Link
                       href={`/admin/restaurants/${restaurant.id}#daily-menu`}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-black text-gray-400 transition-all hover:bg-neutral-800 hover:text-white active:scale-95"
                     >
-                      <span>📅</span>
+                      <FlaticonIcon name="calendar" className="h-4 w-4 shrink-0" />
                       <span className="min-w-0 truncate">จัดการอาหารรายวัน</span>
                     </Link>
                   </div>
@@ -211,7 +212,7 @@ export default function RestaurantSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>🧾</span> รับออเดอร์
+                <FlaticonIcon name="receipt" className="h-4 w-4 shrink-0" /> รับออเดอร์
               </Link>
 
               <Link
@@ -222,7 +223,7 @@ export default function RestaurantSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span>📜</span> ประวัติกิจกรรมร้าน
+                <FlaticonIcon name="memo-pad" className="h-4 w-4 shrink-0" /> ประวัติกิจกรรมร้าน
               </Link>
             </nav>
 
@@ -231,7 +232,7 @@ export default function RestaurantSidebar() {
                 href="/"
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-black text-red-400 bg-red-950/20 border border-red-900/30 hover:bg-red-950/45 hover:text-red-300 active:scale-95 transition-all shadow-md uppercase tracking-wider"
               >
-                <span>🚪</span> ออกจากหน้าจัดการร้าน
+                <FlaticonIcon name="sign-out-alt" className="h-4 w-4" /> ออกจากหน้าจัดการร้าน
               </Link>
             </div>
           </div>

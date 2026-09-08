@@ -1,4 +1,5 @@
 import React from 'react';
+import FlaticonIcon from '@/components/flaticon-icon';
 
 interface ActivityLogItemProps {
   act: {
@@ -80,7 +81,7 @@ export function ActivityLogItem({ act }: ActivityLogItemProps) {
     <div className="p-3  border border-neutral-800/80 rounded-xl flex flex-col gap-3  transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4">
       <div className="flex items-center gap-3 min-w-0 sm:gap-4">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border shrink-0 ${act.colorClass}`}>
-          {act.icon}
+          <FlaticonIcon name={act.icon} className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -97,7 +98,10 @@ export function ActivityLogItem({ act }: ActivityLogItemProps) {
 
       <div className="shrink-0 border-t border-neutral-800/70 pt-2 text-left sm:border-t-0 sm:pt-0 sm:text-right">
         <div className="text-sm font-bold text-orange-400 font-mono">
-          📅 {formatDate(act.timestamp)}
+          <span className="inline-flex items-center gap-1.5">
+            <FlaticonIcon name="calendar" className="h-4 w-4" />
+            {formatDate(act.timestamp)}
+          </span>
         </div>
 
         <div className="text-xs text-gray-400 font-mono mt-0.5">

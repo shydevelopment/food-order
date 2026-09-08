@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import StatusIcon from '@/components/status-icon'
 
 interface ForgotPasswordFormProps {
   sendAction: (formData: FormData) => Promise<{ success: boolean; message?: string }>
@@ -26,7 +27,7 @@ export function ForgotPasswordForm({ sendAction }: ForgotPasswordFormProps) {
         setStateMessage(res.message || 'เกิดข้อผิดพลาดในการส่งคำขอ')
       }
     } catch (err) {
-      // 💡 พิมพ์ข้อความ Error จริงลง Console เพื่อให้ตรวจสอบง่ายขึ้น
+      // พิมพ์ข้อความ Error จริงลง Console เพื่อให้ตรวจสอบง่ายขึ้น
       console.error('Client Submit Error:', err)
       setStateMessage('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์')
     } finally {
@@ -74,7 +75,7 @@ export function ForgotPasswordForm({ sendAction }: ForgotPasswordFormProps) {
 
           {stateMessage && (
             <p className="mt-4 p-4 bg-red-950/20 border border-red-900/40 text-center text-red-400 rounded-md text-sm font-medium">
-              ⚠️ {stateMessage}
+              <StatusIcon type="error" />{' '}{stateMessage}
             </p>
           )}
         </form>

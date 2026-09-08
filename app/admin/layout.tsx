@@ -77,11 +77,6 @@ export default function AdminLayout({
 
   if (authorized) {
     return (
-      /* 
-        🛠️ จุดแก้ไข: ย้ายพวกคลาสเจาะทะลุกรอบและ calc ที่ Tailwind ฟ้องเตือนเส้นเหลือง 
-        ลงมาเขียนไว้ที่ `style={{ ... }}` ด้านล่างนี้แทน ลินเตอร์ของ Tailwind จะไม่มองข้ามมาตรฐาน 
-        และทำให้เส้นเหลืองหายไปทันที โดยไม่เสียโครงสร้าง UI เดิมครับ
-      */
       <div 
         className="relative w-auto bg-black flex flex-col lg:flex-row items-stretch overflow-x-hidden m-0 p-0 -mx-3 -mt-4 -mb-4 sm:-mx-6 lg:-mx-8"
         style={{
@@ -91,7 +86,7 @@ export default function AdminLayout({
         
         {role === 'admin' ? <AdminSidebar /> : <RestaurantSidebar />}
 
-        {/* 📄 ส่วนแสดงเนื้อหาฝั่งขวา */}
+        {/* ส่วนแสดงเนื้อหาฝั่งขวา */}
         <main className="min-w-0 flex-1  p-3 sm:p-5 lg:p-8 overflow-x-hidden lg:overflow-y-auto">
           {children}
         </main>

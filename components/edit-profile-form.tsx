@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
+import StatusIcon from '@/components/status-icon'
 import { createBrowserClient } from '@supabase/ssr'
 import {
   normalizeNotificationPreferences,
@@ -86,7 +88,7 @@ export default function EditProfileForm({
     setSuccessMessage(null)
   }
 
-  // ⚡ ฟังก์ชันสำหรับกดส่งอีเมลยืนยันอีกครั้ง
+  // ฟังก์ชันสำหรับกดส่งอีเมลยืนยันอีกครั้ง
   const handleResendEmail = async () => {
     if (!resendAction) return
     setIsPending(true)
@@ -96,7 +98,7 @@ export default function EditProfileForm({
     try {
       const res = await resendAction()
       if (res.success) {
-        setSuccessMessage(res.message || 'ส่งลิงก์ยืนยันตัวตนไปยังอีเมลของคุณเรียบร้อยแล้ว! ✉️')
+        setSuccessMessage(res.message || 'ส่งลิงก์ยืนยันตัวตนไปยังอีเมลของคุณเรียบร้อยแล้ว')
       } else {
         setErrorMessage(res.message || 'เกิดข้อผิดพลาดในการส่งอีเมล')
       }
@@ -141,7 +143,7 @@ export default function EditProfileForm({
       if (updateError) throw updateError
 
       setAvatarUrl(publicUrl)
-      setSuccessMessage('Profile picture updated successfully! 🎉')
+      setSuccessMessage('Profile picture updated successfully!')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'An error occurred while uploading the image.'
       setErrorMessage(message)
@@ -420,7 +422,7 @@ export default function EditProfileForm({
         </div>
       </div>
 
-      {/* 📱 1. LAYOUT สำหรับจอมือถือ */}
+      {/* LAYOUT สำหรับจอมือถือ */}
       <div className="flex flex-col gap-3 md:hidden">
         
         {/* ACCORDION 1: PROFILE */}
@@ -431,7 +433,7 @@ export default function EditProfileForm({
             className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
-              <span className="text-base">👤</span>
+              <FlaticonIcon name="user" className="h-4 w-4 text-base" />
               <span className={activeTab === 'profile' ? 'text-orange-500' : 'text-neutral-300'}>แก้ไขโปรไฟล์</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'profile' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
@@ -469,22 +471,24 @@ export default function EditProfileForm({
                     <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider block mb-1">อีเมล</label>
                     <input className="w-full rounded-xl px-4 py-2.5  border border-neutral-900/40 text-neutral-500 cursor-not-allowed select-none text-sm" type="email" value={email || ''} disabled />
 
-                    {/* ⚡ แสดงสถานะและปุ่มยืนยันอีเมลบนมือถือ */}
+                    {/* แสดงสถานะและปุ่มยืนยันอีเมลบนมือถือ */}
                     <div className="mt-2">
                       {isEmailConfirmed ? (
                         <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
-                          ✓ Verified Email
+                          <StatusIcon type="success" /> Verified Email
                         </span>
                       ) : (
                         <div className="flex items-center justify-between p-2.5 bg-amber-950/30 border border-amber-900/50 rounded-xl">
-                          <span className="text-[11px] text-amber-400 font-medium">⚠️ ยังไม่ได้ยืนยันอีเมล</span>
+                          <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
+                            <StatusIcon type="error" /> ยังไม่ได้ยืนยันอีเมล
+                          </span>
                           <button
                             type="button"
                             onClick={handleResendEmail}
                             disabled={isPending}
                             className="text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold px-3 py-1 rounded-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                           >
-                            Resend Link
+                            ส่งลิงก์ยืนยันอีเมล
                           </button>
                         </div>
                       )}
@@ -507,7 +511,7 @@ export default function EditProfileForm({
             className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
-              <span className="text-base">🖼️</span>
+              <FlaticonIcon name="picture" className="h-4 w-4 text-base" />
               <span className={activeTab === 'avatar' ? 'text-orange-500' : 'text-neutral-300'}>เปลี่ยนรูปโปรไฟล์</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'avatar' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
@@ -524,12 +528,19 @@ export default function EditProfileForm({
                       {(profile?.full_name || profile?.username || email)?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div className="absolute -bottom-2 -right-2 bg-orange-500 text-black p-1.5 rounded-lg shadow-lg text-xs font-bold">📷</div>
+                  <div className="absolute -bottom-2 -right-2 flex items-center justify-center bg-orange-500 text-black p-1.5 rounded-lg shadow-lg text-xs font-bold">
+                    <FlaticonIcon name="camera" className="h-3.5 w-3.5" />
+                  </div>
                 </div>
                 <p className="text-xs text-neutral-400">แตะรูปหรือกดปุ่มด้านล่างเพื่ออัปโหลดรูปโปรไฟล์</p>
                 <input type="file" id="avatar-file-mobile" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isPending} />
                 <button type="button" disabled={isPending} onClick={() => document.getElementById('avatar-file-mobile')?.click()} className="w-full bg-orange-500 hover:bg-orange-400 text-black active:scale-95 text-xs font-bold py-2.5 rounded-xl transition-all cursor-pointer shadow-lg ">
-                  {isPending ? 'Uploading...' : '📁 Choose Image File'}
+                  {isPending ? 'Uploading...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="folder" className="h-3.5 w-3.5" />
+                      Choose Image File
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -544,7 +555,7 @@ export default function EditProfileForm({
             className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
-              <span className="text-base">🔒</span>
+              <FlaticonIcon name="lock" className="h-4 w-4 text-base" />
               <span className={activeTab === 'password' ? 'text-orange-500' : 'text-neutral-300'}>เปลี่ยนรหัสผ่าน</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'password' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
@@ -584,7 +595,7 @@ export default function EditProfileForm({
             className="w-full p-4 flex items-center justify-between text-left font-bold text-sm   transition-all cursor-pointer"
           >
             <span className="flex items-center gap-3">
-              <span className="text-base">🔔</span>
+              <FlaticonIcon name="bell" className="h-4 w-4 text-base" />
               <span className={activeTab === 'notifications' ? 'text-orange-500' : 'text-neutral-300'}>การแจ้งเตือน</span>
             </span>
             <span className={`text-xs text-neutral-400 transition-transform duration-300 ${activeTab === 'notifications' ? 'rotate-180 text-orange-500' : ''}`}>▼</span>
@@ -665,22 +676,22 @@ export default function EditProfileForm({
 
       </div>
 
-      {/* 💻 2. LAYOUT สำหรับจอคอมพิวเตอร์ DESKTOP */}
+      {/* LAYOUT สำหรับจอคอมพิวเตอร์ DESKTOP */}
       <div className="hidden md:flex gap-6 items-start">
         
         {/* SIDEBAR MENU */}
         <div className="w-64  border border-neutral-800/80 rounded-2xl p-4 flex flex-col gap-2 shrink-0 shadow-lg">
           <button type="button" onClick={() => setDesktopTab('profile')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'profile' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
-            <span>👤</span> User Information
+            <FlaticonIcon name="user" className="h-4 w-4 shrink-0" /> User Information
           </button>
           <button type="button" onClick={() => setDesktopTab('avatar')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'avatar' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
-            <span>🖼️</span> Avatar Settings
+            <FlaticonIcon name="picture" className="h-4 w-4 shrink-0" /> Avatar Settings
           </button>
           <button type="button" onClick={() => setDesktopTab('password')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'password' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
-            <span>🔒</span> Change Password
+            <FlaticonIcon name="lock" className="h-4 w-4 shrink-0" /> Change Password
           </button>
           <button type="button" onClick={() => setDesktopTab('notifications')} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left font-bold text-sm transition-all cursor-pointer ${activeTab === 'notifications' ? 'bg-orange-500 text-black shadow-md shadow-orange-500/10' : 'text-neutral-400 '}`}>
-            <span>🔔</span> Notifications
+            <FlaticonIcon name="bell" className="h-4 w-4 shrink-0" /> Notifications
           </button>
         </div>
 
@@ -728,22 +739,24 @@ export default function EditProfileForm({
                     <div className="col-span-2 space-y-2">
                       <input className="w-full rounded-xl px-4 py-2  border border-neutral-900/40 text-neutral-500 cursor-not-allowed select-none text-sm" type="email" value={email || ''} disabled />
                       
-                      {/* ⚡ แสดงสถานะและปุ่มยืนยันอีเมลบน Desktop */}
+                      {/* แสดงสถานะและปุ่มยืนยันอีเมลบน Desktop */}
                       <div>
                         {isEmailConfirmed ? (
                           <span className="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                            ✓ Verified Email
+                            <StatusIcon type="success" /> Verified Email
                           </span>
                         ) : (
                           <div className="flex items-center justify-between p-2.5 bg-amber-950/30 border border-amber-900/50 rounded-xl">
-                            <span className="text-xs text-amber-400 font-medium">⚠️ ยังไม่ได้ยืนยันอีเมล</span>
+                            <span className="flex items-center gap-1 text-xs text-amber-400 font-medium">
+                              <StatusIcon type="error" /> ยังไม่ได้ยืนยันอีเมล
+                            </span>
                             <button
                               type="button"
                               onClick={handleResendEmail}
                               disabled={isPending}
                               className="text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold px-3 py-1 rounded-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                             >
-                              Resend Link
+                              ส่งลิงก์ยืนยันอีเมล
                             </button>
                           </div>
                         )}
@@ -776,12 +789,19 @@ export default function EditProfileForm({
                       {(profile?.full_name || profile?.username || email)?.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div className="absolute -bottom-2 -right-2 bg-orange-500 text-black p-2 rounded-xl shadow-lg border-2 border-black text-xs font-bold">📷</div>
+                  <div className="absolute -bottom-2 -right-2 flex items-center justify-center bg-orange-500 text-black p-2 rounded-xl shadow-lg border-2 border-black text-xs font-bold">
+                    <FlaticonIcon name="camera" className="h-4 w-4" />
+                  </div>
                 </div>
                 <p className="text-sm text-neutral-400">อัปโหลดรูปใหม่เพื่อเปลี่ยนรูปโปรไฟล์ของคุณ</p>
                 <input type="file" id="avatar-file-desktop" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={isPending} />
                 <button type="button" disabled={isPending} onClick={() => document.getElementById('avatar-file-desktop')?.click()} className="bg-orange-500 hover:bg-orange-400 text-black active:scale-95 text-sm font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer shadow-lg ">
-                  {isPending ? 'Uploading...' : '📁 Choose Image File'}
+                  {isPending ? 'Uploading...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="folder" className="h-4 w-4" />
+                      Choose Image File
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
@@ -921,13 +941,13 @@ export default function EditProfileForm({
       <div className="mt-4">
         {successMessage && (
           <div className="p-4 bg-emerald-950/40 border border-emerald-900/60 rounded-xl text-center text-emerald-400 text-sm font-medium animate-in slide-in-from-bottom-2 duration-200">
-            ✅ {successMessage}
+            <StatusIcon type="success" />{' '}{successMessage}
           </div>
         )}
 
         {errorMessage && (
           <div className="p-4 bg-red-950/30 border border-red-900/50 rounded-xl text-center text-red-400 text-sm font-medium animate-in slide-in-from-bottom-2 duration-200">
-            ⚠️ {errorMessage}
+            <StatusIcon type="error" />{' '}{errorMessage}
           </div>
         )}
       </div>

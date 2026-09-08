@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import FlaticonIcon from '@/components/flaticon-icon'
 
 type ThemeMode = 'dark' | 'light'
 
@@ -48,7 +49,7 @@ export default function ThemeToggle() {
           isLight ? 'translate-x-6 sm:translate-x-7' : 'translate-x-0'
         }`}
       >
-        {isLight ? '☀️' : '🌙'}
+        <FlaticonIcon name={isLight ? 'sun' : 'moon'} className="h-3.5 w-3.5" />
       </span>
     </button>
   )

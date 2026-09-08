@@ -1,6 +1,9 @@
+import { isEmailVerified } from '@/lib/email-verification'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
+import StatusIcon from '@/components/status-icon'
 import LogoutConfirmButton from '@/components/logout-confirm-button'
 import { formatThaiPhoneInput } from '@/lib/phone'
 import { getProfileStudentIdDisplay } from '@/lib/roles'
@@ -36,14 +39,14 @@ export default async function ViewProfilePage() {
   const phone = profile?.phone ? formatThaiPhoneInput(profile.phone) : 'ยังไม่ได้ระบุ'
   const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url
   const email = user.email ?? 'ไม่พบอีเมล'
-  const isEmailConfirmed = Boolean(user.email_confirmed_at)
+  const isEmailConfirmed = isEmailVerified(user)
   
   // ดึง Role จาก Database
   const userRole = (profile?.role || user.app_metadata?.role || 'customer').toLowerCase()
   const userRoleLabel = roleEnglishLabels[userRole] || userRole.toUpperCase()
   const studentIdDisplay = getProfileStudentIdDisplay(profile || {}, user.email)
 
-  // ⚡ ฟังก์ชันกำหนด Class สีตามแบบฉบับ Navbar เป๊ะๆ
+  // ฟังก์ชันกำหนด Class สีตามแบบฉบับ Navbar
   const getRoleStyle = (role: string) => {
     switch (role) {
       case 'admin':
@@ -56,6 +59,21 @@ export default async function ViewProfilePage() {
         return 'bg-green-500/20 text-green-400 border-green-500/50'
       default:
         return 'bg-gray-500/20 text-gray-400 border-gray-500/50'
+    }
+  }
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'chart-histogram'
+      case 'restaurant':
+        return 'restaurant'
+      case 'student':
+        return 'graduation-cap'
+      case 'rider':
+        return 'truck-side'
+      default:
+        return 'user'
     }
   }
 
@@ -73,7 +91,7 @@ export default async function ViewProfilePage() {
         {/* Layout แนวนอน */}
         <div className="flex flex-col md:flex-row">
           
-          {/* 👈 ฝั่งซ้าย: รูป Avatar, ชื่อ, Role Badge และปุ่ม Sign Out */}
+          {/* ฝั่งซ้าย: รูป Avatar, ชื่อ, Role Badge และปุ่ม Sign Out */}
           <div className="app-chrome md:w-1/3 bg-gradient-to-b from-orange-600/20 via-neutral-900 to-neutral-900 p-6 flex flex-col items-center text-center justify-between border-b md:border-b-0 md:border-r border-neutral-800/80">
             <div className="flex flex-col items-center w-full">
               
@@ -100,12 +118,10 @@ export default async function ViewProfilePage() {
               <h1 className="text-xl font-black text-white truncate max-w-full">{fullName}</h1>
               <p className="max-w-full truncate text-xs text-orange-400 font-medium mb-2">@{username}</p>
 
-              {/* 🎨 Role Badge ฝั่งซ้าย (อ้างอิงสีจาก Navbar) */}
-              <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${getRoleStyle(userRole)}`}>
-                {userRole === 'admin' ? `📊 ${userRoleLabel}` :
-                 userRole === 'restaurant' ? `🍔 ${userRoleLabel}` :
-                 userRole === 'student' ? `🎓 ${userRoleLabel}` :
-                 userRole === 'rider' ? `🛵 ${userRoleLabel}` : `👤 ${userRoleLabel}`}
+              {/* Role Badge ฝั่งซ้าย (อ้างอิงสีจาก Navbar) */}
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border ${getRoleStyle(userRole)}`}>
+                <FlaticonIcon name={getRoleIcon(userRole)} className="h-3 w-3" />
+                {userRoleLabel}
               </span>
 
             </div>
@@ -121,7 +137,7 @@ export default async function ViewProfilePage() {
             </div>
           </div>
 
-          {/* 👉 ฝั่งขวา: รายละเอียดโปรไฟล์ */}
+          {/* ฝั่งขวา: รายละเอียดโปรไฟล์ */}
           <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between  min-w-0">
             <div>
               <h2 className="text-lg font-black text-neutral-200 border-b border-neutral-800/80 pb-3 mb-4">
@@ -151,7 +167,7 @@ export default async function ViewProfilePage() {
                   </span>
                 </div>
 
-                {/* 🎨 สิทธิ์การใช้งาน (Role) ในตาราง (อ้างอิงสีจาก Navbar) */}
+                {/* สิทธิ์การใช้งาน (Role) ในตาราง (อ้างอิงสีจาก Navbar) */}
                 <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">Role</span>
                   <span className={`px-2.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider border ${getRoleStyle(userRole)}`}>
@@ -162,7 +178,8 @@ export default async function ViewProfilePage() {
                 <div className="flex flex-col gap-1 py-1 border-b border-neutral-800/60 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-neutral-400 font-medium text-xs uppercase tracking-wider">สถานะอีเมล</span>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${isEmailConfirmed ? 'bg-emerald-950/10 text-emerald-400 border border-emerald-800/50' : 'bg-amber-950/60 text-amber-400 border border-amber-800/50'}`}>
-                    {isEmailConfirmed ? '✓ ยืนยันเรียบร้อย' : '⚠️ ยังไม่ได้ยืนยัน'}
+                    <StatusIcon type={isEmailConfirmed ? 'success' : 'error'} />
+                    {isEmailConfirmed ? 'ยืนยันเรียบร้อย' : 'ยังไม่ได้ยืนยัน'}
                   </span>
                 </div>
 
@@ -180,7 +197,10 @@ export default async function ViewProfilePage() {
                 href="/profile/edit"
                 className="block w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-2.5 px-4 rounded-xl transition-all active:scale-95 text-center text-sm shadow-lg shadow-orange-500/10 cursor-pointer"
               >
-                ✏️ แก้ไขข้อมูลโปรไฟล์
+                <span className="inline-flex items-center justify-center gap-2">
+                  <FlaticonIcon name="edit" className="h-4 w-4" />
+                  แก้ไขข้อมูลโปรไฟล์
+                </span>
               </Link>
             </div>
 

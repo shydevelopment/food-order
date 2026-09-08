@@ -22,7 +22,7 @@ export default async function ForgotPasswordPage() {
 
       const supabase = await createClient()
       
-      // 💡 อัปเดต redirectTo ให้ปลายทางวิ่งไปที่ /reset-password แทนหน้าเดิมแล้วครับ
+      // อัปเดต redirectTo ให้ปลายทางวิ่งไปที่ /reset-password แทนหน้าเดิม
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${siteUrl}/reset-password`,
       })

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import FlaticonIcon from '@/components/flaticon-icon';
 import { useActivityLogs } from '../components/useActivityLogs';
 import { ActivityLogItem } from '../components/ActivityLogItem';
 
@@ -26,7 +27,10 @@ export default function AdminActivityLogsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-3xl">
-            📜 ประวัติกิจกรรม {role === 'restaurant' ? 'ของร้าน' : 'ทั้งหมด'} (Activity Logs)
+            <span className="inline-flex items-center gap-2">
+              <FlaticonIcon name="memo-pad" className="h-6 w-6" />
+              ประวัติกิจกรรม {role === 'restaurant' ? 'ของร้าน' : 'ทั้งหมด'} (Activity Logs)
+            </span>
           </h2>
           <p className="mt-1.5 text-sm text-gray-300 sm:text-base">
             {selectedRestaurant
@@ -42,14 +46,17 @@ export default function AdminActivityLogsPage() {
           onClick={refetch}
           className="w-full justify-center bg-orange-500 hover:bg-orange-600 text-black px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg flex items-center gap-2 active:scale-95 cursor-pointer md:w-auto md:self-auto"
         >
-          <span>🔄</span> รีเฟรชประวัติ
+          <FlaticonIcon name="refresh" className="h-4 w-4" />
+          รีเฟรชประวัติ
         </button>
       </div>
 
       {/* แถบค้นหาและตัวกรอง */}
       <div className=" border border-neutral-800 rounded-xl p-3 shadow-xl flex flex-col md:flex-row gap-3 md:gap-4 justify-between items-stretch md:items-center sm:p-4">
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">🔍</span>
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">
+            <FlaticonIcon name="search" className="h-4 w-4" />
+          </span>
           <input
             type="text"
             placeholder="ค้นหากิจกรรม, สมาชิก, ออร์เดอร์, ชื่อร้าน หรือเมนู..."
@@ -88,10 +95,10 @@ export default function AdminActivityLogsPage() {
               }`}
             >
               {type === 'all' && `ทั้งหมด (${activities.length})`}
-              {type === 'order' && '🛒 ออร์เดอร์'}
-              {type === 'user' && '👤 สมาชิก'}
-              {type === 'restaurant' && '🏪 Restaurant'}
-              {type === 'menu' && '🍽️ เมนูอาหาร'}
+              {type === 'order' && <span className="inline-flex items-center gap-1.5"><FlaticonIcon name="shopping-cart" className="h-3.5 w-3.5" />ออร์เดอร์</span>}
+              {type === 'user' && <span className="inline-flex items-center gap-1.5"><FlaticonIcon name="user" className="h-3.5 w-3.5" />สมาชิก</span>}
+              {type === 'restaurant' && <span className="inline-flex items-center gap-1.5"><FlaticonIcon name="shop" className="h-3.5 w-3.5" />Restaurant</span>}
+              {type === 'menu' && <span className="inline-flex items-center gap-1.5"><FlaticonIcon name="utensils" className="h-3.5 w-3.5" />เมนูอาหาร</span>}
             </button>
           ))}
         </div>

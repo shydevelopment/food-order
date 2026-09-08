@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import FlaticonIcon from '@/components/flaticon-icon';
 import { ACCOUNT_ROLES, getAccountRoleMeta } from '@/lib/roles';
 import { formatThaiPhoneInput } from '@/lib/phone';
 
@@ -28,7 +29,7 @@ export default function ManageRolesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ⚡ State สำหรับระบบ Popup Modal (เพิ่มสเตตตอนปิดเพิ่มเข้ามา)
+  // State สำหรับระบบ Popup Modal (เพิ่มสเตตตอนปิดเพิ่มเข้ามา)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false); // เช็คว่ากำลังเล่นอนิเมชันปิดอยู่ไหม
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
@@ -61,7 +62,7 @@ export default function ManageRolesPage() {
     setIsModalOpen(true);
   };
 
-  // ⚡ ฟังก์ชันปิดมอดอลแบบหน่วงเวลาเพื่อรอให้อนิเมชันเฟดออกแสดงผลจนจบ
+  // ฟังก์ชันปิดมอดอลแบบหน่วงเวลาเพื่อรอให้อนิเมชันเฟดออกแสดงผลจนจบ
   const handleCloseModal = () => {
     setIsClosing(true);
     setTimeout(() => {
@@ -92,7 +93,7 @@ export default function ManageRolesPage() {
         throw new Error(result.error || 'ไม่สามารถเปลี่ยน role ได้');
       }
 
-      alert('💾 เปลี่ยน Role ผู้ใช้งานสำเร็จ!');
+      alert('เปลี่ยน Role ผู้ใช้งานสำเร็จ!');
       await fetchData();
       handleCloseModal(); // ใช้ฟังก์ชันปิดแบบสมูท
     } catch (error) {
@@ -127,7 +128,10 @@ export default function ManageRolesPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-white uppercase tracking-wide">
-            👥 จัดการ Role ผู้ใช้งาน
+            <span className="inline-flex items-center gap-2">
+              <FlaticonIcon name="users" className="h-6 w-6" />
+              จัดการ Role ผู้ใช้งาน
+            </span>
           </h2>
           <p className="text-sm text-gray-400">
             Role หลักมี Customer, Student, Restaurant และ Admin ส่วน Owner/Staff ให้จัดในหน้า สิทธิ์ร้านอาหาร
@@ -135,7 +139,9 @@ export default function ManageRolesPage() {
         </div>
 
         <div className="relative w-full sm:w-72">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">🔍</span>
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">
+            <FlaticonIcon name="search" className="h-4 w-4" />
+          </span>
           <input
             type="text"
             placeholder="ค้นหาชื่อ ชื่อผู้ใช้ อีเมล หรือเบอร์โทร..."
@@ -228,12 +234,12 @@ export default function ManageRolesPage() {
       )}
 
       {/* ========================================== */}
-      {/* ⚡ POP-UP MODAL (เปิดสมูทพุ่งขึ้น - ปิดสมูทเฟดลงครบสูตร) */}
+      {/* POP-UP MODAL (เปิดสมูทพุ่งขึ้น - ปิดสมูทเฟดลงครบสูตร) */}
       {/* ========================================== */}
       {(isModalOpen || isClosing) && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}>
           
-          {/* 🛠️ ส่วนฝังการตั้งค่าอนิเมชัน ทั้งจังหวะเข้า (In) และจังหวะออก (Out) */}
+          {/* ส่วนฝังการตั้งค่าอนิเมชัน ทั้งจังหวะเข้า (In) และจังหวะออก (Out) */}
           <style>{`
             @keyframes smoothFadeIn {
               from { opacity: 0; backdrop-filter: blur(0px); }
@@ -262,7 +268,10 @@ export default function ManageRolesPage() {
             
             {/* หัว Modal */}
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
-              <h3 className="text-lg font-black text-white">⚙️ เปลี่ยน Role ผู้ใช้งาน</h3>
+              <h3 className="flex items-center gap-2 text-lg font-black text-white">
+                <FlaticonIcon name="settings" className="h-5 w-5" />
+                เปลี่ยน Role ผู้ใช้งาน
+              </h3>
               <button 
                 onClick={handleCloseModal}
                 className="text-gray-500 hover:text-white transition-colors text-xl font-bold"
@@ -326,7 +335,12 @@ export default function ManageRolesPage() {
                   disabled={submitLoading}
                   className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 text-black px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-orange-500/10"
                 >
-                  {submitLoading ? 'กำลังบันทึก...' : '💾 ยืนยันเปลี่ยน Role'}
+                  {submitLoading ? 'กำลังบันทึก...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="disk" className="h-4 w-4" />
+                      ยืนยันเปลี่ยน Role
+                    </span>
+                  )}
                 </button>
               </div>
             </form>

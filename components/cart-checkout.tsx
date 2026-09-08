@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { UIEvent } from 'react'
+import FlaticonIcon from '@/components/flaticon-icon'
 
 interface CartItem {
   menuId: string
@@ -392,8 +393,8 @@ export default function CartCheckout() {
                     >
                       <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-xl  sm:h-32 md:h-20 md:w-20">
                         {item.customName ? (
-                          <div className="absolute inset-0 flex items-center justify-center  text-2xl">
-                            🍳
+                          <div className="absolute inset-0 flex items-center justify-center text-2xl text-amber-300">
+                            <FlaticonIcon name="utensils" className="h-8 w-8" />
                           </div>
                         ) : (
                           <img

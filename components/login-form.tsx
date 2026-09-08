@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import StatusIcon from '@/components/status-icon'
 import Script from 'next/script'
 import { useFormStatus } from 'react-dom'
 
@@ -165,7 +166,9 @@ export default function LoginForm({
                   : 'border-red-900/40 bg-red-950/20 text-red-400'
               }`}
             >
-              {messageType === 'success' ? '✅' : '⚠️'} {message}
+              <span aria-hidden="true" className={messageType === 'success' ? 'text-emerald-400' : 'text-amber-400'}>
+                <StatusIcon type={messageType === 'success' ? 'success' : 'error'} />
+              </span>{' '}{message}
             </p>
           )}
         </form>
