@@ -243,14 +243,15 @@ export default function Navbar() {
     <header className="app-chrome bg-neutral-950 text-white shadow-md w-full relative z-50 border-b border-neutral-900">
       <div className="w-full px-3 py-3 flex justify-between items-center gap-2 relative z-20 bg-neutral-950 sm:px-6 sm:gap-3">
         {/* LOGO */}
-        <div
+        <Link
+          href="/"
+          aria-label="กลับไปหน้าแรก"
           className="relative z-20 min-w-0 shrink text-sm font-black cursor-pointer text-orange-500 tracking-wide transition-transform active:scale-95 truncate sm:text-xl"
-          onClick={() => (window.location.href = '/')}
         >
           Food <span className="text-white">Order</span>{' '}
           <span className="hidden min-[390px]:inline">KMUTNB</span>
           <FlaticonIcon name="restaurant" className="ml-1.5 inline-flex h-4 w-4 align-[-0.1em] sm:h-5 sm:w-5" />
-        </div>
+        </Link>
 
         {/* DESKTOP NAVIGATION */}
         <nav className="absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 whitespace-nowrap text-sm font-medium lg:flex">

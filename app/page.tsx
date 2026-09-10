@@ -1,6 +1,7 @@
 import { isEmailVerified } from '@/lib/email-verification'
 import { createClient } from '@/supabase/service'
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
 import { getBangkokDayIndex, isMenuAvailableOnDay } from '@/lib/menu-days'
 import { getRestaurantTypeMeta, RESTAURANT_TYPES } from '@/lib/restaurant-types'
 import { formatRestaurantTimeRange, isRestaurantOpenNow } from '@/lib/restaurant-hours'
@@ -169,7 +170,8 @@ export default async function Index() {
                         {isRestaurantOpenNow(featuredRestaurant.status, featuredRestaurant.open_time, featuredRestaurant.close_time) ? 'เปิดอยู่' : 'ปิดแล้ว'}
                       </span>
                       <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-black text-white backdrop-blur">
-                        {featuredType.icon} {featuredType.label}
+                        <FlaticonIcon name={featuredType.icon} className="mr-1 h-3 w-3 align-middle" />
+                        {featuredType.label}
                       </span>
                     </div>
                     <h2 className="text-3xl font-black text-white sm:text-4xl">{featuredRestaurant.name}</h2>
@@ -244,7 +246,7 @@ export default async function Index() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-base">{typeMeta.icon}</span>
+                          <FlaticonIcon name={typeMeta.icon} className="h-4 w-4 shrink-0 text-base" />
                           <span className="truncate text-[11px] font-black text-amber-300">{typeMeta.label}</span>
                         </div>
                         <h3 className="mt-1 truncate text-lg font-black text-white">{restaurant.name}</h3>
@@ -273,7 +275,7 @@ export default async function Index() {
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-black text-white">
-                      <span className="mr-2">{type.icon}</span>
+                      <FlaticonIcon name={type.icon} className="mr-2 h-4 w-4 align-middle" />
                       {type.label}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-neutral-500">{type.description}</span>

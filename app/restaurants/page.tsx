@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
 import { createClient } from '@/supabase/service'
 import { getRestaurantTypeMeta, RESTAURANT_TYPES, RESTAURANT_TYPE_VALUES, supportsCustomMenuText } from '@/lib/restaurant-types'
 import { formatThaiPhoneInput } from '@/lib/phone'
@@ -165,7 +166,7 @@ export default async function StoreIndexPage({
                       : 'border-neutral-800  text-neutral-300 hover:border-orange-500/40 hover:text-orange-300'
                   }`}
                 >
-                  <span className="mr-1 text-sm">{type.icon}</span>
+                  <FlaticonIcon name={type.icon} className="mr-1 h-3.5 w-3.5 align-middle text-sm" />
                   {type.label}
                   <span className="ml-2 rounded-full bg-black/20 px-2 py-0.5 text-[10px]">{typeCounts.get(type.value) || 0}</span>
                 </Link>
@@ -214,7 +215,7 @@ export default async function StoreIndexPage({
                         </div>
                         <div className="absolute bottom-4 left-4 right-4">
                           <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[10px] font-black text-amber-200 backdrop-blur">
-                            <span className="mr-1">{typeMeta.icon}</span>
+                            <FlaticonIcon name={typeMeta.icon} className="mr-1 h-3 w-3 align-middle" />
                             {typeMeta.label}
                           </span>
                           <h3 className="mt-2 line-clamp-1 text-2xl font-black text-white">
