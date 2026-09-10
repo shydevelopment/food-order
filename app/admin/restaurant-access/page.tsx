@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import FlaticonIcon from '@/components/flaticon-icon';
 import { getAccountRoleMeta, getRestaurantAccessLevelMeta } from '@/lib/roles';
 
 interface Profile {
@@ -316,7 +317,9 @@ export default function RestaurantAccessPage() {
         </div>
 
         <div className="relative w-full lg:w-80">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-neutral-500">🔍</span>
+          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-xs text-neutral-500">
+            <FlaticonIcon name="search" className="h-4 w-4" />
+          </span>
           <input
             type="text"
             value={searchTerm}

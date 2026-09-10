@@ -1,3 +1,5 @@
+import { sendVerificationEmail } from '@/lib/send-verification-email'
+import { isEmailVerified } from '@/lib/email-verification'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
@@ -7,7 +9,10 @@ import { normalizeNotificationPreferences } from '@/lib/notification-preferences
 import { DUPLICATE_PHONE_MESSAGE, validateThaiPhone } from '@/lib/phone'
 import { getKmutnbStudentUsernameFromEmail, getProfileStudentId, isKmutnbStudentEmail } from '@/lib/roles'
 
-export default async function EditProfilePage() {
+export default async function EditProfilePage({ searchParams }: {
+  searchParams: Promise<{ message?: string }>
+}) {
+  const { message } = await searchParams
   const supabase = await createClient()
 
   // 1. ตรวจสอบข้อมูล User ปัจจุบัน
@@ -16,8 +21,8 @@ export default async function EditProfilePage() {
     redirect('/login')
   }
 
-  // ⚡ เช็กสถานะว่ายืนยันอีเมลแล้วหรือยัง
-  const isEmailConfirmed = Boolean(user.email_confirmed_at)
+  // เช็กสถานะว่ายืนยันอีเมลแล้วหรือยัง
+  const isEmailConfirmed = isEmailVerified(user)
 
   // 2. ดึงข้อมูลโปรไฟล์ปัจจุบัน
   const { data: profile } = await supabase
@@ -144,7 +149,7 @@ export default async function EditProfilePage() {
     }
   }
 
-  // ⚡ 4. Server Action สำหรับส่งอีเมลยืนยันอีกครั้ง
+  // 4. Server Action สำหรับส่งอีเมลยืนยันอีกครั้ง
   const resendVerificationEmail = async () => {
     'use server'
     try {
@@ -158,17 +163,20 @@ export default async function EditProfilePage() {
         return { success: false, message: 'ไม่พบข้อมูลอีเมลผู้ใช้งาน' }
       }
 
-      // สั่งให้ Supabase ส่งอีเมลยืนยันอีกครั้ง
-      const { error } = await supabaseServer.auth.resend({
-        type: 'signup',
-        email: currentUser.email,
-        options: {
-          emailRedirectTo: `${siteUrl}/register-success`,
-        },
-      })
+      if (isEmailVerified(currentUser)) {
+        return { success: true, message: 'อีเมลนี้ยืนยันเรียบร้อยแล้ว' }
+      }
 
-      if (error) {
-        return { success: false, message: error.message }
+      if (currentUser.app_metadata.email_verification_required === true) {
+        await sendVerificationEmail(currentUser, siteUrl)
+      } else {
+        // Keep verification available for accounts created before deferred verification.
+        const { error } = await supabaseServer.auth.resend({
+          type: 'signup',
+          email: currentUser.email,
+          options: { emailRedirectTo: `${siteUrl}/register-success` },
+        })
+        if (error) return { success: false, message: error.message }
       }
 
       return { success: true, message: 'ส่งลิงก์ยืนยันตัวตนไปยังอีเมลของคุณเรียบร้อยแล้ว!' }
@@ -182,6 +190,7 @@ export default async function EditProfilePage() {
     <div className="flex flex-col items-center justify-center p-4 min-h-[80vh]">
       <main className="w-full flex flex-col items-center justify-center p-4">
         
+        {message && <p role="alert" className="mb-4 rounded-xl border border-amber-500/30 p-4 text-sm text-amber-300">{message}</p>}
         <EditProfileForm 
           profile={profile} 
           email={user.email} 

@@ -71,11 +71,6 @@ export default async function LoginPage({
       redirect(`/login?message=${encodeURIComponent('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}`)
     }
 
-    if (data.user && !data.user.email_confirmed_at) {
-      await supabase.auth.signOut()
-      redirect(`/login?message=${encodeURIComponent('บัญชีนี้ยังไม่ได้ยืนยันอีเมล กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ')}`)
-    }
-
     if (data.user) {
       await syncStudentRoleForUser({
         id: data.user.id,

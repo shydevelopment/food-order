@@ -1,11 +1,12 @@
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
 
 export default function CheckEmailPage() {
   return (
     <div className="flex flex-col items-center justify-center p-4 min-h-[80vh] text-white">
       <div className="max-w-md w-full bg-zinc-900 p-8 rounded-lg text-center border border-orange-500/30 shadow-2xl">
         <div className="w-16 h-16 bg-orange-500/10 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl border border-orange-500/20">
-          ✉️
+          <FlaticonIcon name="envelope" className="h-7 w-7" />
         </div>
         <h1 className="text-2xl font-bold mb-2">ตรวจสอบอีเมลของคุณ</h1>
         <p className="text-zinc-400 mb-6 text-sm leading-relaxed">

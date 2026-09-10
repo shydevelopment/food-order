@@ -56,3 +56,22 @@ Use lowercase, kebab-case URL segments. Profile editing lives under `/profile/ed
 | Terms of use | `/terms-of-use` |
 
 Legacy URLs redirect permanently in `next.config.ts`, preserving restaurant IDs and query parameters. Use the canonical paths above for new links.
+
+## Deferred email verification
+
+New registrations create a password-enabled Supabase account and sign in immediately.
+`email_confirmed_at` enables Supabase login; the application checks protected
+`app_metadata.email_verification_required` and `app_metadata.verified_email` for
+actual ownership verification. Existing accounts keep their original verification status.
+Home links unverified users to `/profile/edit`, where they can request a verification email.
+
+Set `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (an address on a
+verified Resend domain), and `NEXT_PUBLIC_SITE_URL` before deploying. Keep the service
+role key server-only. Verification uses Supabase single-use magic-link tokens and their
+configured expiry, sent through Resend to `/auth/verify-email`. No Supabase confirmation
+setting change is required. New signups do not send email until requested from the profile.
+
+Manual smoke test: register with a new email, confirm Home is accessible and shows the
+verification notice, log out/in before verifying, request the email from Edit Profile,
+follow its link, and confirm the notice disappears. Reusing or expiring the link should
+show an error; duplicate registration must not change the existing account password.

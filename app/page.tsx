@@ -1,3 +1,4 @@
+import { isEmailVerified } from '@/lib/email-verification'
 import { createClient } from '@/supabase/service'
 import Link from 'next/link'
 import { getBangkokDayIndex, isMenuAvailableOnDay } from '@/lib/menu-days'
@@ -83,6 +84,15 @@ export default async function Index() {
   return (
     <div className="home-page min-h-screen text-white">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-0 pb-8 sm:px-2 lg:gap-6">
+        {user && !isEmailVerified(user) && (
+          <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5" aria-label="ยืนยันอีเมล">
+            <h2 className="font-bold text-amber-300">คุณยังไม่ได้ยืนยันอีเมล</h2>
+            <p className="mt-1 text-sm text-neutral-300">เข้าใช้งานได้แล้ว และสามารถยืนยันอีเมลภายหลังได้ที่หน้าแก้ไขโปรไฟล์</p>
+            <Link href="/profile/edit" className="mt-3 inline-flex rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-black hover:bg-amber-300">
+              ไปยืนยันอีเมล
+            </Link>
+          </section>
+        )}
         <section className="home-hero overflow-hidden rounded-3xl border border-neutral-800 ">
           <div className="grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(0,1.04fr)_minmax(390px,0.96fr)]">
             <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
