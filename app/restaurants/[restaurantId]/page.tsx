@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
 import { notFound } from 'next/navigation'
 import AddToCartButton from '@/components/add-to-cart-button'
 import CustomMadeToOrderForm from '@/components/custom-made-to-order-form'
@@ -154,7 +155,7 @@ export default async function RestaurantStorePage({
                   {isOpen ? 'เปิดอยู่' : 'ปิดแล้ว'}
                 </span>
                 <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-200 backdrop-blur">
-                  <span className="mr-1">{restaurantType.icon}</span>
+                  <FlaticonIcon name={restaurantType.icon} className="mr-1 h-3 w-3 align-middle" />
                   {restaurantType.label}
                 </span>
                 <span className="rounded-full border border-white/15 bg-black/55 px-3 py-1 text-xs font-black text-white backdrop-blur">
