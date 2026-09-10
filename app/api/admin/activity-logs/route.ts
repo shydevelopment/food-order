@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
         title: isCancelled ? `ออเดอร์ถูกยกเลิก ${orderLabel}` : `คำสั่งซื้อ ${orderLabel}`,
         detail: `ร้าน ${restaurantName} • ยอด ฿${Number(order.total_price || 0).toLocaleString('th-TH')} • สถานะ: ${order.status || 'รอดำเนินการ'}${isCancelled && order.cancellation_reason ? ` • เหตุผล: ${order.cancellation_reason}` : ''}`,
         timestamp: parseTimestamp(order.created_at),
-        icon: isCancelled ? '⚠️' : '🛒',
+        icon: isCancelled ? 'exclamation' : 'shopping-cart',
         colorClass: isCancelled
           ? 'bg-red-500/10 text-red-400 border-red-500/20'
           : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -211,7 +211,7 @@ export async function GET(req: NextRequest) {
         title: 'เพิ่มเมนูอาหารใหม่',
         detail: `ร้าน ${restaurantName} • เมนู "${menu.name}" (฿${Number(menu.price || 0).toLocaleString('th-TH')})`,
         timestamp: parseTimestamp(menu.created_at),
-        icon: '🍽️',
+        icon: 'utensils',
         colorClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
       }
     })
@@ -224,7 +224,7 @@ export async function GET(req: NextRequest) {
       title: 'ร้านอาหารในระบบ',
       detail: `ร้าน "${restaurant.name}" ${restaurant.owner_id ? `• owner_id: ${restaurant.owner_id.slice(0, 8)}` : '• ยังไม่มี Owner'}`,
       timestamp: parseTimestamp(restaurant.created_at),
-      icon: '🏪',
+      icon: 'shop',
       colorClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
     }))
 
@@ -236,7 +236,7 @@ export async function GET(req: NextRequest) {
       title: 'สมาชิกในระบบ',
       detail: `${row.full_name || row.username || 'สมาชิก'} (@${row.username || 'ผู้ใช้'}) • Role: ${getAccountRoleMeta(row.role)?.thaiLabel || 'Customer'}`,
       timestamp: parseTimestamp(row.created_at),
-      icon: '👤',
+      icon: 'user',
       colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     }))
 

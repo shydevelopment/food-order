@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import FlaticonIcon from '@/components/flaticon-icon';
+import StatusIcon from '@/components/status-icon';
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
 import PasswordRequirements from '@/components/password-requirements';
 import { getAccountRoleMeta } from '@/lib/roles';
@@ -31,7 +33,7 @@ export default function AdminChangePasswordPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<PasswordTargetUser | null>(null);
 
-  // 🔔 State สำหรับ Pop-up แจ้งเตือน (พร้อมตัวแปรจัดการจังหวะปิด Fade Out)
+  // State สำหรับ Pop-up แจ้งเตือน (พร้อมตัวแปรจัดการจังหวะปิด Fade Out)
   const [showWarningModal, setShowWarningModal] = useState(true);
   const [isWarningClosing, setIsWarningClosing] = useState(false);
 
@@ -72,7 +74,7 @@ export default function AdminChangePasswordPage() {
     };
   }, [supabase]);
 
-  // ⚡ ฟังก์ชันปิด Pop-up เตือนความปลอดภัยพร้อมเล่นอนิเมชัน Fade-Out
+  // ฟังก์ชันปิด Pop-up เตือนความปลอดภัยพร้อมเล่นอนิเมชัน Fade-Out
   const handleCloseWarningModal = () => {
     setIsWarningClosing(true);
     setTimeout(() => {
@@ -91,12 +93,12 @@ export default function AdminChangePasswordPage() {
 
     const passwordPolicyError = validatePasswordPolicy(newPassword);
     if (passwordPolicyError) {
-      alert('❌ ' + passwordPolicyError);
+      alert(passwordPolicyError);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('❌ รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน');
+      alert('รหัสผ่านใหม่และการยืนยันรหัสผ่านไม่ตรงกัน');
       return;
     }
 
@@ -117,7 +119,7 @@ export default function AdminChangePasswordPage() {
         throw new Error(data.error || 'ไม่สามารถเปลี่ยนรหัสผ่านได้');
       }
 
-      alert(`✨ เปลี่ยนรหัสผ่านให้บัญชี "${selectedUser.full_name || selectedUser.username}" เรียบร้อยแล้ว!`);
+      alert(`เปลี่ยนรหัสผ่านให้บัญชี "${selectedUser.full_name || selectedUser.username}" เรียบร้อยแล้ว!`);
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: unknown) {
@@ -141,7 +143,10 @@ export default function AdminChangePasswordPage() {
       {/* ส่วนหัวของหน้าจอ */}
       <div className="mb-5 sm:mb-8">
         <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-3xl">
-          🔐 รีเซ็ต / เปลี่ยนรหัสผ่านผู้ใช้งาน
+          <span className="inline-flex items-center gap-2">
+            <FlaticonIcon name="lock" className="h-6 w-6" />
+            รีเซ็ต / เปลี่ยนรหัสผ่านผู้ใช้งาน
+          </span>
         </h2>
         <p className="mt-1.5 text-sm text-gray-300 sm:text-base">
           เลือกผู้ใช้งานที่ต้องการ และกำหนดรหัสผ่านใหม่สำหรับเข้าสู่ระบบ
@@ -156,7 +161,9 @@ export default function AdminChangePasswordPage() {
               1. ค้นหาผู้ใช้งานที่ต้องการเปลี่ยนรหัสผ่าน
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">🔍</span>
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">
+                <FlaticonIcon name="search" className="h-4 w-4" />
+              </span>
               <input
                 type="text"
                 placeholder="ค้นหาชื่อ ชื่อผู้ใช้ หรืออีเมล..."
@@ -203,7 +210,7 @@ export default function AdminChangePasswordPage() {
                       <p className="text-xs text-gray-400 truncate mt-0.5">@{u.username || 'ไม่มี username'}</p>
                       <p className="text-xs text-gray-500 truncate">{u.email || 'ไม่มีอีเมล'}</p>
                     </div>
-                    {isSelected && <span className="text-base text-orange-400 font-bold">✓</span>}
+                    {isSelected && <StatusIcon type="success" />}
                   </div>
                 );
               })
@@ -294,14 +301,21 @@ export default function AdminChangePasswordPage() {
                       disabled={submitLoading}
                       className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 text-black px-7 py-3 rounded-xl text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-orange-500/10 active:scale-95 cursor-pointer sm:w-auto"
                     >
-                      {submitLoading ? 'กำลังบันทึกรหัสผ่านใหม่...' : '💾 บันทึกรหัสผ่านใหม่'}
+                      {submitLoading ? 'กำลังบันทึกรหัสผ่านใหม่...' : (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <FlaticonIcon name="disk" className="h-4 w-4" />
+                          บันทึกรหัสผ่านใหม่
+                        </span>
+                      )}
                     </button>
                   </div>
                 </form>
               </div>
             ) : (
               <div className="py-14 text-center border-2 border-dashed border-neutral-800 rounded-xl  sm:py-28">
-                <p className="text-4xl mb-3">👈</p>
+                <p className="mb-3 flex justify-center text-4xl text-neutral-500">
+                  <FlaticonIcon name="angle-left" className="h-10 w-10" />
+                </p>
                 <p className="text-base font-bold text-gray-300">กรุณาเลือกผู้ใช้งานจากรายการทางด้านซ้าย</p>
                 <p className="text-sm text-neutral-500 mt-1">เพื่อเริ่มต้นกำหนดรหัสผ่านใหม่ให้กับผู้ใช้งานนั้น</p>
               </div>
@@ -311,7 +325,7 @@ export default function AdminChangePasswordPage() {
       </div>
 
       {/* ========================================================= */}
-      {/* ⚠️ POP-UP แจ้งเตือนข้อควรระวังพร้อมอนิเมชัน Fade-In / Fade-Out */}
+      {/* POP-UP แจ้งเตือนข้อควรระวังพร้อมอนิเมชัน Fade-In / Fade-Out */}
       {/* ========================================================= */}
       {(showWarningModal || isWarningClosing) && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-3 bg-black/80 backdrop-blur-md sm:p-4 ${isWarningClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}>
@@ -344,7 +358,7 @@ export default function AdminChangePasswordPage() {
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-amber-500" />
 
             <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl text-amber-500">
-              ⚠️
+              <StatusIcon type="error" className="h-8 w-8" />
             </div>
 
             <h3 className="text-xl font-black text-white mb-2 sm:text-2xl">

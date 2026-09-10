@@ -2,11 +2,15 @@ import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
 import { DEFAULT_RESTAURANT_TYPE, RESTAURANT_TYPE_VALUES } from '@/lib/restaurant-types'
+import { validateThaiPhone } from '@/lib/phone'
 
 const getAdminClient = () => createSupabaseAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const TIME_PATTERN = /^\d{2}:\d{2}(?::\d{2})?$/
 
 const verifyAdmin = async () => {
   const supabase = await createClient()
@@ -50,6 +54,26 @@ const normalizeRestaurantPayload = (body: Record<string, unknown>) => {
   }
 }
 
+const validateRestaurantPayload = (payload: ReturnType<typeof normalizeRestaurantPayload>, options: { requireImage: boolean }) => {
+  if (!payload.name) return 'กรุณากรอกชื่อร้านอาหาร'
+  if (!payload.email) return 'กรุณากรอกอีเมลร้านอาหาร'
+  if (!EMAIL_PATTERN.test(payload.email)) return 'กรุณากรอกรูปแบบอีเมลร้านอาหารให้ถูกต้อง'
+
+  const phoneValidation = validateThaiPhone(payload.phone)
+  if (!phoneValidation.success) return phoneValidation.message
+  payload.phone = phoneValidation.phone
+
+  if (!payload.description) return 'กรุณากรอกคำอธิบายรายละเอียดร้าน'
+  if (!payload.address) return 'กรุณากรอกที่อยู่ร้านอาหาร'
+  if (!payload.open_time || !TIME_PATTERN.test(payload.open_time)) return 'กรุณากรอกเวลาเปิดทำการ'
+  if (!payload.close_time || !TIME_PATTERN.test(payload.close_time)) return 'กรุณากรอกเวลาปิดทำการ'
+  if (!['open', 'closed'].includes(payload.status)) return 'กรุณาเลือกสถานะร้านค้า'
+  if (options.requireImage && !payload.image_url) return 'กรุณาอัปโหลดรูปภาพโลโก้หน้าร้าน'
+  if (!payload.restaurant_type) return 'กรุณาเลือกรูปแบบร้าน'
+
+  return null
+}
+
 export async function GET() {
   try {
     const auth = await verifyAdmin()
@@ -78,9 +102,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const payload = normalizeRestaurantPayload(body)
+    const validationError = validateRestaurantPayload(payload, { requireImage: true })
 
-    if (!payload.name) {
-      return NextResponse.json({ error: 'กรุณากรอกชื่อร้านอาหาร' }, { status: 400 })
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
     }
 
     const { data, error } = await auth.supabaseAdmin

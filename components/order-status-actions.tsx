@@ -7,6 +7,9 @@ import { getOrderStatusLabel } from '@/lib/order-status'
 interface OrderStatusActionsProps {
   orderId: string
   status: string | null
+  cashPaymentPending?: boolean
+  cashPaymentId?: string
+  customerCancellationRequest?: string | null
 }
 
 const nextActions = [
@@ -19,7 +22,7 @@ const nextActions = [
   {
     status: 'completed',
     label: 'เสร็จสิ้น',
-    visibleFrom: ['delivering', 'preparing'],
+    visibleFrom: ['delivering'],
   },
   {
     status: 'cancelled',
@@ -31,6 +34,9 @@ const nextActions = [
 export default function OrderStatusActions({
   orderId,
   status,
+  cashPaymentPending = false,
+  cashPaymentId,
+  customerCancellationRequest = null,
 }: OrderStatusActionsProps) {
   const router = useRouter()
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
@@ -77,13 +83,41 @@ export default function OrderStatusActions({
   }
 
   const handleCancelOrder = () => {
-    const cleanedReason = cancellationReason.trim()
+    const cleanedReason = cancellationReason.trim() || customerCancellationRequest?.trim() || ''
     if (cleanedReason.length < 3) {
       alert('กรุณากรอกเหตุผลการยกเลิกอย่างน้อย 3 ตัวอักษร')
       return
     }
 
     void handleUpdateStatus('cancelled', cleanedReason)
+  }
+
+  const handleConfirmCashPayment = async () => {
+    if (!cashPaymentId) return
+
+    setUpdatingStatus('cash')
+    try {
+      const response = await fetch(`/api/admin/payments/${cashPaymentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' }),
+      })
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'ไม่สามารถยืนยันรับเงินสดได้')
+      }
+
+      router.refresh()
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'ไม่สามารถยืนยันรับเงินสดได้',
+      )
+    } finally {
+      setUpdatingStatus(null)
+    }
   }
 
   if (status === 'completed' || status === 'cancelled') {
@@ -99,7 +133,10 @@ export default function OrderStatusActions({
             <button
               key={action.status}
               type="button"
-              disabled={Boolean(updatingStatus)}
+              disabled={
+                Boolean(updatingStatus) ||
+                (action.status === 'completed' && cashPaymentPending)
+              }
               onClick={() => {
                 if (action.status === 'cancelled') {
                   setShowCancelDialog(true)
@@ -116,10 +153,33 @@ export default function OrderStatusActions({
             >
               {updatingStatus === action.status
                 ? 'กำลังบันทึก...'
-                : action.label}
+                : action.status === 'completed' && cashPaymentPending
+                  ? 'รอยืนยันเงินสด'
+                  : action.label}
             </button>
           ))}
+        {cashPaymentPending && status === 'delivering' && cashPaymentId && (
+          <button
+            type="button"
+            disabled={Boolean(updatingStatus)}
+            onClick={() => void handleConfirmCashPayment()}
+            className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-black text-neutral-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {updatingStatus === 'cash'
+              ? 'กำลังยืนยันเงินสด...'
+              : 'ยืนยันรับเงินสด'}
+          </button>
+        )}
       </div>
+
+      {cashPaymentPending && status === 'delivering' && !cashPaymentId && (
+        <a
+          href="/admin/payments?method=cash&status=pending"
+          className="inline-flex text-xs font-bold text-amber-300 underline decoration-amber-500/50 underline-offset-4 transition hover:text-amber-200"
+        >
+          ยืนยันรับเงินสดในหน้า Payment ก่อนปิดออเดอร์
+        </a>
+      )}
 
       {showCancelDialog && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/75 px-4 py-6 text-white backdrop-blur-sm food-alert-overlay">
@@ -131,11 +191,12 @@ export default function OrderStatusActions({
               ยกเลิกออเดอร์
             </p>
             <h2 className="mt-2 text-center text-2xl font-black text-white">
-              กรอกเหตุผลให้ลูกค้าทราบ
+              {customerCancellationRequest ? 'ยืนยันยกเลิกตามคำขอของลูกค้า' : 'กรอกเหตุผลให้ลูกค้าทราบ'}
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-sm text-neutral-400">
-              เหตุผลนี้จะแสดงให้ลูกค้าเห็นในหน้า Track Order
-              และการแจ้งเตือนสถานะ
+              {customerCancellationRequest
+                ? `ลูกค้าระบุว่า: ${customerCancellationRequest}`
+                : 'เหตุผลนี้จะแสดงให้ลูกค้าเห็นในหน้า Track Order และการแจ้งเตือนสถานะ'}
             </p>
 
             <label className="mt-5 block text-xs font-bold uppercase tracking-wide text-neutral-400">
@@ -151,7 +212,7 @@ export default function OrderStatusActions({
               className="mt-2 w-full resize-none rounded-xl border border-neutral-800  px-3 py-3 text-sm text-white placeholder-neutral-600 outline-none transition focus:border-red-500"
             />
             <div className="mt-1 flex items-center justify-between gap-3 text-xs text-neutral-500">
-              <span>บังคับกรอกก่อนยกเลิก</span>
+              <span>{customerCancellationRequest ? 'ใช้เหตุผลของลูกค้าได้ หรือระบุเหตุผลของร้าน' : 'บังคับกรอกก่อนยกเลิก'}</span>
               <span>{cancellationReason.length}/300</span>
             </div>
 

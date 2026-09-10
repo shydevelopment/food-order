@@ -1,10 +1,9 @@
-import { headers } from 'next/headers'
 import { createClient } from '@/supabase/service'
 import { redirect } from 'next/navigation'
 import { getKmutnbStudentUsernameFromEmail, resolveAccountRoleForEmail } from '@/lib/roles'
 import { validatePasswordPolicy } from '@/lib/password-policy'
 import { DUPLICATE_PHONE_MESSAGE, validateThaiPhone } from '@/lib/phone'
-import { getSiteUrl } from '@/lib/site-url'
+import { createAdminClient } from '@/supabase/admin'
 import RegisterForm from '@/components/register-form'
 
 export default async function RegisterPage({
@@ -56,9 +55,6 @@ export default async function RegisterPage({
       redirect(`/register?message=${encodeURIComponent(passwordPolicyError)}`)
     }
 
-    const requestHeaders = await headers()
-    const siteUrl = getSiteUrl(requestHeaders)
-
     const supabase = await createClient()
 
     const { data: existingPhoneProfile, error: phoneLookupError } = await supabase
@@ -75,19 +71,20 @@ export default async function RegisterPage({
       redirect(`/register?message=${encodeURIComponent(DUPLICATE_PHONE_MESSAGE)}`)
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
+    // Login is enabled immediately; email ownership is tracked in protected app metadata.
+    const admin = createAdminClient()
+    const { error } = await admin.auth.admin.createUser({
+      email: email.trim().toLowerCase(),
       password,
-      options: {
-        emailRedirectTo: `${siteUrl}/register-success`,
-        data: {
-          username: username,
-          full_name: displayName,
-          display_name: displayName,
-          phone: phone,
-          student_id: accountRole === 'student' ? studentId : null,
-          role: accountRole,
-        },
+      email_confirm: true,
+      app_metadata: { email_verification_required: true },
+      user_metadata: {
+        username,
+        full_name: displayName,
+        display_name: displayName,
+        phone,
+        student_id: accountRole === 'student' ? studentId : null,
+        role: accountRole,
       },
     })
 
@@ -95,14 +92,7 @@ export default async function RegisterPage({
       redirect(`/register?message=${encodeURIComponent(error.message)}`)
     }
 
-    if (data?.user && data.user.identities && data.user.identities.length === 0) {
-      const msg = encodeURIComponent('อีเมลนี้ถูกใช้งานและยืนยันตัวตนแล้ว กรุณาเข้าสู่ระบบ')
-      redirect(`/login?message=${msg}`)
-    }
-
-    const successMsg = encodeURIComponent('สมัครสมาชิกสำเร็จ! ระบบได้ส่งอีเมลสำหรับยืนยันตัวตนไปยังอีเมลของคุณแล้ว กรุณาตรวจสอบกล่องข้อความ (รวมถึงจดหมายขยะ) เพื่อเปิดใช้งานบัญชี')
-    
-    redirect(`/login?message=${successMsg}&type=success`)
+    redirect(`/login?message=${encodeURIComponent('สมัครสมาชิกสำเร็จแล้ว กรุณาเข้าสู่ระบบอีกครั้ง')}&type=success`)
   }
 
   return (

@@ -4,6 +4,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import FlaticonIcon from '@/components/flaticon-icon';
+import StatusIcon from '@/components/status-icon';
 import {
   COMMON_INGREDIENTS,
   DEFAULT_RESTAURANT_TYPE,
@@ -31,7 +33,7 @@ export default function RestaurantDetailPage() {
   // State สำหรับคำนวณสถานะเปิดปิด Real-time
   const [isOpenNow, setIsOpenNow] = useState(false);
   
-  // 🔥 State สำหรับระบบแก้ไขข้อมูลร้านอาหาร
+  // State สำหรับระบบแก้ไขข้อมูลร้านอาหาร
   const [isEditRestModalOpen, setIsEditRestModalOpen] = useState(false);
   const [restImageFile, setRestImageFile] = useState<File | null>(null);
   const [editRestData, setEditRestData] = useState({
@@ -67,7 +69,7 @@ export default function RestaurantDetailPage() {
   });
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  // 👥 State สำหรับระบบดูสมาชิก / พนักงานประจำร้าน
+  // State สำหรับระบบดูสมาชิก / พนักงานประจำร้าน
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -122,7 +124,7 @@ export default function RestaurantDetailPage() {
     }
   };
 
-  // 👥 ฟังก์ชันดึงรายชื่อสมาชิก / เจ้าของ / พนักงานประจำร้านจากตาราง profiles
+  // ฟังก์ชันดึงรายชื่อสมาชิก / เจ้าของ / พนักงานประจำร้านจากตาราง profiles
   const fetchRestaurantMembers = async () => {
     setMembersLoading(true);
     try {
@@ -230,7 +232,7 @@ export default function RestaurantDetailPage() {
       }
       
       setIsEditRestModalOpen(false);
-      alert('แก้ไขข้อมูลร้านค้าสำเร็จ 🎉');
+      alert('แก้ไขข้อมูลร้านค้าสำเร็จ');
     } catch (error: any) {
       alert('เกิดข้อผิดพลาดในการแก้ไขร้านค้า: ' + error.message);
     } finally {
@@ -297,24 +299,30 @@ export default function RestaurantDetailPage() {
   const handleAddMenu = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canManage) return alert('เฉพาะ Owner เท่านั้นที่เพิ่มเมนูได้');
-    if (!newMenu.name || !newMenu.price) return alert('กรุณากรอกชื่อเมนูและราคา');
 
-    setActionLoading(true);
-    let uploadedImageUrl = null;
+    const menuName = newMenu.name.trim();
+    const menuDescription = newMenu.description.trim();
+    const menuPrice = Number(newMenu.price);
+
+    if (!menuName) return alert('กรุณากรอกชื่อเมนู');
+    if (!Number.isFinite(menuPrice) || menuPrice <= 0) return alert('กรุณากรอกราคาเมนูให้ถูกต้อง');
+    if (categories.length > 0 && !newMenu.category_id) return alert('กรุณาเลือกหมวดเมนู');
+    if (newMenu.available_days.length === 0) return alert('กรุณาเลือกวันที่เมนูนี้เข้าร้านอย่างน้อย 1 วัน');
+    if (!imageFile) return alert('กรุณาอัปโหลดรูปภาพเมนูอาหาร');
+    if (!menuDescription) return alert('กรุณากรอกรายละเอียดเมนู');
 
     try {
-      if (imageFile) {
-        uploadedImageUrl = await uploadWorkspaceImage(imageFile, 'menus');
-      }
+      setActionLoading(true);
+      const uploadedImageUrl = await uploadWorkspaceImage(imageFile, 'menus');
 
       const res = await fetch(`/api/restaurant-workspace/${restaurantId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'menu',
-          name: newMenu.name,
-          price: parseFloat(newMenu.price),
-          description: newMenu.description || null,
+          name: menuName,
+          price: menuPrice,
+          description: menuDescription,
           image_url: uploadedImageUrl,
           is_available: newMenu.is_available,
           available_days: newMenu.available_days,
@@ -531,7 +539,7 @@ export default function RestaurantDetailPage() {
   };
 
   if (loading) return <div className="p-8 text-neutral-400  min-h-screen">กำลังโหลดข้อมูลระบบร้านอาหาร...</div>;
-  if (!restaurant) return <div className="p-8 text-red-400  min-h-screen">⚠️ ไม่พบข้อมูลร้านอาหาร</div>;
+  if (!restaurant) return <div className="flex min-h-screen items-center gap-2 p-8 text-red-400"><StatusIcon type="error" /> ไม่พบข้อมูลร้านอาหาร</div>;
 
   const restaurantTypeMeta = getRestaurantTypeMeta(restaurant.restaurant_type);
   const isMadeToOrder = restaurant.restaurant_type === 'made_to_order';
@@ -616,22 +624,23 @@ export default function RestaurantDetailPage() {
         </Link>
       </div>
 
-      {/* 🏪 ส่วนแสดงข้อมูลร้าน */}
+      {/* ส่วนแสดงข้อมูลร้าน */}
       <div className=" border border-neutral-800 rounded-2xl p-3 sm:p-5 lg:p-6 mb-6 sm:mb-8 flex flex-col lg:flex-row gap-4 lg:gap-6 shadow-xl relative group">
         
-        {/* 🔥 ปุ่มสำหรับแก้ไขข้อมูลร้านอาหาร & ปุ่มดูสมาชิกประจำร้าน */}
+        {/* ปุ่มสำหรับแก้ไขข้อมูลร้านอาหาร & ปุ่มดูสมาชิกประจำร้าน */}
         <div className="static mb-2 flex flex-wrap items-center gap-2 lg:absolute lg:top-4 lg:right-4 lg:mb-0">
           <span className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide ${
             getRestaurantAccessLevelMeta(accessLevel)?.badgeClass || 'border-blue-500/30 bg-blue-500/10 text-blue-400'
           }`}>
             {getRestaurantAccessLevelMeta(accessLevel)?.thaiLabel || 'Staff'}
           </span>
-          {/* 👥 ปุ่มเปิดดูรายชื่อสมาชิกในร้าน */}
+          {/* ปุ่มเปิดดูรายชื่อสมาชิกในร้าน */}
           <button 
             onClick={openMembersModal}
             className="bg-orange-500 hover:bg-orange-600 text-black px-3.5 py-1.5 rounded-lg text-xs font-black transition-all shadow-lg shadow-orange-500/10 flex items-center gap-1.5 active:scale-95 cursor-pointer"
           >
-            👥 สมาชิกในร้าน
+            <FlaticonIcon name="users" className="h-4 w-4" />
+            สมาชิกในร้าน
           </button>
 
           {canManage && (
@@ -639,7 +648,8 @@ export default function RestaurantDetailPage() {
               onClick={openEditRestModal}
               className="  text-neutral-300 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-neutral-700/60 flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
-              ✏️ แก้ไขข้อมูลร้าน
+              <FlaticonIcon name="edit" className="h-4 w-4" />
+              แก้ไขข้อมูลร้าน
             </button>
           )}
         </div>
@@ -647,7 +657,10 @@ export default function RestaurantDetailPage() {
         {restaurant.image_url ? (
           <img src={restaurant.image_url} alt={restaurant.name} className="h-36 w-full object-cover rounded-xl border border-neutral-800 shadow-md shrink-0  sm:h-44 sm:w-44" />
         ) : (
-          <div className="h-36 w-full  rounded-xl flex items-center justify-center border border-neutral-800 text-neutral-600 shrink-0 sm:h-44 sm:w-44">🏪 ไม่มีรูปภาพ</div>
+          <div className="h-36 w-full  rounded-xl flex items-center justify-center gap-2 border border-neutral-800 text-neutral-600 shrink-0 sm:h-44 sm:w-44">
+            <FlaticonIcon name="shop" className="h-5 w-5" />
+            ไม่มีรูปภาพ
+          </div>
         )}
         <div className="flex-1 w-full min-w-0 pr-0 lg:pr-48">
           <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -664,11 +677,14 @@ export default function RestaurantDetailPage() {
           <p className="text-sm text-neutral-400 mb-4">{restaurant.description || 'ไม่มีคำอธิบายร้าน'}</p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-4 border-t border-neutral-800/60 text-xs text-neutral-400">
-            <p>📍 <strong>ที่อยู่:</strong> {restaurant.address || '-'}</p>
-            <p>📞 <strong>เบอร์โทร:</strong> {restaurant.phone ? formatThaiPhoneInput(restaurant.phone) : '-'}</p>
-            {restaurant.email && <p>📧 <strong>อีเมล:</strong> {restaurant.email}</p>}
+            <p className="flex items-center gap-1.5"><FlaticonIcon name="marker" className="h-3.5 w-3.5" /> <strong>ที่อยู่:</strong> {restaurant.address || '-'}</p>
+            <p className="flex items-center gap-1.5"><FlaticonIcon name="phone-call" className="h-3.5 w-3.5" /> <strong>เบอร์โทร:</strong> {restaurant.phone ? formatThaiPhoneInput(restaurant.phone) : '-'}</p>
+            {restaurant.email && <p className="flex items-center gap-1.5"><FlaticonIcon name="envelope" className="h-3.5 w-3.5" /> <strong>อีเมล:</strong> {restaurant.email}</p>}
             <p className="sm:col-span-2 text-orange-400 font-bold">
-              🕒 เวลาทำการ: {formatTimeDisplay(restaurant.open_time)} - {formatTimeDisplay(restaurant.close_time)} น.
+              <span className="inline-flex items-center gap-1.5">
+                <FlaticonIcon name="time-past" className="h-3.5 w-3.5" />
+                เวลาทำการ: {formatTimeDisplay(restaurant.open_time)} - {formatTimeDisplay(restaurant.close_time)} น.
+              </span>
             </p>
           </div>
           {canManageIngredients && (
@@ -715,7 +731,7 @@ export default function RestaurantDetailPage() {
         </div>
       </div>
 
-      {/* 🍽️ ส่วนจัดการเมนูอาหาร */}
+      {/* ส่วนจัดการเมนูอาหาร */}
       <div>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6 border-b border-neutral-800 pb-4">
           <div>
@@ -728,7 +744,10 @@ export default function RestaurantDetailPage() {
               onClick={openMembersModal}
               className="  text-white px-3.5 py-2 rounded-lg text-xs font-bold transition-all border border-neutral-700 cursor-pointer"
             >
-              👥 ดูสมาชิกในร้าน
+              <span className="inline-flex items-center justify-center gap-2">
+                <FlaticonIcon name="users" className="h-4 w-4" />
+                ดูสมาชิกในร้าน
+              </span>
             </button>
             {canManage && (
               <button 
@@ -852,13 +871,16 @@ export default function RestaurantDetailPage() {
                     onClick={() => handleDeleteMenu(menu.id, menu.name)}
                     className="absolute top-3 right-3 text-neutral-500 hover:text-red-400 p-1.5 rounded-md hover:bg-red-950/30 transition-all duration-200 opacity-80 lg:opacity-0 lg:group-hover:opacity-100"
                   >
-                    🗑️
+                    <FlaticonIcon name="trash" className="h-4 w-4" />
                   </button>
                 )}
                 {menu.image_url ? (
                   <img src={menu.image_url} alt={menu.name} className="h-28 w-full rounded-lg object-cover  border border-neutral-800/80 shrink-0 md:h-20 md:w-20" />
                 ) : (
-                  <div className="h-28 w-full rounded-lg  flex items-center justify-center text-[10px] text-neutral-600 font-bold border border-neutral-800 shrink-0 md:h-20 md:w-20">🍽️ ไม่มีรูป</div>
+                  <div className="h-28 w-full rounded-lg  flex items-center justify-center gap-1.5 text-[10px] text-neutral-600 font-bold border border-neutral-800 shrink-0 md:h-20 md:w-20">
+                    <FlaticonIcon name="utensils" className="h-4 w-4" />
+                    ไม่มีรูป
+                  </div>
                 )}
                 <div className="flex flex-col justify-between flex-1 min-w-0 pr-0 md:pr-6">
                   <div>
@@ -917,13 +939,15 @@ export default function RestaurantDetailPage() {
           </div>
         ) : (
           <div className=" border border-neutral-800 border-dashed rounded-2xl p-8 text-center sm:p-16">
-            <span className="text-4xl block mb-3">🍽️</span>
+            <span className="mb-3 flex justify-center text-4xl text-neutral-600">
+              <FlaticonIcon name="utensils" className="h-10 w-10" />
+            </span>
             <h4 className="text-sm font-bold text-neutral-400">{emptyMenuText}</h4>
           </div>
         )}
       </div>
 
-      {/* 👥 POPUP MODAL: รายชื่อสมาชิก / เจ้าของ / พนักงานในร้าน */}
+      {/* POPUP MODAL: รายชื่อสมาชิก / เจ้าของ / พนักงานในร้าน */}
       {isMembersModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
           <div className=" border border-neutral-800 w-full max-w-2xl rounded-2xl p-4 sm:p-6 shadow-2xl flex flex-col max-h-[85vh]">
@@ -932,7 +956,8 @@ export default function RestaurantDetailPage() {
             <div className="flex items-start justify-between gap-3 pb-4 border-b border-neutral-800 shrink-0">
               <div>
                 <h3 className="text-lg font-black text-orange-500 uppercase tracking-wide flex items-center gap-2">
-                  👥 รายชื่อสมาชิกประจำร้าน (Restaurant Staff / Members)
+                  <FlaticonIcon name="users" className="h-5 w-5" />
+                  รายชื่อสมาชิกประจำร้าน (Restaurant Staff / Members)
                 </h3>
                 <p className="text-xs text-neutral-400 mt-0.5">ร้าน {restaurant?.name}</p>
               </div>
@@ -1003,17 +1028,26 @@ export default function RestaurantDetailPage() {
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
                                 : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                             }`}>
-                              {isOwner ? '👑 Owner' : `👤 ${getRestaurantAccessLevelMeta(member.access_level)?.thaiLabel || 'Staff'}`}
+                              <span className="inline-flex items-center gap-1.5">
+                                <FlaticonIcon name={isOwner ? 'crown' : 'user'} className="h-3 w-3" />
+                                {isOwner ? 'Owner' : getRestaurantAccessLevelMeta(member.access_level)?.thaiLabel || 'Staff'}
+                              </span>
                             </span>
                           </div>
                           <p className="text-xs text-neutral-400 mt-1">Username: @{member.username || '-'}</p>
-                          <p className="text-xs text-neutral-500 truncate">📧 อีเมล: {member.email || '-'}</p>
+                          <p className="flex items-center gap-1.5 text-xs text-neutral-500 truncate">
+                            <FlaticonIcon name="envelope" className="h-3 w-3" />
+                            อีเมล: {member.email || '-'}
+                          </p>
                         </div>
                       </div>
 
                       <div className="text-left shrink-0 sm:text-right">
                         <span className="text-xs font-mono text-neutral-400 block">
-                          📞 {member.phone || 'ไม่ระบุเบอร์โทร'}
+                          <span className="inline-flex items-center gap-1.5">
+                            <FlaticonIcon name="phone-call" className="h-3 w-3" />
+                            {member.phone || 'ไม่ระบุเบอร์โทร'}
+                          </span>
                         </span>
                         {canManage && !isOwner && member.member_id && (
                           <button
@@ -1051,12 +1085,15 @@ export default function RestaurantDetailPage() {
         </div>
       )}
 
-      {/* ✏️ POPUP MODAL: แก้ไขข้อมูลร้านอาหาร */}
+      {/* POPUP MODAL: แก้ไขข้อมูลร้านอาหาร */}
       {isEditRestModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className=" border border-neutral-800 w-full max-w-lg rounded-2xl p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-neutral-800">
-              <h3 className="text-base font-black text-orange-500 uppercase tracking-wide">✏️ แก้ไขข้อมูลร้านอาหาร</h3>
+              <h3 className="flex items-center gap-2 text-base font-black text-orange-500 uppercase tracking-wide">
+                <FlaticonIcon name="edit" className="h-5 w-5" />
+                แก้ไขข้อมูลร้านอาหาร
+              </h3>
               <button onClick={() => setIsEditRestModalOpen(false)} className="text-neutral-500 hover:text-white text-sm font-bold">✕</button>
             </div>
 
@@ -1087,7 +1124,7 @@ export default function RestaurantDetailPage() {
                         className="sr-only"
                       />
                       <span className="flex items-center gap-2 text-sm font-black text-white">
-                        <span className="text-lg">{type.icon}</span>
+                        <FlaticonIcon name={type.icon} className="h-5 w-5" />
                         {type.label}
                       </span>
                       <span className="mt-1 block text-[11px] leading-4 text-neutral-500">{type.description}</span>
@@ -1163,7 +1200,12 @@ export default function RestaurantDetailPage() {
               <div className="flex flex-col-reverse gap-3 pt-2 border-t border-neutral-800 mt-4 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => setIsEditRestModalOpen(false)} className="  text-neutral-300 px-4 py-2 rounded-lg text-xs font-bold">ยกเลิก</button>
                 <button type="submit" disabled={actionLoading} className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider">
-                  {actionLoading ? 'กำลังบันทึก...' : '💾 บันทึกการเปลี่ยนแปลง'}
+                  {actionLoading ? 'กำลังบันทึก...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="disk" className="h-4 w-4" />
+                      บันทึกการเปลี่ยนแปลง
+                    </span>
+                  )}
                 </button>
               </div>
             </form>
@@ -1171,13 +1213,16 @@ export default function RestaurantDetailPage() {
         </div>
       )}
 
-      {/* ✨ POPUP MODAL: เพิ่มเมนูอาหาร */}
+      {/* POPUP MODAL: เพิ่มเมนูอาหาร */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className=" border border-neutral-800 w-full max-w-md rounded-2xl p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-neutral-800">
               <div>
-                <h3 className="text-base font-black text-orange-500 uppercase tracking-wide">✨ {addMenuTitle}</h3>
+                <h3 className="flex items-center gap-2 text-base font-black text-orange-500 uppercase tracking-wide">
+                  <FlaticonIcon name="plus" className="h-5 w-5" />
+                  {addMenuTitle}
+                </h3>
                 <p className="mt-1 text-xs text-neutral-500">{orderFlowText}</p>
               </div>
               <button onClick={() => { setIsModalOpen(false); setImageFile(null); }} className="text-neutral-500 hover:text-white text-sm font-bold">✕</button>
@@ -1188,13 +1233,14 @@ export default function RestaurantDetailPage() {
                 <input type="text" required placeholder={menuNamePlaceholder} value={newMenu.name} onChange={(e) => setNewMenu({...newMenu, name: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1">หมวดเมนู</label>
+                <label className="block text-xs font-bold text-neutral-400 mb-1">หมวดเมนู {categories.length > 0 ? '*' : ''}</label>
                 <select
+                  required={categories.length > 0}
                   value={newMenu.category_id}
                   onChange={(event) => setNewMenu({...newMenu, category_id: event.target.value})}
                   className="w-full rounded-lg border border-neutral-800  px-3 py-2 text-sm text-white outline-none transition focus:border-orange-500"
                 >
-                  <option value="">ไม่ระบุหมวด</option>
+                  <option value="">{categories.length > 0 ? 'เลือกหมวดเมนู' : 'ยังไม่มีหมวดเมนู'}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
@@ -1206,7 +1252,7 @@ export default function RestaurantDetailPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">ราคา (บาท) *</label>
-                  <input type="number" required min="0" step="0.01" placeholder="50" value={newMenu.price} onChange={(e) => setNewMenu({...newMenu, price: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
+                  <input type="number" required min="1" step="0.01" placeholder="50" value={newMenu.price} onChange={(e) => setNewMenu({...newMenu, price: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-neutral-400 mb-1">สถานะเริ่มต้น</label>
@@ -1261,17 +1307,22 @@ export default function RestaurantDetailPage() {
                 <p className="mt-2 text-xs text-neutral-500">ถ้าไม่ติ๊กวันไหน เมนูนั้นจะไม่แสดงในหน้าลูกค้าของวันนั้น</p>
               </div>
               <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1">รูปภาพเมนูอาหาร</label>
-                <input type="file" accept="image/*" onChange={(e) => e.target.files && setImageFile(e.target.files[0])} className="w-full  border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold  file:text-white  cursor-pointer" />
+                <label className="block text-xs font-bold text-neutral-400 mb-1">รูปภาพเมนูอาหาร *</label>
+                <input type="file" accept="image/*" required onChange={(e) => e.target.files && setImageFile(e.target.files[0])} className="w-full  border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-400 file:mr-3 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold  file:text-white  cursor-pointer" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-neutral-400 mb-1">{menuDescriptionLabel}</label>
-                <textarea rows={2} placeholder={menuDescriptionPlaceholder} value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 resize-none" />
+                <label className="block text-xs font-bold text-neutral-400 mb-1">{menuDescriptionLabel} *</label>
+                <textarea rows={2} required placeholder={menuDescriptionPlaceholder} value={newMenu.description} onChange={(e) => setNewMenu({...newMenu, description: e.target.value})} className="w-full  border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500 resize-none" />
               </div>
               <div className="flex flex-col-reverse gap-3 pt-2 border-t border-neutral-800 mt-4 sm:flex-row sm:justify-end">
                 <button type="button" onClick={() => { setIsModalOpen(false); setImageFile(null); }} className="  text-neutral-300 px-4 py-2 rounded-lg text-xs font-bold">ยกเลิก</button>
                 <button type="submit" disabled={actionLoading} className="bg-orange-500 hover:bg-orange-600 text-black px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider  disabled:text-neutral-500">
-                  {actionLoading ? 'กำลังอัปโหลด...' : '💾 บันทึกข้อมูล'}
+                  {actionLoading ? 'กำลังอัปโหลด...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="disk" className="h-4 w-4" />
+                      บันทึกข้อมูล
+                    </span>
+                  )}
                 </button>
               </div>
             </form>

@@ -37,3 +37,41 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Application routes
+
+Use lowercase, kebab-case URL segments. Profile editing lives under `/profile/edit`; restaurant details live under `/restaurants/[restaurantId]`.
+
+| Page | Path |
+| --- | --- |
+| Restaurants | `/restaurants` |
+| Restaurant details | `/restaurants/[restaurantId]` |
+| Order tracking | `/orders` |
+| Cart | `/cart` |
+| Profile | `/profile` |
+| Edit profile | `/profile/edit` |
+| About | `/about` |
+| Contact | `/contact` |
+| Privacy policy | `/privacy-policy` |
+| Terms of use | `/terms-of-use` |
+
+Legacy URLs redirect permanently in `next.config.ts`, preserving restaurant IDs and query parameters. Use the canonical paths above for new links.
+
+## Deferred email verification
+
+New registrations create a password-enabled Supabase account and sign in immediately.
+`email_confirmed_at` enables Supabase login; the application checks protected
+`app_metadata.email_verification_required` and `app_metadata.verified_email` for
+actual ownership verification. Existing accounts keep their original verification status.
+Home links unverified users to `/profile/edit`, where they can request a verification email.
+
+Set `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (an address on a
+verified Resend domain), and `NEXT_PUBLIC_SITE_URL` before deploying. Keep the service
+role key server-only. Verification uses Supabase single-use magic-link tokens and their
+configured expiry, sent through Resend to `/auth/verify-email`. No Supabase confirmation
+setting change is required. New signups do not send email until requested from the profile.
+
+Manual smoke test: register with a new email, confirm Home is accessible and shows the
+verification notice, log out/in before verifying, request the email from Edit Profile,
+follow its link, and confirm the notice disappears. Reusing or expiring the link should
+show an error; duplicate registration must not change the existing account password.

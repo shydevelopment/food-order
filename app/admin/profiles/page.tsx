@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import FlaticonIcon from '@/components/flaticon-icon';
 import { ACCOUNT_ROLES, getAccountRoleMeta, getProfileStudentIdDisplay, resolveAccountRoleForEmail } from '@/lib/roles';
 import { PASSWORD_PATTERN, PASSWORD_REQUIREMENTS_TEXT, validatePasswordPolicy } from '@/lib/password-policy';
 import {
@@ -36,13 +37,13 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ⚡ State สำหรับระบบ Popup Modal
+  // State สำหรับระบบ Popup Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
-  // 🆕 เพิ่ม State สำหรับ Username และ Email
+  // เพิ่ม State สำหรับ Username และ Email
   const [usernameInput, setUsernameInput] = useState('');
   const [emailInput, setEmailInput] = useState('');
   const [fullNameInput, setFullNameInput] = useState('');
@@ -150,7 +151,7 @@ export default function AdminUsersPage() {
         throw new Error(profileResult.error || 'ไม่สามารถบันทึกข้อมูลผู้ใช้ได้');
       }
 
-      alert('💾 บันทึกการแก้ไขข้อมูลสำเร็จ!');
+      alert('บันทึกการแก้ไขข้อมูลสำเร็จ!');
       handleCloseModal();
       fetchProfiles(); 
     } catch (error) {
@@ -202,7 +203,7 @@ export default function AdminUsersPage() {
         throw new Error(result.error || 'ไม่สามารถเพิ่มบัญชีได้');
       }
 
-      alert('✅ เพิ่มบัญชีผู้ใช้สำเร็จ!');
+      alert('เพิ่มบัญชีผู้ใช้สำเร็จ!');
       setIsAddModalOpen(false);
       fetchProfiles();
     } catch (error) {
@@ -229,7 +230,10 @@ export default function AdminUsersPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-white uppercase tracking-wide">
-            👥 ข้อมูลผู้ใช้งานทั้งหมด
+            <span className="inline-flex items-center gap-2">
+              <FlaticonIcon name="users" className="h-6 w-6" />
+              ข้อมูลผู้ใช้งานทั้งหมด
+            </span>
           </h2>
           <p className="text-sm text-gray-400">
             ดูรายละเอียดโปรไฟล์ ชื่อผู้ใช้ เบอร์โทรศัพท์ และ Role ในระบบ
@@ -242,12 +246,14 @@ export default function AdminUsersPage() {
             onClick={handleOpenAddModal}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-black shadow-lg shadow-orange-500/10 transition-all hover:bg-orange-600 active:scale-95"
           >
-            <span>➕</span>
+            <FlaticonIcon name="plus" className="h-4 w-4" />
             เพิ่มบัญชี
           </button>
 
           <div className="relative w-full sm:w-72">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">🔍</span>
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-xs">
+              <FlaticonIcon name="search" className="h-4 w-4" />
+            </span>
             <input
               type="text"
               placeholder="ค้นหาชื่อ ชื่อผู้ใช้ อีเมล หรือเบอร์โทร..."
@@ -344,14 +350,17 @@ export default function AdminUsersPage() {
       )}
 
       {/* ========================================== */}
-      {/* 🆕 POP-UP MODAL เพิ่มบัญชีผู้ใช้งาน */}
+      {/* POP-UP MODAL เพิ่มบัญชีผู้ใช้งาน */}
       {/* ========================================== */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-xl border border-neutral-800  p-4 shadow-2xl sm:p-6">
             <div className="mb-4 flex items-center justify-between border-b border-neutral-800 pb-2">
               <div>
-                <h3 className="text-lg font-black text-white">➕ เพิ่มบัญชีผู้ใช้งาน</h3>
+                <h3 className="flex items-center gap-2 text-lg font-black text-white">
+                  <FlaticonIcon name="plus" className="h-5 w-5" />
+                  เพิ่มบัญชีผู้ใช้งาน
+                </h3>
                 <p className="mt-0.5 text-xs text-neutral-500">สร้างบัญชีใหม่พร้อมกำหนด Role ในระบบ</p>
               </div>
               <button
@@ -499,7 +508,12 @@ export default function AdminUsersPage() {
                   disabled={createLoading}
                   className="rounded-lg bg-orange-500 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-orange-500/10 transition-colors hover:bg-orange-600 disabled:bg-orange-800"
                 >
-                  {createLoading ? 'กำลังเพิ่มบัญชี...' : '✅ เพิ่มบัญชี'}
+                  {createLoading ? 'กำลังเพิ่มบัญชี...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="plus" className="h-4 w-4" />
+                      เพิ่มบัญชี
+                    </span>
+                  )}
                 </button>
               </div>
             </form>
@@ -508,7 +522,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* ========================================== */}
-      {/* ⚡ POP-UP MODAL แก้ไขข้อมูล */}
+      {/* POP-UP MODAL แก้ไขข้อมูล */}
       {/* ========================================== */}
       {(isModalOpen || isClosing) && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}>
@@ -539,7 +553,10 @@ export default function AdminUsersPage() {
 
           <div className={`max-h-[92vh] w-full max-w-md overflow-y-auto  border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6 ${isClosing ? 'animate-content-out' : 'animate-content-in'}`}>
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-neutral-800">
-              <h3 className="text-lg font-black text-white">✏️ แก้ไขข้อมูลโปรไฟล์</h3>
+              <h3 className="flex items-center gap-2 text-lg font-black text-white">
+                <FlaticonIcon name="edit" className="h-5 w-5" />
+                แก้ไขข้อมูลโปรไฟล์
+              </h3>
               <button 
                 type="button"
                 onClick={handleCloseModal}
@@ -646,7 +663,12 @@ export default function AdminUsersPage() {
                   disabled={submitLoading}
                   className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 text-black px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg shadow-orange-500/10"
                 >
-                  {submitLoading ? 'กำลังบันทึก...' : '💾 บันทึกการเปลี่ยนแปลง'}
+                  {submitLoading ? 'กำลังบันทึก...' : (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <FlaticonIcon name="disk" className="h-4 w-4" />
+                      บันทึกการเปลี่ยนแปลง
+                    </span>
+                  )}
                 </button>
               </div>
             </form>

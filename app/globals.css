@@ -4,7 +4,9 @@
   --background: #0a0a0a;
   --foreground: #ededed;
   --surface: #171717;
-  --surface-soft: #262626;
+  --surface-soft: #242424;
+  --field-surface: #101010;
+  --surface-raised: #1c1c1c;
   --border-soft: #262626;
   --muted: #a3a3a3;
 }
@@ -21,6 +23,8 @@ html[data-theme="light"] {
   --foreground: #0f172a;
   --surface: #ffffff;
   --surface-soft: #f1f5f9;
+  --field-surface: #ffffff;
+  --surface-raised: #ffffff;
   --border-soft: #e2e8f0;
   --muted: #475569;
 }
@@ -32,12 +36,42 @@ html {
 }
 
 body {
-  background: transparent;
-  color: inherit;
+  background: var(--background);
+  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   max-width: 100%;
   overflow-x: hidden;
   min-width: 320px;
+}
+
+/* Keep all controls and bordered content surfaces opaque in both themes. */
+:where(input, textarea, select) {
+  background-color: var(--field-surface);
+  color: var(--foreground);
+  border-color: var(--border-soft);
+}
+
+:where(input, textarea, select):focus {
+  background-color: var(--field-surface);
+}
+
+:where(div, section, article, aside, form, li)[class*="border-"]:not([class*="bg-"]):not(.border-t):not(.border-b):not(.border-l):not(.border-r) {
+  background-color: var(--surface);
+}
+
+:where(div, section, article, aside, form, li)[class*="bg-neutral-950/"],
+:where(div, section, article, aside, form, li)[class*="bg-neutral-900/"],
+:where(div, section, article, aside, form, li)[class*="bg-neutral-800/"] {
+  background-color: var(--surface) !important;
+}
+
+.time-picker-panel {
+  background-color: var(--surface-raised);
+  color: var(--foreground);
+}
+
+.time-picker-wheel {
+  background-color: var(--surface-soft);
 }
 
 * {
@@ -51,14 +85,29 @@ svg {
   max-width: 100%;
 }
 
+.fi::before {
+  line-height: 1;
+}
+
 html,
 body {
   transition: background-color 200ms ease-out, color 200ms ease-out;
 }
 
 html[data-theme="light"] .bg-black,
-html[data-theme="light"] .bg-zinc-950 {
+html[data-theme="light"] .bg-zinc-950,
+html[data-theme="light"] .bg-neutral-950 {
   background-color: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+html[data-theme="light"] .bg-neutral-900 {
+  background-color: var(--surface-soft) !important;
+  color: var(--foreground) !important;
+}
+
+html[data-theme="light"] .bg-neutral-800 {
+  background-color: #e2e8f0 !important;
   color: var(--foreground) !important;
 }
 
@@ -235,7 +284,7 @@ html[data-theme="light"] .app-chrome .text-neutral-600 {
 html[data-theme="light"] input,
 html[data-theme="light"] textarea,
 html[data-theme="light"] select {
-  background-color: #ffffff !important;
+  background-color: var(--field-surface) !important;
   color: #0f172a !important;
   border-color: var(--border-soft) !important;
 }
@@ -393,6 +442,41 @@ html[data-theme="light"] .notifications-item:hover {
 
 .food-alert-card--exit {
   animation: food-alert-card-out 180ms ease-in both;
+}
+
+.payment-method-card {
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.payment-method-eyebrow {
+  color: #6ee7b7;
+}
+
+.payment-method-title {
+  color: #d1fae5;
+}
+
+.payment-method-note {
+  color: rgba(110, 231, 183, 0.82);
+}
+
+html[data-theme="light"] .payment-method-card {
+  background: #ecfdf5 !important;
+  border-color: #10b981 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65) !important;
+}
+
+html[data-theme="light"] .payment-method-eyebrow {
+  color: #047857 !important;
+}
+
+html[data-theme="light"] .payment-method-title {
+  color: #064e3b !important;
+}
+
+html[data-theme="light"] .payment-method-note {
+  color: #059669 !important;
 }
 
 .responsive-table {

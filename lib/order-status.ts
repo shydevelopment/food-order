@@ -13,10 +13,10 @@ export const orderStatusMeta: Record<OrderStatus, {
  className: string
 }> = {
  pending: {
- label:'รอร้านรับออเดอร์',
+ label:'รอยืนยันการสั่งออเดอร์',
  adminTabLabel:'รอรับออเดอร์',
- customerDetail:'ร้านได้รับออเดอร์แล้ว กำลังรอยืนยัน',
- notificationLabel:'รอร้านรับออเดอร์',
+ customerDetail:'ส่งออเดอร์ให้ร้านแล้ว กำลังรอร้านยืนยันรับออเดอร์',
+ notificationLabel:'รอยืนยันการสั่งออเดอร์',
  tone:'orange',
  className:'border-amber-500/30 bg-amber-500/10 text-amber-400',
  },

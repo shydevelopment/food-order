@@ -1,10 +1,13 @@
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/supabase/service'
 import OrderChatBox from '@/components/order-chat-box'
+import CancelOrderButton from '@/components/cancel-order-button'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { isPaymentMethod, isPaymentStatus, paymentMethodMeta, paymentStatusMeta } from '@/lib/payments'
 import {
   getOrderStatusLabel,
+  getOrderStatusDetail,
   getOrderStatusStyle,
   isActiveOrderStatus,
 } from '@/lib/order-status'
@@ -19,6 +22,8 @@ interface Order {
   pickup_time: string | null
   pickup_note: string | null
   cancellation_reason: string | null
+  cancellation_requested_at: string | null
+  cancellation_request_reason: string | null
   created_at: string
 }
 
@@ -48,10 +53,8 @@ const formatPickupTime = (pickupTime: string | null) => {
   return pickupTime ? pickupTime.slice(0, 5) : '-'
 }
 
-const paymentMethodLabel = 'เงินสด จ่ายหน้าร้าน'
-
 const buildTrackOrderHref = (orderId: string) => {
-  return `/trackorderPage?order=${orderId}`
+  return `/orders?order=${orderId}`
 }
 
 export default async function TrackOrderPage({
@@ -76,13 +79,29 @@ export default async function TrackOrderPage({
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  const { data: orders, error: ordersError } = await supabaseAdmin
+  const initialOrders = await supabaseAdmin
     .from('orders')
     .select(
-      'id, order_no, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, created_at',
+      'id, order_no, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, cancellation_requested_at, cancellation_request_reason, created_at',
     )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+  let orders = initialOrders.data as Order[] | null
+  let ordersError = initialOrders.error
+
+  // Keep the order history usable while the cancellation-request migration is
+  // being rolled out. The cash-order status does not depend on those fields.
+  if (ordersError?.message.includes('cancellation_requested')) {
+    const fallback = await supabaseAdmin
+      .from('orders')
+      .select(
+        'id, order_no, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, created_at',
+      )
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    orders = fallback.data as Order[] | null
+    ordersError = fallback.error
+  }
 
   if (ordersError) {
     console.error('Error fetching orders:', ordersError.message)
@@ -90,6 +109,10 @@ export default async function TrackOrderPage({
 
   const orderRows = (orders || []) as Order[]
   const orderIds = orderRows.map((order) => order.id)
+  const { data: payments } = orderIds.length
+    ? await supabaseAdmin.from('payments').select('order_id, method, status').in('order_id', orderIds)
+    : { data: [] }
+  const paymentsByOrder = new Map((payments || []).map(payment => [payment.order_id, payment]))
   const restaurantIds = Array.from(
     new Set(orderRows.map((order) => order.restaurant_id)),
   )
@@ -164,7 +187,7 @@ export default async function TrackOrderPage({
             </p>
           </div>
           <Link
-            href="/storePage"
+            href="/restaurants"
             className="inline-flex items-center justify-center rounded-lg border border-neutral-800 px-4 py-2 text-sm font-bold text-neutral-300 transition  hover:text-white"
           >
             สั่งอาหารเพิ่ม
@@ -307,6 +330,7 @@ export default async function TrackOrderPage({
             >
               {(() => {
                 const order = selectedOrder
+                const payment = paymentsByOrder.get(order.id)
                 const orderItemsForOrder = itemsByOrder.get(order.id) || []
                 const restaurant = restaurantsById.get(order.restaurant_id)
 
@@ -332,6 +356,11 @@ export default async function TrackOrderPage({
                         <p className="mt-1 text-sm text-neutral-400">
                           ร้าน {restaurant?.name || 'ไม่พบชื่อร้าน'}
                         </p>
+                        {order.status === 'pending' && (
+                          <p className="mt-2 text-sm font-bold text-amber-300">
+                            สถานะ: {getOrderStatusDetail(order.status)}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs text-neutral-500">
                           {new Date(order.created_at).toLocaleString('th-TH', {
                             dateStyle: 'medium',
@@ -351,11 +380,21 @@ export default async function TrackOrderPage({
                     {order.status === 'cancelled' && (
                       <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 p-4 text-sm text-red-100">
                         <p className="text-xs font-bold uppercase tracking-wide text-red-300">
-                          เหตุผลที่ร้านยกเลิกออเดอร์
+                          เหตุผลที่ยกเลิกออเดอร์
                         </p>
                         <p className="mt-1 font-bold">
-                          {order.cancellation_reason || 'ร้านไม่ได้ระบุเหตุผล'}
+                          {order.cancellation_reason || 'ไม่ได้ระบุเหตุผล'}
                         </p>
+                      </div>
+                    )}
+
+                    {order.cancellation_requested_at && order.status !== 'cancelled' && (
+                      <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100">
+                        <p className="text-xs font-bold uppercase tracking-wide text-amber-300">
+                          ส่งคำขอยกเลิกให้ร้านแล้ว
+                        </p>
+                        <p className="mt-1 font-bold">{order.cancellation_request_reason || 'ไม่ได้ระบุเหตุผล'}</p>
+                        <p className="mt-1 text-xs text-amber-200/80">ร้านต้องยืนยันการยกเลิกก่อน ออเดอร์จึงจะถูกยกเลิก</p>
                       </div>
                     )}
 
@@ -368,16 +407,26 @@ export default async function TrackOrderPage({
                           {formatPickupTime(order.pickup_time)}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">
+                      <div className="payment-method-card rounded-xl p-3">
+                        <p className="payment-method-eyebrow text-xs font-bold uppercase tracking-wide">
                           วิธีชำระเงิน
                         </p>
-                        <p className="mt-1 text-sm font-black text-emerald-300">
-                          {paymentMethodLabel}
+                        <p className="payment-method-title mt-1 text-sm font-black">
+                          {payment && isPaymentMethod(payment.method) ? paymentMethodMeta[payment.method].label : 'เงินสด จ่ายหน้าร้าน'}
                         </p>
-                        <p className="mt-0.5 text-xs text-neutral-500">
-                          ชำระเงินตอนรับอาหาร
+                        <p className="payment-method-note mt-0.5 text-xs">
+                          {payment && isPaymentStatus(payment.status) ? paymentStatusMeta[payment.status].label : 'ชำระเงินตอนรับอาหาร'}
                         </p>
+                        {payment?.method === 'qr' && payment.status === 'pending' && order.status !== 'cancelled' && (
+                          <Link href={`/payment?orders=${order.id}`} className="mt-2 inline-block text-sm font-bold text-amber-400 underline">
+                            ดู QR / ตรวจสอบการชำระเงิน
+                          </Link>
+                        )}
+                        {payment && ['cash', 'qr'].includes(payment.method)
+                          && ['pending', 'failed', 'cancelled'].includes(payment.status)
+                          && ['pending', 'preparing', 'delivering'].includes(order.status || 'pending') && (
+                          <CancelOrderButton orderId={order.id} cancellationRequested={Boolean(order.cancellation_requested_at)} />
+                        )}
                       </div>
                       <div className="border-t border-neutral-800 pt-3 sm:col-span-2">
                         <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">

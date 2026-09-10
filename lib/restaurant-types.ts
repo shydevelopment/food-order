@@ -3,37 +3,37 @@ export const RESTAURANT_TYPES = [
     value: 'made_to_order',
     label: 'ร้านตามสั่ง',
     description: 'ลูกค้าเขียนเมนูเอง เลือกพิเศษ และร้านจัดการวัตถุดิบหมดได้',
-    icon: '🍳',
+    icon: 'egg-fried',
   },
   {
     value: 'rice_menu',
     label: 'เมนูราดข้าว',
     description: 'ร้านจัดเมนูรายวัน ลูกค้าเลือกเมนูและติ๊กพิเศษได้',
-    icon: '🍛',
+    icon: 'bowl-rice',
   },
   {
     value: 'noodle',
     label: 'ร้านก๋วยเตี๋ยว',
     description: 'ร้านจัดเมนูก๋วยเตี๋ยวรายวัน ลูกค้าเลือกเมนู ติ๊กพิเศษ และเลือกเวลารับได้',
-    icon: '🍜',
+    icon: 'bowl-chopsticks-noodles',
   },
   {
     value: 'drink',
     label: 'ร้านน้ำ',
     description: 'ร้านจัดเมนูเครื่องดื่มให้ลูกค้าเลือก',
-    icon: '🧋',
+    icon: 'coffee',
   },
   {
     value: 'dessert_fruit',
     label: 'ร้านขนมหวานผลไม้',
     description: 'ร้านจัดเมนูขนมหวานหรือผลไม้รายวัน และปิดเมนูที่หมดได้',
-    icon: '🍧',
+    icon: 'ice-cream',
   },
   {
     value: 'other',
     label: 'ร้านอื่น ๆ',
     description: 'ร้านประเภทอื่นที่จัดเมนูให้ลูกค้าเลือกและกำหนดวันขายได้',
-    icon: '🏪',
+    icon: 'shop',
   },
 ] as const
 

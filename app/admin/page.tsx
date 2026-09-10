@@ -1,14 +1,35 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
+import FlaticonIcon from '@/components/flaticon-icon';
 import { ActivityLogItem } from './components/ActivityLogItem';
 import { getAccountRoleMeta } from '@/lib/roles';
 
+interface DashboardActivity {
+  id: string;
+  title: string;
+  detail: string;
+  timestamp: Date | null;
+  icon: string;
+  colorClass: string;
+}
+
+interface DashboardMenuRow {
+  id: string;
+  name: string;
+  price: number | null;
+  created_at: string | null;
+  restaurants?: { name?: string | null } | null;
+}
+
 export default function AdminDashboardHome() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabase = useMemo(
+    () => createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ),
+    []
   );
 
   // State สำหรับสถิติ
@@ -18,36 +39,9 @@ export default function AdminDashboardHome() {
   const [loadingStats, setLoadingStats] = useState<boolean>(true);
 
   // State สำหรับ Activity Log
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<DashboardActivity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState<boolean>(true);
   const [isRealtimeActive, setIsRealtimeActive] = useState<boolean>(false);
-
-  useEffect(() => {
-    fetchDashboardStats();
-    fetchActivityLogs();
-
-    // ⚡ ดักจับ Realtime เมื่อมีการสร้างข้อมูลใหม่
-    const channel = supabase
-      .channel('realtime-dashboard-activities')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => handleRealtimeUpdate())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'restaurants' }, () => handleRealtimeUpdate())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'menus' }, () => handleRealtimeUpdate())
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => handleRealtimeUpdate())
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          setIsRealtimeActive(true);
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
-
-  const handleRealtimeUpdate = () => {
-    fetchDashboardStats();
-    fetchActivityLogs();
-  };
 
   // Helper แปลงเป็น Date Object อย่างปลอดภัย
   const parseSafeDate = (dateString: string | null | undefined): Date | null => {
@@ -57,7 +51,7 @@ export default function AdminDashboardHome() {
   };
 
   // 1. ดึงข้อมูลสถิติรวม
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     setLoadingStats(true);
     try {
       const { count: uCount } = await supabase
@@ -79,15 +73,16 @@ export default function AdminDashboardHome() {
       setUserCount(uCount || 0);
       setRestaurantCount(rCount || 0);
       setTodayOrdersCount(oCount || 0);
-    } catch (error: any) {
-      console.error('Error fetching dashboard stats:', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching dashboard stats:', message);
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [supabase]);
 
   // 2. ดึงข้อมูลกิจกรรมล่าสุด (ดึง created_at จริงจาก Supabase)
-  const fetchActivityLogs = async () => {
+  const fetchActivityLogs = useCallback(async () => {
     setLoadingActivities(true);
     try {
       // ดึง 5 ออร์เดอร์ล่าสุด
@@ -97,7 +92,7 @@ export default function AdminDashboardHome() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // ⚡ ดึง 5 สมาชิกสิริรวมเรียงตาม created_at จริง
+      // ดึง 5 สมาชิกสิริรวมเรียงตาม created_at จริง
       const { data: latestUsers } = await supabase
         .from('profiles')
         .select('id, full_name, username, role, email, created_at')
@@ -124,7 +119,7 @@ export default function AdminDashboardHome() {
         title: `มีรายการสั่งซื้อใหม่ #${String(o.id).substring(0, 8)}`,
         detail: `ยอดชำระ: ฿${o.total_price ? o.total_price.toLocaleString() : '0'} • สถานะ: ${o.status || 'รอดำเนินการ'}`,
         timestamp: parseSafeDate(o.created_at),
-        icon: '🛒',
+        icon: 'shopping-cart',
         colorClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
       }));
 
@@ -132,8 +127,8 @@ export default function AdminDashboardHome() {
         id: `user-${u.id}`,
         title: `ผู้ใช้งานในระบบ`,
         detail: `${u.full_name || u.username || 'สมาชิก'} (@${u.username || 'ผู้ใช้'}) • Role: ${getAccountRoleMeta(u.role)?.thaiLabel || 'Customer'}`,
-        timestamp: parseSafeDate(u.created_at), // ⚡ ดึงวันที่สมัครจริง
-        icon: '👤',
+        timestamp: parseSafeDate(u.created_at),
+        icon: 'user',
         colorClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
       }));
 
@@ -142,16 +137,16 @@ export default function AdminDashboardHome() {
         title: `เพิ่มร้านอาหารใหม่`,
         detail: `ร้าน "${r.name}" เข้าสู่ระบบ`,
         timestamp: parseSafeDate(r.created_at),
-        icon: '🏪',
+        icon: 'shop',
         colorClass: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
       }));
 
-      const formattedMenus = (latestMenus || []).map((m: any) => ({
+      const formattedMenus = ((latestMenus || []) as DashboardMenuRow[]).map((m) => ({
         id: `menu-${m.id}`,
         title: `เพิ่มเมนูอาหารใหม่`,
         detail: `เมนู "${m.name}" (฿${m.price || 0}) ${m.restaurants?.name ? `ร้าน ${m.restaurants.name}` : ''}`,
         timestamp: parseSafeDate(m.created_at),
-        icon: '🍽️',
+        icon: 'utensils',
         colorClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
       }));
 
@@ -161,19 +156,54 @@ export default function AdminDashboardHome() {
         .slice(0, 10);
 
       setActivities(combinedLogs);
-    } catch (error: any) {
-      console.error('Error fetching activity logs:', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error fetching activity logs:', message);
     } finally {
       setLoadingActivities(false);
     }
-  };
+  }, [supabase]);
+
+  const handleRealtimeUpdate = useCallback(() => {
+    void fetchDashboardStats();
+    void fetchActivityLogs();
+  }, [fetchActivityLogs, fetchDashboardStats]);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      await Promise.resolve();
+      await Promise.all([fetchDashboardStats(), fetchActivityLogs()]);
+    };
+
+    void loadDashboard();
+
+    // ดักจับ Realtime เมื่อมีการสร้างข้อมูลใหม่
+    const channel = supabase
+      .channel('realtime-dashboard-activities')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => handleRealtimeUpdate())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'restaurants' }, () => handleRealtimeUpdate())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'menus' }, () => handleRealtimeUpdate())
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => handleRealtimeUpdate())
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsRealtimeActive(true);
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchActivityLogs, fetchDashboardStats, handleRealtimeUpdate, supabase]);
 
   return (
     <div className="space-y-5 sm:space-y-8">
       {/* ส่วนหัวของหน้าจอ */}
       <div>
         <h2 className="text-xl font-black text-white uppercase tracking-wide sm:text-2xl">
-          📊 ภาพรวมระบบ (Dashboard)
+          <span className="inline-flex items-center gap-2">
+            <FlaticonIcon name="chart-histogram" className="h-5 w-5 sm:h-6 sm:w-6" />
+            ภาพรวมระบบ (Dashboard)
+          </span>
         </h2>
         <p className="mt-1 text-xs text-gray-400 sm:text-sm">
           ยินดีต้อนรับเข้าสู่ระบบจัดการ Food Order KMUTNB
@@ -222,13 +252,16 @@ export default function AdminDashboardHome() {
         </div>
       </div>
 
-      {/* 📜 ส่วนแสดง Activity Log */}
+      {/* ส่วนแสดง Activity Log */}
       <div className=" border border-neutral-800 rounded-xl p-4 shadow-2xl sm:p-6">
         <div className="mb-5 flex flex-col gap-3 border-b border-neutral-800 pb-4 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <h3 className="text-base font-black text-white uppercase tracking-wide sm:text-lg">
-                📜 ประวัติกิจกรรมล่าสุด (Activity Log)
+                <span className="inline-flex items-center gap-2">
+                  <FlaticonIcon name="memo-pad" className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ประวัติกิจกรรมล่าสุด (Activity Log)
+                </span>
               </h3>
               <span className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
                 isRealtimeActive 
@@ -249,7 +282,10 @@ export default function AdminDashboardHome() {
             onClick={handleRealtimeUpdate}
             className="w-full text-xs text-orange-400 hover:text-orange-300 font-bold bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 px-3 py-2 rounded-lg transition-all cursor-pointer sm:w-auto sm:py-1.5"
           >
-            🔄 รีเฟรช
+            <span className="inline-flex items-center justify-center gap-2">
+              <FlaticonIcon name="refresh" className="h-4 w-4" />
+              รีเฟรช
+            </span>
           </button>
         </div>
 

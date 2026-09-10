@@ -34,6 +34,8 @@ interface Order {
   pickup_time: string | null
   pickup_note: string | null
   cancellation_reason: string | null
+  cancellation_requested_at: string | null
+  cancellation_request_reason: string | null
   created_at: string
 }
 
@@ -65,6 +67,13 @@ interface Menu {
   image_url: string | null
 }
 
+interface OrderPayment {
+  id: string
+  order_id: string
+  method: string
+  status: string
+}
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -76,8 +85,6 @@ const statusTabs = allowedOrderStatuses.map((status) => ({
 const formatPickupTime = (pickupTime: string | null) => {
   return pickupTime ? pickupTime.slice(0, 5) : '-'
 }
-
-const paymentMethodLabel = 'เงินสด จ่ายหน้าร้าน'
 
 const getCustomerDisplayName = (customer: Customer | undefined) => {
   if (!customer) return 'ไม่พบชื่อผู้ใช้'
@@ -203,7 +210,7 @@ export default async function AdminOrdersPage({
   let ordersQuery = supabaseAdmin
     .from('orders')
     .select(
-      'id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, created_at',
+      'id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, cancellation_requested_at, cancellation_request_reason, created_at',
     )
     .order('created_at', { ascending: false })
 
@@ -251,6 +258,18 @@ export default async function AdminOrdersPage({
           )
           .in('order_id', orderIds)
       : { data: [] }
+
+  const { data: orderPayments, error: orderPaymentsError } =
+    orderIds.length > 0
+      ? await supabaseAdmin
+          .from('payments')
+          .select('id, order_id, method, status')
+          .in('order_id', orderIds)
+      : { data: [], error: null }
+
+  if (orderPaymentsError) {
+    console.error('Error fetching order payments:', orderPaymentsError.message)
+  }
 
   const itemRows = (orderItems || []) as OrderItem[]
   const menuIds = Array.from(
@@ -323,6 +342,12 @@ export default async function AdminOrdersPage({
     list.push(item)
     itemsByOrder.set(item.order_id, list)
   })
+  const paymentsByOrderId = new Map(
+    ((orderPayments || []) as OrderPayment[]).map((payment) => [
+      payment.order_id,
+      payment,
+    ]),
+  )
 
   const menusById = new Map((menus || []).map((menu: Menu) => [menu.id, menu]))
   const restaurantsById = new Map(
@@ -516,6 +541,14 @@ export default async function AdminOrdersPage({
             const restaurant = restaurantsById.get(order.restaurant_id)
             const customer = customersById.get(order.user_id)
             const orderItemsForOrder = itemsByOrder.get(order.id) || []
+            const payment = paymentsByOrderId.get(order.id)
+            const cashPaymentPending = payment?.method === 'cash' && payment.status !== 'paid'
+            const orderPaymentMethodLabel =
+              !payment || payment.method === 'cash'
+                ? 'เงินสด จ่ายหน้าร้าน'
+                : payment.method === 'qr'
+                  ? 'QR พร้อมเพย์'
+                  : payment.method
 
             return (
               <article
@@ -580,15 +613,19 @@ export default async function AdminOrdersPage({
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-emerald-300">
+                  <div className="payment-method-card rounded-xl p-4">
+                    <p className="payment-method-eyebrow text-xs font-bold uppercase tracking-wide">
                       วิธีชำระเงิน
                     </p>
-                    <p className="mt-1 text-sm font-black text-emerald-200">
-                      {paymentMethodLabel}
+                    <p className="payment-method-title mt-1 text-sm font-black">
+                      {orderPaymentMethodLabel}
                     </p>
-                    <p className="mt-0.5 text-xs text-emerald-300/80">
-                      ลูกค้าชำระเงินตอนรับอาหาร
+                    <p className="payment-method-note mt-0.5 text-xs">
+                      {payment?.method === 'cash' && order.status === 'pending'
+                        ? 'ลูกค้าเลือกชำระเงินสด · กดรับออเดอร์เพื่อยืนยัน'
+                        : cashPaymentPending
+                          ? 'ชำระเงินเมื่อรับอาหาร'
+                          : 'ยืนยันรับเงินแล้ว'}
                     </p>
                   </div>
 
@@ -608,6 +645,17 @@ export default async function AdminOrdersPage({
                       </p>
                       <p className="mt-1 text-sm font-bold text-red-100">
                         {order.cancellation_reason || 'ไม่ได้ระบุเหตุผล'}
+                      </p>
+                    </div>
+                  )}
+
+                  {order.cancellation_requested_at && order.status !== 'cancelled' && (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 md:col-span-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-amber-300">
+                        ลูกค้าขอยกเลิกออเดอร์ — รอร้านยืนยัน
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-amber-100">
+                        {order.cancellation_request_reason || 'ไม่ได้ระบุเหตุผล'}
                       </p>
                     </div>
                   )}
@@ -675,6 +723,9 @@ export default async function AdminOrdersPage({
                     <OrderStatusActions
                       orderId={order.id}
                       status={order.status}
+                      cashPaymentPending={cashPaymentPending}
+                      cashPaymentId={payment?.id}
+                      customerCancellationRequest={order.cancellation_requested_at ? order.cancellation_request_reason : null}
                     />
                     <OrderChatBox
                       orderId={order.id}

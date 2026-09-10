@@ -33,7 +33,7 @@ export default function RealtimeRefresh() {
   )
 
   useEffect(() => {
-    const isFastRealtimePath = pathname === '/trackorderPage' || pathname.startsWith('/admin')
+    const isFastRealtimePath = pathname === '/orders' || pathname.startsWith('/admin')
 
     const scheduleRefresh = () => {
       if (document.visibilityState === 'hidden') return

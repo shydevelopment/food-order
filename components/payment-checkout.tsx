@@ -46,6 +46,10 @@ interface CheckoutDraft {
 const cartStorageKey = 'food-order-cart'
 const checkoutDraftStorageKey = 'food-order-checkout-draft'
 
+// Temporary switch: keep the QR checkout implementation in place while the
+// payment option is unavailable to customers. Set this back to true to reopen it.
+const qrPaymentsEnabled = false
+
 const readCart = (): CartItem[] => {
   try {
     return JSON.parse(
@@ -98,13 +102,14 @@ const groupCartItemsByRestaurant = (cartItems: CartItem[]) => {
   return Array.from(groupMap.values())
 }
 
-export default function PaymentCheckout() {
+export default function PaymentCheckout({ userId }: { userId: string }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [draft, setDraft] = useState<CheckoutDraft | null>(null)
   const [selectedMethod, setSelectedMethod] = useState<
     'cash' | 'promptpay' | 'card'
   >('cash')
   const [submitting, setSubmitting] = useState(false)
+  const [showCashConfirmation, setShowCashConfirmation] = useState(false)
   const [profileRequiredMessage, setProfileRequiredMessage] = useState<
     string | null
   >(null)
@@ -136,10 +141,58 @@ export default function PaymentCheckout() {
   const itemCount = totals.itemCount || draft?.itemCount || 0
   const orderCount = groupedCart.length || draft?.restaurants?.length || 0
   const canSubmit =
-    selectedMethod === 'cash'
+    (selectedMethod === 'cash' || (qrPaymentsEnabled && selectedMethod === 'promptpay' && items.every(item => Boolean(item.menuId))))
     && items.length > 0
     && groupedCart.length > 0
     && Boolean(draft)
+
+  const submitQrPayment = async () => {
+    if (!draft || !canSubmit || submitting) return
+    setSubmitting(true)
+    setProfileRequiredMessage(null)
+    const orderIds: string[] = []
+    const successful = new Set<string>()
+    try {
+      for (const group of groupedCart) {
+        const payload = {
+          restaurantId: group.restaurantId, pickupTime: draft.pickupTime, pickupNote: draft.pickupNote,
+          paymentMethod: 'qr', items: group.items.map(item => ({
+            menuId: item.menuId, quantity: item.quantity, customName: item.customName,
+            isSpecial: Boolean(item.isSpecial), itemNote: item.itemNote,
+          })),
+        }
+        const fingerprint = JSON.stringify({ payload, draftDate: draft.updatedAt })
+        const storageKey = `food-order-qr-checkout:${userId}:${group.restaurantId}`
+        let attempt: { fingerprint: string; key: string } | null = null
+        try { attempt = JSON.parse(window.localStorage.getItem(storageKey) || 'null') } catch { /* Start a new checkout. */ }
+        if (attempt?.fingerprint !== fingerprint) {
+          attempt = { fingerprint, key: crypto.randomUUID() }
+          window.localStorage.setItem(storageKey, JSON.stringify(attempt))
+        }
+        const response = await fetch('/api/orders', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, checkoutKey: attempt.key }),
+        })
+        const result = await response.json()
+        if (!response.ok) {
+          if (result.code === 'PROFILE_PHONE_REQUIRED') setProfileRequiredMessage(result.error)
+          throw new Error(result.error || 'ไม่สามารถสร้างออเดอร์ QR ได้')
+        }
+        orderIds.push(result.orderId)
+        successful.add(group.restaurantId)
+        // Keep failed restaurants in the cart; successful orders can be resumed from /orders.
+        const remaining = items.filter(item => !successful.has(item.restaurantId))
+        writeCart(remaining)
+        setItems(remaining)
+      }
+      clearCheckoutData()
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'เกิดข้อผิดพลาด กรุณาลองอีกครั้ง')
+    } finally {
+      setSubmitting(false)
+      if (orderIds.length) window.location.href = `/payment?orders=${orderIds.join(',')}`
+    }
+  }
 
   const submitCashPayment = async () => {
     if (!draft || items.length === 0) {
@@ -243,8 +296,8 @@ export default function PaymentCheckout() {
       clearCheckoutData()
       window.location.href =
         createdOrderIds.length === 1
-          ? `/trackorderPage?order=${createdOrderIds[0]}`
-          : '/trackorderPage'
+          ? `/orders?order=${createdOrderIds[0]}`
+          : '/orders'
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสั่งอาหาร'
@@ -267,7 +320,7 @@ export default function PaymentCheckout() {
           กลับไปตะกร้าเพื่อเลือกเวลารับอาหารและยืนยันคำสั่งซื้อก่อน
         </p>
         <Link
-          href="/cartPage"
+          href="/cart"
           className="mt-6 inline-flex rounded-xl bg-amber-500 px-5 py-3 text-sm font-black text-neutral-950 transition hover:bg-amber-400"
         >
           กลับไปตะกร้า
@@ -297,7 +350,7 @@ export default function PaymentCheckout() {
               {profileRequiredMessage}
             </p>
             <Link
-              href="/editPage"
+              href="/profile/edit"
               className="mt-3 inline-flex text-sm font-black text-amber-400 hover:text-amber-300"
             >
               ไปแก้ไขโปรไฟล์
@@ -308,6 +361,7 @@ export default function PaymentCheckout() {
         <div className="mt-6 grid gap-3">
           <button
             type="button"
+            disabled={submitting}
             onClick={() => setSelectedMethod('cash')}
             className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${
               selectedMethod === 'cash'
@@ -331,27 +385,33 @@ export default function PaymentCheckout() {
                 เงินสด จ่ายหน้าร้าน
               </span>
               <span className="mt-1 block text-sm font-medium text-neutral-400">
-                ชำระเงินกับร้านตอนรับอาหาร
+                ยืนยันออเดอร์ก่อน แล้วชำระเงินกับร้านตอนรับอาหาร
               </span>
             </span>
           </button>
 
           <button
             type="button"
-            disabled
-            className="flex w-full cursor-not-allowed items-center gap-4 rounded-2xl border border-neutral-800  p-4 text-left opacity-60"
+            disabled={submitting || !qrPaymentsEnabled || items.some(item => !item.menuId)}
+            onClick={() => setSelectedMethod('promptpay')}
+            aria-pressed={selectedMethod === 'promptpay'}
+            className={`flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition disabled:opacity-50 ${selectedMethod === 'promptpay' ? 'border-amber-500 bg-amber-500/10' : 'border-neutral-800 hover:border-neutral-700'}`}
           >
-            <span className="h-5 w-5 shrink-0 rounded-full border border-neutral-700" />
+            <span className={`h-5 w-5 shrink-0 rounded-full border ${selectedMethod === 'promptpay' ? 'border-amber-400 bg-amber-400' : 'border-neutral-700'}`} />
             <span className="min-w-0 flex-1">
               <span className="block text-base font-black text-neutral-300">
                 ชำระเงินพร้อมเพย์
               </span>
               <span className="mt-1 block text-sm font-medium text-neutral-500">
-                ยังไม่พร้อมใช้งาน
+                {!qrPaymentsEnabled
+                  ? 'ปิดใช้งานชั่วคราว กรุณาเลือกชำระเงินสด'
+                  : items.some(item => !item.menuId)
+                    ? 'เมนูเขียนเองยังไม่ทราบราคา กรุณาเลือกเงินสด'
+                    : 'สแกน QR ผ่านแอปธนาคาร · แยก QR ตามร้าน'}
               </span>
             </span>
             <span className="rounded-full border border-neutral-700 px-3 py-1 text-[11px] font-black text-neutral-500">
-              เร็ว ๆ นี้
+              {qrPaymentsEnabled ? 'QR' : 'ปิดชั่วคราว'}
             </span>
           </button>
 
@@ -426,23 +486,57 @@ export default function PaymentCheckout() {
         <button
           type="button"
           disabled={!canSubmit || submitting}
-          onClick={submitCashPayment}
+          onClick={selectedMethod === 'promptpay' ? submitQrPayment : () => setShowCashConfirmation(true)}
           className="mt-5 w-full rounded-xl bg-amber-500 px-5 py-3 text-sm font-black text-neutral-950 transition hover:bg-amber-400  disabled:text-neutral-500"
         >
           {submitting
             ? 'กำลังยืนยันคำสั่งซื้อ...'
+            : selectedMethod === 'promptpay'
+              ? 'ยืนยันและสร้าง QR ชำระเงิน'
             : orderCount > 1
               ? `ยืนยัน ${orderCount} ออเดอร์และจ่ายหน้าร้าน`
-              : 'ยืนยันและจ่ายหน้าร้าน'}
+              : 'ยืนยันการสั่งซื้อ'}
         </button>
 
         <Link
-          href="/cartPage"
+          href="/cart"
           className="mt-3 flex w-full justify-center rounded-xl border border-neutral-800 px-5 py-3 text-sm font-bold text-neutral-400 transition  hover:text-white"
         >
           กลับไปแก้ไขตะกร้า
         </Link>
       </aside>
+      {showCashConfirmation && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/75 px-4 py-6 text-white backdrop-blur-sm food-alert-overlay">
+          <div className="w-full max-w-md rounded-2xl border border-neutral-800 p-5 shadow-2xl shadow-black/60 food-alert-panel">
+            <p className="text-xs font-black uppercase tracking-wide text-amber-400">ยืนยันออเดอร์เงินสด</p>
+            <h2 className="mt-2 text-xl font-black">ยืนยันสั่งอาหารใช่ไหม?</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-400">
+              ร้านจะได้รับแจ้งเตือนว่าออเดอร์นี้ชำระเงินสด และต้องกดรับออเดอร์ก่อนจึงจะเริ่มเตรียมอาหาร
+            </p>
+            <p className="mt-4 rounded-xl border border-neutral-800 px-4 py-3 text-sm font-black text-amber-300">
+              ยอดชำระ ฿{totalPrice.toLocaleString('th-TH')}
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => { setShowCashConfirmation(false); void submitCashPayment() }}
+                className="rounded-xl bg-amber-500 px-5 py-3 text-sm font-black text-neutral-950 transition hover:bg-amber-400 disabled:opacity-50"
+              >
+                ยืนยันสั่งอาหาร
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setShowCashConfirmation(false)}
+                className="rounded-xl border border-neutral-700 px-5 py-3 text-sm font-bold text-neutral-300 transition hover:text-white disabled:opacity-50"
+              >
+                กลับ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

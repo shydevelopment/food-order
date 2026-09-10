@@ -5,6 +5,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { User } from '@supabase/supabase-js'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import FlaticonIcon from './flaticon-icon'
+import StatusIcon from './status-icon'
 import LogoutConfirmButton from './logout-confirm-button'
 import ThemeToggle from './theme-toggle'
 import { getAccountRoleMeta, isKmutnbStudentEmail } from '@/lib/roles'
@@ -246,7 +248,8 @@ export default function Navbar() {
           onClick={() => (window.location.href = '/')}
         >
           Food <span className="text-white">Order</span>{' '}
-          <span className="hidden min-[390px]:inline">KMUTNB</span> 🍔
+          <span className="hidden min-[390px]:inline">KMUTNB</span>
+          <FlaticonIcon name="restaurant" className="ml-1.5 inline-flex h-4 w-4 align-[-0.1em] sm:h-5 sm:w-5" />
         </div>
 
         {/* DESKTOP NAVIGATION */}
@@ -259,16 +262,16 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/storePage"
-            className={`transition-all active:scale-90 ${pathname === '/storePage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+            href="/restaurants"
+            className={`transition-all active:scale-90 ${pathname === '/restaurants' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
           >
             ร้านอาหาร
           </Link>
 
           {user && (
             <a
-              href="/trackorderPage"
-              className={`transition-all active:scale-90 ${pathname === '/trackorderPage' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+              href="/orders"
+              className={`transition-all active:scale-90 ${pathname === '/orders' ? 'text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
             >
               ติดตามคำสั่งซื้อ
             </a>
@@ -279,7 +282,10 @@ export default function Navbar() {
               href={isAdmin ? '/admin' : '/admin/orders'}
               className="text-red-400 hover:text-red-500 font-bold border border-red-900/50 px-2.5 py-0.5 rounded bg-red-950/20 transition-all active:scale-90 active:bg-red-900/50 text-xs tracking-wide"
             >
-              {isAdmin ? '📊 Admin' : '🧾 Restaurant'}
+              <span className="inline-flex items-center gap-1.5">
+                <FlaticonIcon name={isAdmin ? 'chart-histogram' : 'receipt'} className="h-3 w-3" />
+                {isAdmin ? 'Admin' : 'Restaurant'}
+              </span>
             </a>
           )}
         </nav>
@@ -348,7 +354,7 @@ export default function Navbar() {
                       {notificationError ? (
                         <div className="px-4 py-8 text-center">
                           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-500/30 bg-orange-500/10 text-lg font-black text-orange-300">
-                            !
+                            <StatusIcon type="error" />
                           </div>
                           <p className="mt-3 text-sm font-bold text-neutral-300">
                             ยังโหลดแจ้งเตือนไม่ได้
@@ -381,7 +387,7 @@ export default function Navbar() {
                                     : 'border-orange-500/30 bg-orange-500/10 text-orange-300'
                               }`}
                             >
-                              {item.type === 'chat' ? 'แชท' : '!'}
+                              <FlaticonIcon name={item.type === 'chat' ? 'comment' : 'bell'} className="h-4 w-4" />
                             </span>
                             <span className="min-w-0">
                               <span className="block truncate text-sm font-black text-white">
@@ -396,7 +402,7 @@ export default function Navbar() {
                       ) : (
                         <div className="px-4 py-8 text-center">
                           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-950 text-lg text-neutral-500">
-                            ✓
+                            <StatusIcon type="success" />
                           </div>
                           <p className="mt-3 text-sm font-bold text-neutral-300">
                             ไม่มีแจ้งเตือนค้างอยู่
@@ -424,7 +430,7 @@ export default function Navbar() {
           {/* CART ICON */}
           {user && (
             <a
-              href="/cartPage"
+              href="/cart"
               className="relative text-gray-300 hover:text-orange-500 transition-all active:scale-75 p-1 group"
             >
               <svg
@@ -536,18 +542,24 @@ export default function Navbar() {
                     </div>
 
                     <a
-                      href="/viewProfile"
+                      href="/profile"
                       className="block px-4 py-2 text-sm hover:bg-neutral-800 hover:text-orange-400 transition-colors active:bg-neutral-700"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      👤 ดูโปรไฟล์
+                      <span className="inline-flex items-center gap-2">
+                        <FlaticonIcon name="user" className="h-4 w-4" />
+                        ดูโปรไฟล์
+                      </span>
                     </a>
                     <a
-                      href="/editPage"
+                      href="/profile/edit"
                       className="block px-4 py-2 text-sm hover:bg-neutral-800 hover:text-orange-400 transition-colors active:bg-neutral-700"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      ⚙️ แก้ไขโปรไฟล์
+                      <span className="inline-flex items-center gap-2">
+                        <FlaticonIcon name="settings" className="h-4 w-4" />
+                        แก้ไขโปรไฟล์
+                      </span>
                     </a>
                     <hr className="border-neutral-800 my-1" />
                     <LogoutConfirmButton
@@ -560,7 +572,10 @@ export default function Navbar() {
                       }
                       className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-950/30 font-medium transition-colors active:bg-red-900/50 cursor-pointer"
                     >
-                      🚪 ออกจากระบบ
+                      <span className="inline-flex items-center gap-2">
+                        <FlaticonIcon name="sign-out-alt" className="h-4 w-4" />
+                        ออกจากระบบ
+                      </span>
                     </LogoutConfirmButton>
                   </div>
                 </>
@@ -621,7 +636,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 📌 MOBILE DRAWER / MENU */}
+      {/* MOBILE DRAWER / MENU */}
       <div
         className={`lg:hidden grid transition-[grid-template-rows,opacity] duration-300 ease-in-out absolute w-full left-0 bg-neutral-950 z-10 shadow-2xl ${
           isMobileMenuOpen
@@ -683,21 +698,30 @@ export default function Navbar() {
                     className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    🏠 หน้าแรก
+                    <span className="inline-flex items-center gap-2">
+                      <FlaticonIcon name="home" className="h-4 w-4" />
+                      หน้าแรก
+                    </span>
                   </Link>
                   <Link
-                    href="/storePage"
-                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+                    href="/restaurants"
+                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/restaurants' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    🍔 ร้านอาหาร
+                    <span className="inline-flex items-center gap-2">
+                      <FlaticonIcon name="restaurant" className="h-4 w-4" />
+                      ร้านอาหาร
+                    </span>
                   </Link>
                   <a
-                    href="/trackorderPage"
-                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/trackorderPage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+                    href="/orders"
+                    className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/orders' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    📍 ติดตามคำสั่งซื้อ
+                    <span className="inline-flex items-center gap-2">
+                      <FlaticonIcon name="marker" className="h-4 w-4" />
+                      ติดตามคำสั่งซื้อ
+                    </span>
                   </a>
                   {(isAdmin || isRestaurantOwner) && (
                     <a
@@ -705,7 +729,8 @@ export default function Navbar() {
                       className="p-2 rounded-lg text-red-400 bg-red-950/30 border border-red-900/50 font-bold flex items-center gap-2 transition-all active:scale-95 active:bg-red-900/50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {isAdmin ? '📊 Admin Dashboard' : '🧾 Restaurant Orders'}
+                      <FlaticonIcon name={isAdmin ? 'chart-histogram' : 'receipt'} className="h-4 w-4" />
+                      {isAdmin ? 'Admin Dashboard' : 'Restaurant Orders'}
                     </a>
                   )}
                 </nav>
@@ -714,18 +739,24 @@ export default function Navbar() {
 
                 <div className="space-y-2 pt-1">
                   <a
-                    href="/viewProfile"
+                    href="/profile"
                     className="block p-2 rounded-lg text-sm text-gray-300 hover:bg-neutral-900 hover:text-orange-400 transition-all active:scale-95 active:bg-neutral-800"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    👤 ดูโปรไฟล์
+                    <span className="inline-flex items-center gap-2">
+                      <FlaticonIcon name="user" className="h-4 w-4" />
+                      ดูโปรไฟล์
+                    </span>
                   </a>
                   <a
-                    href="/editPage"
+                    href="/profile/edit"
                     className="block p-2 rounded-lg text-sm text-gray-300 hover:bg-neutral-900 hover:text-orange-400 transition-all active:scale-95 active:bg-neutral-800"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    ⚙️ แก้ไขโปรไฟล์
+                    <span className="inline-flex items-center gap-2">
+                      <FlaticonIcon name="settings" className="h-4 w-4" />
+                      แก้ไขโปรไฟล์
+                    </span>
                   </a>
                   <LogoutConfirmButton
                     context={
@@ -738,7 +769,10 @@ export default function Navbar() {
                     onBeforeOpen={() => setIsMobileMenuOpen(false)}
                     className="w-full text-left p-2 rounded-lg text-sm font-bold text-red-400 bg-red-950/20 hover:bg-red-900/40 transition-all active:scale-95 active:bg-red-900/60"
                   >
-                    🚪 ออกจากระบบ
+                    <span className="inline-flex items-center gap-2">
+                      <FlaticonIcon name="sign-out-alt" className="h-4 w-4" />
+                      ออกจากระบบ
+                    </span>
                   </LogoutConfirmButton>
                 </div>
               </div>
@@ -750,14 +784,20 @@ export default function Navbar() {
                   className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  🏠 หน้าแรก
+                  <span className="inline-flex items-center gap-2">
+                    <FlaticonIcon name="home" className="h-4 w-4" />
+                    หน้าแรก
+                  </span>
                 </Link>
                 <Link
-                  href="/storePage"
-                  className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/storePage' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
+                  href="/restaurants"
+                  className={`p-2 rounded-lg transition-all active:scale-95 active:bg-orange-500/20 ${pathname === '/restaurants' ? 'bg-orange-500/10 text-orange-500 font-bold' : 'text-gray-300 hover:text-orange-400'}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  🍔 ร้านอาหาร
+                  <span className="inline-flex items-center gap-2">
+                    <FlaticonIcon name="restaurant" className="h-4 w-4" />
+                    ร้านอาหาร
+                  </span>
                 </Link>
                 <hr className="border-neutral-900 my-1" />
                 <a

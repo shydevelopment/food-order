@@ -1,4 +1,5 @@
 import { getPasswordRequirementStates } from '@/lib/password-policy'
+import StatusIcon from '@/components/status-icon'
 
 interface PasswordRequirementsProps {
   password: string
@@ -25,7 +26,7 @@ export default function PasswordRequirements({ password, className = '' }: Passw
             }`}
             aria-hidden="true"
           >
-            {requirement.met ? '✓' : ''}
+            {requirement.met ? <StatusIcon type="success" /> : null}
           </span>
           <span>{requirement.label}</span>
         </div>

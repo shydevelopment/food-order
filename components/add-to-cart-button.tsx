@@ -75,7 +75,7 @@ export default function AddToCartButton({ menu, allowSpecial = false, disabled =
     }
 
     writeCart(nextCart)
-    window.location.href = '/cartPage'
+    window.location.href = '/cart'
   }
 
   return (

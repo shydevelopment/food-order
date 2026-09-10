@@ -7,10 +7,10 @@ import { usePathname } from 'next/navigation';
 export default function Footer() {
   const pathname = usePathname();
   const links = [
-    { href: '/aboutusPage', label: 'เกี่ยวกับเรา' },
-    { href: '/termsofusePage', label: 'เงื่อนไขการใช้งาน' },
-    { href: '/privacypolicyPage', label: 'นโยบายความเป็นส่วนตัว' },
-    { href: '/contactPage', label: 'ติดต่อเรา' },
+    { href: '/about', label: 'เกี่ยวกับเรา' },
+    { href: '/terms-of-use', label: 'เงื่อนไขการใช้งาน' },
+    { href: '/privacy-policy', label: 'นโยบายความเป็นส่วนตัว' },
+    { href: '/contact', label: 'ติดต่อเรา' },
   ];
 
   return (
@@ -24,6 +24,9 @@ export default function Footer() {
           </p>
           <p className="text-[11px] text-gray-600 mt-1">
             สร้างด้วย Next.js, Tailwind CSS และ Supabase
+          </p>
+          <p className="text-[10px] text-gray-700 mt-1">
+            Uicons by <a href="https://www.flaticon.com/uicons" className="hover:text-orange-400">Flaticon</a>
           </p>
         </div>
 

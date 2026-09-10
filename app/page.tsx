@@ -1,3 +1,4 @@
+import { isEmailVerified } from '@/lib/email-verification'
 import { createClient } from '@/supabase/service'
 import Link from 'next/link'
 import { getBangkokDayIndex, isMenuAvailableOnDay } from '@/lib/menu-days'
@@ -83,6 +84,15 @@ export default async function Index() {
   return (
     <div className="home-page min-h-screen text-white">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-0 pb-8 sm:px-2 lg:gap-6">
+        {user && !isEmailVerified(user) && (
+          <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5" aria-label="ยืนยันอีเมล">
+            <h2 className="font-bold text-amber-300">คุณยังไม่ได้ยืนยันอีเมล</h2>
+            <p className="mt-1 text-sm text-neutral-300">เข้าใช้งานได้แล้ว และสามารถยืนยันอีเมลภายหลังได้ที่หน้าแก้ไขโปรไฟล์</p>
+            <Link href="/profile/edit" className="mt-3 inline-flex rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-black hover:bg-amber-300">
+              ไปยืนยันอีเมล
+            </Link>
+          </section>
+        )}
         <section className="home-hero overflow-hidden rounded-3xl border border-neutral-800 ">
           <div className="grid min-h-[520px] grid-cols-1 lg:grid-cols-[minmax(0,1.04fr)_minmax(390px,0.96fr)]">
             <div className="flex flex-col justify-between gap-8 p-5 sm:p-8 lg:p-10">
@@ -103,13 +113,13 @@ export default async function Index() {
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                   <Link
-                    href="/storePage"
+                    href="/restaurants"
                     className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-orange-500 px-6 text-sm font-black text-black transition hover:bg-orange-400 active:scale-95"
                   >
                     ดูร้านอาหาร
                   </Link>
                   <Link
-                    href={user ? '/trackorderPage' : '/login'}
+                    href={user ? '/orders' : '/login'}
                     className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-neutral-700  px-6 text-sm font-black text-white transition hover:border-sky-500/50 hover:text-sky-300 active:scale-95"
                   >
                     {user ? 'ติดตามออเดอร์' : 'เข้าสู่ระบบ'}
@@ -177,7 +187,7 @@ export default async function Index() {
                       </div>
                     </div>
                     <Link
-                      href={`/storePage/${featuredRestaurant.id}`}
+                      href={`/restaurants/${featuredRestaurant.id}`}
                       className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-white px-5 text-sm font-black text-neutral-950 transition hover:bg-orange-200 active:scale-95 sm:w-auto"
                     >
                       เข้าร้านแนะนำ
@@ -203,7 +213,7 @@ export default async function Index() {
                 <h2 className="text-xl font-black text-white">ร้านที่เปิดอยู่ตอนนี้</h2>
                 <p className="mt-1 text-sm text-neutral-500">เลือกเข้าร้านเพื่อดูเมนูของวันนี้</p>
               </div>
-              <Link href="/storePage" className="shrink-0 text-sm font-black text-orange-400 transition hover:text-orange-300">
+              <Link href="/restaurants" className="shrink-0 text-sm font-black text-orange-400 transition hover:text-orange-300">
                 ดูทั้งหมด
               </Link>
             </div>
@@ -222,7 +232,7 @@ export default async function Index() {
                   return (
                     <Link
                       key={restaurant.id}
-                      href={`/storePage/${restaurant.id}`}
+                      href={`/restaurants/${restaurant.id}`}
                       className="home-quick-card group grid grid-cols-[92px_minmax(0,1fr)] gap-3 rounded-2xl border border-neutral-800  p-3 transition hover:border-orange-500/40 "
                     >
                       <div className="relative h-24 overflow-hidden rounded-xl ">
@@ -258,7 +268,7 @@ export default async function Index() {
               {RESTAURANT_TYPES.map((type) => (
                 <Link
                   key={type.value}
-                  href={`/storePage?type=${type.value}`}
+                  href={`/restaurants?type=${type.value}`}
                   className="home-category-link flex items-center justify-between gap-3 rounded-2xl border border-neutral-800  px-4 py-3 transition hover:border-orange-500/40 "
                 >
                   <span className="min-w-0">

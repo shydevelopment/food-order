@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import FlaticonIcon from '@/components/flaticon-icon'
+import StatusIcon from '@/components/status-icon'
 
 export default function RegisterSuccessPage() {
   return (
@@ -8,7 +10,7 @@ export default function RegisterSuccessPage() {
         <div className="max-w-md w-full  border border-neutral-800/80 p-8 rounded-2xl shadow-2xl text-center animate-in fade-in zoom-in-95 duration-300">
           
           <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-            ✓
+            <StatusIcon type="success" className="h-10 w-10" />
           </div>
 
           <h1 className="text-2xl font-black text-white mb-3 tracking-wide">
@@ -19,14 +21,17 @@ export default function RegisterSuccessPage() {
           </p>
 
           <p className="text-neutral-400 text-sm mb-8 leading-relaxed">
-            สมัครสมาชิกสำเร็จแล้ว! ตอนนี้คุณสามารถเข้าสู่ระบบเพื่อเริ่มใช้งานและสั่งอาหารอร่อยๆ ได้เลยครับ 🍔
+            สมัครสมาชิกสำเร็จแล้ว! ตอนนี้คุณสามารถเข้าสู่ระบบเพื่อเริ่มใช้งานและสั่งอาหารอร่อยๆ ได้เลยครับ
           </p>
 
           <Link 
             href="/"
             className="block w-full bg-orange-500 hover:bg-orange-400 text-black font-bold py-3 px-4 rounded-xl transition-all active:scale-95 shadow-lg shadow-orange-500/20 text-center text-sm cursor-pointer"
           >
-            กลับเข้าสู่หน้าเว็บ (Go to Homepage)
+            <span className="inline-flex items-center justify-center gap-2">
+              <FlaticonIcon name="home" className="h-4 w-4" />
+              กลับเข้าสู่หน้าเว็บ (Go to Homepage)
+            </span>
           </Link>
 
         </div>

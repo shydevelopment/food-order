@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
+import FlaticonIcon from '@/components/flaticon-icon';
 
 interface AdminProfile {
   username: string | null;
@@ -125,7 +126,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                    <span className="shrink-0">📊</span> <span className="min-w-0 truncate">หน้าแรก Admin</span>
+                    <FlaticonIcon name="chart-histogram" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">หน้าแรก Admin</span>
               </Link>
 
               <Link
@@ -136,7 +137,18 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🧾</span> <span className="min-w-0 truncate">รับออเดอร์</span>
+                <FlaticonIcon name="receipt" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">รับออเดอร์</span>
+              </Link>
+
+              <Link
+                href="/admin/payments"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all active:scale-95 ${
+                  pathname === '/admin/payments'
+                    ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/10'
+                    : 'text-gray-400 hover:text-white hover:bg-neutral-800'
+                }`}
+              >
+                <FlaticonIcon name="credit-card" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">การชำระเงิน</span>
               </Link>
 
               <Link
@@ -147,7 +159,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">👥</span> <span className="min-w-0 truncate">ข้อมูลผู้ใช้งาน</span>
+                <FlaticonIcon name="users" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">ข้อมูลผู้ใช้งาน</span>
               </Link>
 
               <Link
@@ -158,7 +170,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🔑</span> <span className="min-w-0 truncate">จัดการ Role และสิทธิ์</span>
+                <FlaticonIcon name="key" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">จัดการ Role และสิทธิ์</span>
               </Link>
 
               <Link
@@ -169,7 +181,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🧩</span> <span className="min-w-0 truncate">สิทธิ์ร้านอาหาร</span>
+                <FlaticonIcon name="puzzle" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">สิทธิ์ร้านอาหาร</span>
               </Link>
 
               <Link
@@ -180,7 +192,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🏷️</span> <span className="min-w-0 truncate">จัดการหมวดเมนู</span>
+                <FlaticonIcon name="tags" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">จัดการหมวดเมนู</span>
               </Link>
 
               <Link
@@ -191,7 +203,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">🔐</span> <span className="min-w-0 truncate">เปลี่ยนรหัสผ่านผู้ใช้งาน</span>
+                <FlaticonIcon name="lock" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">เปลี่ยนรหัสผ่านผู้ใช้งาน</span>
               </Link>
 
               <Link
@@ -202,7 +214,7 @@ export default function AdminSidebar() {
                     : 'text-gray-400 hover:text-white hover:bg-neutral-800'
                 }`}
               >
-                <span className="shrink-0">📜</span> <span className="min-w-0 truncate">ประวัติกิจกรรม</span>
+                <FlaticonIcon name="memo-pad" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">ประวัติกิจกรรม</span>
               </Link>
 
               <div>
@@ -215,7 +227,7 @@ export default function AdminSidebar() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="shrink-0">🏪</span> <span className="min-w-0 truncate">จัดการร้านอาหาร</span>
+                    <FlaticonIcon name="shop" className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">จัดการร้านอาหาร</span>
                   </div>
                   <span className={`text-[10px] transition-transform duration-200 ${isRestaurantsOpen ? 'rotate-180' : ''}`}>
                     ▼
@@ -232,7 +244,10 @@ export default function AdminSidebar() {
                           : 'text-gray-500 hover:text-gray-300 hover:bg-neutral-800/45'
                       }`}
                     >
-                      📋 ดูร้านอาหารทั้งหมด
+                      <span className="inline-flex items-center gap-1.5">
+                        <FlaticonIcon name="list" className="h-3.5 w-3.5" />
+                        ดูร้านอาหารทั้งหมด
+                      </span>
                     </Link>
 
                     {restaurants.length > 0 ? (
@@ -246,13 +261,19 @@ export default function AdminSidebar() {
                                 : 'text-gray-500 hover:text-gray-300 hover:bg-neutral-800/45'
                             }`}
                           >
-                            📍 {shop.name}
+                            <span className="inline-flex max-w-full items-center gap-1.5">
+                              <FlaticonIcon name="marker" className="h-3.5 w-3.5 shrink-0" />
+                              <span className="min-w-0 truncate">{shop.name}</span>
+                            </span>
                           </Link>
                           <Link
                             href={`/admin/restaurants/${shop.id}#daily-menu`}
                             className="block rounded-md px-3 py-2 text-[11px] font-bold text-gray-600 transition hover:bg-neutral-800/45 hover:text-amber-400 active:scale-95"
                           >
-                            📅 อาหารรายวัน
+                            <span className="inline-flex items-center gap-1.5">
+                              <FlaticonIcon name="calendar" className="h-3.5 w-3.5" />
+                              อาหารรายวัน
+                            </span>
                           </Link>
                         </div>
                       ))
@@ -269,7 +290,7 @@ export default function AdminSidebar() {
                 href="/"
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-black text-red-400 bg-red-950/20 border border-red-900/30 hover:bg-red-950/45 hover:text-red-300 active:scale-95 transition-all shadow-md uppercase tracking-wider"
               >
-                <span>🚪</span> ออกจากหน้า Admin
+                <FlaticonIcon name="sign-out-alt" className="h-4 w-4" /> ออกจากหน้า Admin
               </Link>
             </div>
           </div>
