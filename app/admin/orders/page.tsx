@@ -34,6 +34,8 @@ interface Order {
   pickup_time: string | null
   pickup_note: string | null
   cancellation_reason: string | null
+  cancellation_requested_at: string | null
+  cancellation_request_reason: string | null
   created_at: string
 }
 
@@ -83,8 +85,6 @@ const statusTabs = allowedOrderStatuses.map((status) => ({
 const formatPickupTime = (pickupTime: string | null) => {
   return pickupTime ? pickupTime.slice(0, 5) : '-'
 }
-
-const paymentMethodLabel = 'เงินสด จ่ายหน้าร้าน'
 
 const getCustomerDisplayName = (customer: Customer | undefined) => {
   if (!customer) return 'ไม่พบชื่อผู้ใช้'
@@ -210,7 +210,7 @@ export default async function AdminOrdersPage({
   let ordersQuery = supabaseAdmin
     .from('orders')
     .select(
-      'id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, created_at',
+      'id, order_no, user_id, restaurant_id, total_price, status, delivery_address, pickup_time, pickup_note, cancellation_reason, cancellation_requested_at, cancellation_request_reason, created_at',
     )
     .order('created_at', { ascending: false })
 
@@ -542,9 +542,13 @@ export default async function AdminOrdersPage({
             const customer = customersById.get(order.user_id)
             const orderItemsForOrder = itemsByOrder.get(order.id) || []
             const payment = paymentsByOrderId.get(order.id)
-            const cashPaymentPending =
-              !payment ||
-              (payment.method === 'cash' && payment.status !== 'paid')
+            const cashPaymentPending = payment?.method === 'cash' && payment.status !== 'paid'
+            const orderPaymentMethodLabel =
+              !payment || payment.method === 'cash'
+                ? 'เงินสด จ่ายหน้าร้าน'
+                : payment.method === 'qr'
+                  ? 'QR พร้อมเพย์'
+                  : payment.method
 
             return (
               <article
@@ -614,12 +618,14 @@ export default async function AdminOrdersPage({
                       วิธีชำระเงิน
                     </p>
                     <p className="payment-method-title mt-1 text-sm font-black">
-                      {paymentMethodLabel}
+                      {orderPaymentMethodLabel}
                     </p>
                     <p className="payment-method-note mt-0.5 text-xs">
-                      {cashPaymentPending
-                        ? 'รอยืนยันรับเงินก่อนปิดออเดอร์'
-                        : 'ยืนยันรับเงินแล้ว'}
+                      {payment?.method === 'cash' && order.status === 'pending'
+                        ? 'ลูกค้าเลือกชำระเงินสด · กดรับออเดอร์เพื่อยืนยัน'
+                        : cashPaymentPending
+                          ? 'ชำระเงินเมื่อรับอาหาร'
+                          : 'ยืนยันรับเงินแล้ว'}
                     </p>
                   </div>
 
@@ -639,6 +645,17 @@ export default async function AdminOrdersPage({
                       </p>
                       <p className="mt-1 text-sm font-bold text-red-100">
                         {order.cancellation_reason || 'ไม่ได้ระบุเหตุผล'}
+                      </p>
+                    </div>
+                  )}
+
+                  {order.cancellation_requested_at && order.status !== 'cancelled' && (
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 md:col-span-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-amber-300">
+                        ลูกค้าขอยกเลิกออเดอร์ — รอร้านยืนยัน
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-amber-100">
+                        {order.cancellation_request_reason || 'ไม่ได้ระบุเหตุผล'}
                       </p>
                     </div>
                   )}
@@ -708,6 +725,7 @@ export default async function AdminOrdersPage({
                       status={order.status}
                       cashPaymentPending={cashPaymentPending}
                       cashPaymentId={payment?.id}
+                      customerCancellationRequest={order.cancellation_requested_at ? order.cancellation_request_reason : null}
                     />
                     <OrderChatBox
                       orderId={order.id}

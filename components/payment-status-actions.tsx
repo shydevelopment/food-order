@@ -60,7 +60,7 @@ export default function PaymentStatusActions({
     return null
   }
 
-  if (!isAdmin && method !== 'cash') {
+  if (method === 'qr' || (!isAdmin && method !== 'cash')) {
     return (
       <span className="text-xs font-medium text-neutral-500">
         รอผู้ให้บริการยืนยัน

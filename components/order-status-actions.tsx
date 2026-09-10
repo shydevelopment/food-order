@@ -9,6 +9,7 @@ interface OrderStatusActionsProps {
   status: string | null
   cashPaymentPending?: boolean
   cashPaymentId?: string
+  customerCancellationRequest?: string | null
 }
 
 const nextActions = [
@@ -35,6 +36,7 @@ export default function OrderStatusActions({
   status,
   cashPaymentPending = false,
   cashPaymentId,
+  customerCancellationRequest = null,
 }: OrderStatusActionsProps) {
   const router = useRouter()
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
@@ -81,7 +83,7 @@ export default function OrderStatusActions({
   }
 
   const handleCancelOrder = () => {
-    const cleanedReason = cancellationReason.trim()
+    const cleanedReason = cancellationReason.trim() || customerCancellationRequest?.trim() || ''
     if (cleanedReason.length < 3) {
       alert('กรุณากรอกเหตุผลการยกเลิกอย่างน้อย 3 ตัวอักษร')
       return
@@ -189,11 +191,12 @@ export default function OrderStatusActions({
               ยกเลิกออเดอร์
             </p>
             <h2 className="mt-2 text-center text-2xl font-black text-white">
-              กรอกเหตุผลให้ลูกค้าทราบ
+              {customerCancellationRequest ? 'ยืนยันยกเลิกตามคำขอของลูกค้า' : 'กรอกเหตุผลให้ลูกค้าทราบ'}
             </h2>
             <p className="mx-auto mt-2 max-w-md text-center text-sm text-neutral-400">
-              เหตุผลนี้จะแสดงให้ลูกค้าเห็นในหน้า Track Order
-              และการแจ้งเตือนสถานะ
+              {customerCancellationRequest
+                ? `ลูกค้าระบุว่า: ${customerCancellationRequest}`
+                : 'เหตุผลนี้จะแสดงให้ลูกค้าเห็นในหน้า Track Order และการแจ้งเตือนสถานะ'}
             </p>
 
             <label className="mt-5 block text-xs font-bold uppercase tracking-wide text-neutral-400">
@@ -209,7 +212,7 @@ export default function OrderStatusActions({
               className="mt-2 w-full resize-none rounded-xl border border-neutral-800  px-3 py-3 text-sm text-white placeholder-neutral-600 outline-none transition focus:border-red-500"
             />
             <div className="mt-1 flex items-center justify-between gap-3 text-xs text-neutral-500">
-              <span>บังคับกรอกก่อนยกเลิก</span>
+              <span>{customerCancellationRequest ? 'ใช้เหตุผลของลูกค้าได้ หรือระบุเหตุผลของร้าน' : 'บังคับกรอกก่อนยกเลิก'}</span>
               <span>{cancellationReason.length}/300</span>
             </div>
 

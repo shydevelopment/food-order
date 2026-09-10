@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/supabase/service'
 import { validateThaiPhone } from '@/lib/phone'
 import { getBangkokDayIndex, isMenuAvailableOnDay } from '@/lib/menu-days'
+import { createHash } from 'node:crypto'
+import { kgpConfig, PaymentError } from '@/lib/kgp'
 
 interface OrderItemInput {
   menuId?: string
@@ -29,6 +31,7 @@ interface CustomerProfileRow {
 
 const paymentMethodLabels = {
   cash: 'เงินสด จ่ายหน้าร้าน',
+  qr: 'QR พร้อมเพย์',
 } as const
 
 type PaymentMethod = keyof typeof paymentMethodLabels
@@ -143,11 +146,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'กรุณาเลือกรายการอาหารก่อนสั่งซื้อ' }, { status: 400 })
     }
 
-    if (!(paymentMethod in paymentMethodLabels)) {
+    if (!Object.hasOwn(paymentMethodLabels, paymentMethod)) {
       return NextResponse.json({ error: 'วิธีชำระเงินนี้ยังไม่พร้อมใช้งาน' }, { status: 400 })
     }
 
     const paymentMethodLabel = paymentMethodLabels[paymentMethod]
+    const checkoutKey = String(body.checkoutKey || '')
+    if (paymentMethod === 'qr') {
+      kgpConfig()
+      if (!/^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(checkoutKey)) {
+        return NextResponse.json({ error: 'รหัสยืนยันคำสั่งซื้อไม่ถูกต้อง' }, { status: 400 })
+      }
+    }
 
     const [pickupHour, pickupMinute] = pickupTime.split(':').map((value) => Number(value))
 
@@ -177,10 +187,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'จำนวนอาหารไม่ถูกต้อง' }, { status: 400 })
     }
 
+    if (paymentMethod === 'qr' && (normalizedItems.length !== items.length || normalizedItems.length > 100
+      || normalizedItems.some(item => !item.menuId || item.quantity > 100))) {
+      return NextResponse.json({ error: 'QR รองรับเมนูที่มีราคากำหนดแล้วเท่านั้น กรุณาใช้เงินสดสำหรับเมนูเขียนเอง' }, { status: 400 })
+    }
+
     const supabaseAdmin = createSupabaseAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    const checkoutFingerprint = createHash('sha256').update(JSON.stringify({
+      restaurantId, deliveryAddress, pickupTime, pickupNote, items: normalizedItems,
+    })).digest('hex')
+    if (paymentMethod === 'qr') {
+      const { data: existing, error } = await supabaseAdmin.from('payments')
+        .select('order_id, amount, checkout_fingerprint').eq('customer_id', user.id)
+        .eq('checkout_key', checkoutKey).maybeSingle()
+      if (error) throw new PaymentError('ช่องทาง QR ยังไม่พร้อม กรุณาติดต่อผู้ดูแลระบบ', 503)
+      if (existing) {
+        if (existing.checkout_fingerprint !== checkoutFingerprint) {
+          throw new PaymentError('ข้อมูลคำสั่งซื้อเปลี่ยน กรุณากลับไปตรวจตะกร้า', 409)
+        }
+        return NextResponse.json({ success: true, orderId: existing.order_id, totalPrice: Number(existing.amount), paymentMethod, paymentMethodLabel })
+      }
+    }
 
     const { data: customerProfile, error: customerProfileError } = await supabaseAdmin
       .from('profiles')
@@ -276,6 +307,38 @@ export async function POST(req: NextRequest) {
       }
 
       totalPrice += Number(menu.price) * item.quantity
+    }
+
+    if (paymentMethod === 'qr') {
+      totalPrice = Math.round(totalPrice * 100) / 100
+      if (!Number.isFinite(totalPrice) || totalPrice <= 0 || totalPrice > 9999999999.99) {
+        throw new PaymentError('ยอดชำระ QR ไม่ถูกต้อง', 400)
+      }
+      const { data: qrOrder, error } = await supabaseAdmin.rpc('create_kgp_order', {
+        p_customer: user.id, p_checkout_key: checkoutKey, p_fingerprint: checkoutFingerprint,
+        p_order: {
+          restaurant_id: restaurantId, total_price: totalPrice,
+          delivery_address: deliveryAddress || 'รับอาหารที่ร้าน', pickup_time: pickupTime,
+          pickup_note: pickupNote || null,
+        },
+        p_items: normalizedItems.map(item => ({
+          menu_id: item.menuId, custom_name: item.customName || null, is_special: item.isSpecial,
+          item_note: item.itemNote || null, quantity: item.quantity, price: Number(menusById.get(item.menuId)!.price),
+        })),
+      })
+      if (error || !qrOrder) throw new PaymentError('ไม่สามารถบันทึกออเดอร์ QR ได้ กรุณาตรวจสอบการติดตั้งฐานข้อมูล', 503)
+      if (qrOrder.created) {
+        await createOrderNotifications({
+          supabaseAdmin, customerId: user.id, restaurantId,
+          restaurantName: restaurant.name || 'ร้านอาหาร', restaurantOwnerId: restaurant.owner_id || null,
+          restaurantEmail: restaurant.email || null, orderId: qrOrder.id, orderNo: qrOrder.order_no,
+          totalPrice, pickupTime, paymentMethodLabel: 'QR พร้อมเพย์ (รอชำระ)', customerName: customerDisplayName,
+        })
+      }
+      return NextResponse.json({
+        success: true, orderId: qrOrder.id, orderNo: qrOrder.order_no,
+        totalPrice: Number(qrOrder.total_price), paymentMethod, paymentMethodLabel,
+      })
     }
 
     const { data: order, error: orderError } = await supabaseAdmin
@@ -379,6 +442,7 @@ export async function POST(req: NextRequest) {
       paymentMethodLabel,
     })
   } catch (error) {
+    if (error instanceof PaymentError) return NextResponse.json({ error: error.message }, { status: error.status })
     const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในระบบสั่งอาหาร'
     return NextResponse.json({ error: message }, { status: 500 })
   }

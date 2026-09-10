@@ -201,9 +201,9 @@ export async function PATCH(req: NextRequest) {
         )
       }
 
-      if (payment.method === 'cash' && payment.status !== 'paid') {
+      if (payment.status !== 'paid') {
         return NextResponse.json(
-          { error: 'ออเดอร์เงินสดนี้ยังไม่ได้ยืนยันรับเงิน กรุณายืนยันที่หน้า Payment ก่อนปิดออเดอร์' },
+          { error: 'ออเดอร์นี้ยังไม่ได้ยืนยันรับเงิน กรุณาตรวจสอบที่หน้า Payment ก่อนปิดออเดอร์' },
           { status: 400 },
         )
       }
@@ -216,6 +216,8 @@ export async function PATCH(req: NextRequest) {
             cancellation_reason: cleanedCancellationReason,
             cancelled_at: new Date().toISOString(),
             cancelled_by: user.id,
+            cancellation_requested_at: null,
+            cancellation_request_reason: null,
           }
         : { status: nextStatus }
 
@@ -226,6 +228,19 @@ export async function PATCH(req: NextRequest) {
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 400 })
+    }
+
+    if (nextStatus === 'cancelled') {
+      const { error: cancelPaymentError } = await supabaseAdmin
+        .from('payments')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('order_id', orderId)
+        .eq('method', 'cash')
+        .in('status', ['pending', 'failed'])
+
+      if (cancelPaymentError) {
+        console.error('Error cancelling cash payment:', cancelPaymentError.message)
+      }
     }
 
     await Promise.all([

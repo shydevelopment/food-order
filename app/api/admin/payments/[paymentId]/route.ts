@@ -101,6 +101,9 @@ export async function PATCH(
     }
 
     const isAdmin = profile.role === 'admin'
+    if (payment.method === 'qr') {
+      return NextResponse.json({ error: 'สถานะ QR อัปเดตจากผู้ให้บริการชำระเงินเท่านั้น' }, { status: 409 })
+    }
     if (!isAdmin) {
       const canAccess = await canAccessRestaurant({
         supabaseAdmin,
